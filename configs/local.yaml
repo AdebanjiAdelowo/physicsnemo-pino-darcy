@@ -1,0 +1,16 @@
+# Reduced physics-weight study for a laptop (Apple MPS or CPU).
+# Model, data, batch size, optimiser and loss as upstream. Reduced: 15 epochs instead
+# of 50 and one seed. gamma is 0.99948708 ** (50 / 15), so the learning rate falls by
+# the same factor over the run as it does over the 50 epochs of the upstream schedule.
+defaults:
+  - official
+  - _self_
+
+name: local
+max_epochs: 15
+gamma: 0.99829129
+
+study:
+  residuals: [shipped, consistent]
+  physics_weights: [0, 0.001, 0.01, 0.1, 1]
+  seeds: [0]

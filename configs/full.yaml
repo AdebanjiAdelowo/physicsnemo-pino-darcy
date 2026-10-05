@@ -1,0 +1,14 @@
+# Physics-weight study at the upstream training budget, sized for one NVIDIA GPU session.
+# Every training setting is that of official.yaml; only the study axes are extended.
+# The run shipped_w0.1_seed0 of this study is the upstream default configuration.
+defaults:
+  - official
+  - _self_
+
+name: full
+device: cuda
+
+study:
+  residuals: [shipped, consistent]
+  physics_weights: [0, 0.001, 0.01, 0.1, 1]
+  seeds: [0, 1, 2]

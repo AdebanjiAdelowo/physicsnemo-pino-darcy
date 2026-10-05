@@ -1,0 +1,27 @@
+# Pipeline check. Takes a few minutes on a laptop CPU; most of it is the evaluation of the
+# 240 x 240 validation and test sets.
+# The numbers it produces are not results.
+defaults:
+  - official
+  - _self_
+
+name: smoke
+max_epochs: 2
+
+model:
+  fno:
+    latent_channels: 8
+    num_fno_modes: 6
+
+data:
+  train_samples: 8
+
+study:
+  residuals: [shipped, consistent]
+  physics_weights: [0, 0.1]
+  seeds: [0]
+
+evaluation:
+  plot_samples: 2
+  timing_warmup: 1
+  timing_repeats: 3
