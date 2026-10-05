@@ -1,0 +1,9 @@
+# PhysicsNeMo is pinned to a commit of the main branch: physicsnemo.sym (PDE, PhysicsInformer)
+# is part of the main package at this commit, and the adapted example is read at this commit.
+nvidia-physicsnemo[sym] @ git+https://github.com/NVIDIA/physicsnemo.git@b45a5c810c741e6b41f8515be24c51121f8fc21f
+hydra-core>=1.3.2
+h5py>=3.10
+gdown>=5.2.2
+matplotlib>=3.8
+pytest>=8.0
+scipy>=1.11

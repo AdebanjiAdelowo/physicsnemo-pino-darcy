@@ -1,0 +1,18 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.ipynb_checkpoints/
+.DS_Store
+.venv/
+*.egg-info/
+
+# downloaded dataset, run directories and checkpoints (tracked summaries live in results/)
+datasets/
+runs/
+outputs/
+checkpoints/
+*.pt
+*.mdlus
+*.zip
+*.hdf5
+*.mat
