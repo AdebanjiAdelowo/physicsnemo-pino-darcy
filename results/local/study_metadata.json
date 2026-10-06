@@ -1,0 +1,146 @@
+{
+  "timestamp_utc": "2026-10-05T21:48:49+00:00",
+  "git_commit": "d1bd2ca0eaf4ff64a1dfa5fef0c5ed4e60377989",
+  "git_dirty": false,
+  "upstream": {
+    "repository": "https://github.com/NVIDIA/physicsnemo",
+    "commit": "b45a5c810c741e6b41f8515be24c51121f8fc21f",
+    "example": "examples/cfd/darcy_physics_informed"
+  },
+  "device": "mps",
+  "gpu_name": null,
+  "cuda_version": null,
+  "python_version": "3.12.2",
+  "torch_version": "2.14.1",
+  "torch_threads": 5,
+  "physicsnemo": {
+    "version": "2.3.0a0",
+    "commit": "b45a5c810c741e6b41f8515be24c51121f8fc21f",
+    "url": "https://github.com/nvidia/physicsnemo"
+  },
+  "warp_version": "1.18.0",
+  "sympy_version": "1.14.0",
+  "numpy_version": "2.5.3",
+  "platform": "macOS-26.6.2-arm64-arm-64bit",
+  "processor": "arm",
+  "physics_device": "cpu",
+  "residual_definitions": {
+    "shipped": {
+      "forcing": 0.0174793296268,
+      "fd_dx": 0.004166666666666667
+    },
+    "consistent": {
+      "forcing": 57.210432056087576,
+      "fd_dx": 0.004149377593360996
+    }
+  },
+  "pde_loss_factor": 0.004166666666666667,
+  "config": {
+    "start_lr": 0.001,
+    "gamma": 0.99829129,
+    "max_epochs": 15,
+    "physics_weight": 0.1,
+    "model": {
+      "fno": {
+        "in_channels": 1,
+        "out_channels": 1,
+        "decoder_layers": 1,
+        "decoder_layer_size": 32,
+        "dimension": 2,
+        "latent_channels": 32,
+        "num_fno_layers": 4,
+        "num_fno_modes": 12,
+        "padding": 9
+      }
+    },
+    "name": "local",
+    "device": "auto",
+    "output_dir": "runs/local",
+    "batch_size": 1,
+    "data": {
+      "dir": "datasets/Darcy_241",
+      "train_percent": 10,
+      "validation_percent": 10,
+      "test_samples": 256,
+      "train_samples": null
+    },
+    "study": {
+      "residuals": [
+        "shipped",
+        "consistent"
+      ],
+      "physics_weights": [
+        0,
+        0.001,
+        0.01,
+        0.1,
+        1
+      ],
+      "seeds": [
+        0
+      ]
+    },
+    "evaluation": {
+      "plot_samples": 3,
+      "timing_warmup": 3,
+      "timing_repeats": 20
+    }
+  },
+  "dataset": {
+    "source": "https://drive.google.com/uc?id=1ViDqN7nc_VCnMackiXv_d7CHZANAFKzV",
+    "archive": "Darcy_241.zip",
+    "archive_sha256": "2c2ad2b5d6238d62365aba5127d3e6dee365163ac4de884463fa5b677c06bf1a",
+    "mat_file": "piececonst_r241_N1024_smooth1.mat",
+    "mat_keys": {
+      "Kcoeff": [
+        1024,
+        241,
+        241
+      ],
+      "Kcoeff_x": [
+        1024,
+        241,
+        241
+      ],
+      "Kcoeff_y": [
+        1024,
+        241,
+        241
+      ],
+      "coeff": [
+        1024,
+        241,
+        241
+      ],
+      "sol": [
+        1024,
+        241,
+        241
+      ]
+    },
+    "splits": {
+      "train": [
+        0,
+        102
+      ],
+      "validation": [
+        102,
+        204
+      ],
+      "test": [
+        204,
+        460
+      ]
+    },
+    "files": {
+      "train.hdf5": "7617caa38eb4fb541f8a1afc5e99ae32feb43f9da22b68e346dd8fd2b3d1de46",
+      "validation.hdf5": "86546b8d735f390fdd40a06186f4ce92ea4c04b5ffe2e4f1553731da10743cab",
+      "test.hdf5": "f6c5240a0f6bba92cc016d3021ff819d734f517d54b49d78b3d81f572238112a"
+    }
+  },
+  "samples": {
+    "train": 102,
+    "validation": 102,
+    "test": 256
+  }
+}

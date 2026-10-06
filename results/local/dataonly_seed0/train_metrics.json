@@ -1,0 +1,16 @@
+{
+  "run": "dataonly_seed0",
+  "residual": null,
+  "physics_weight": 0.0,
+  "effective_pde_coefficient": 0.0,
+  "seed": 0,
+  "parameters": 2365169,
+  "optimiser_steps": 1530,
+  "final_train_loss_data": 0.0042567901751574344,
+  "final_train_loss_pde": null,
+  "final_train_loss_total": 0.0042567901751574344,
+  "train_seconds": 358.22383941698354,
+  "optimisation_seconds": 262.0565270810621,
+  "optimisation_ms_per_step": 171.27877586997522,
+  "peak_train_memory_mb": null
+}
