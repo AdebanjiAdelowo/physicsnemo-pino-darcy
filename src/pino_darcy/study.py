@@ -99,7 +99,8 @@ def evaluate_study(cfg: DictConfig, root: Path) -> dict:
         rows.append(summary_row(json.loads((run_dir / "train_metrics.json").read_text()), evaluation))
         if seed == plot_seed:
             for key, value in run_fields.items():
-                fields[f"{key}__{run_dir.name}"] = value
+                # residual fields are only plotted: half precision keeps the tracked file small
+                fields[f"{key}__{run_dir.name}"] = value.astype(np.float16) if key.startswith("residual") else value
         print(
             f"[eval] {run_dir.name}: test relative L2 {rows[-1]['test_rel_l2_mean']:.4e}, "
             f"PDE L1 shipped {rows[-1]['test_pde_l1_shipped']:.3e}, consistent {rows[-1]['test_pde_l1_consistent']:.3e}",

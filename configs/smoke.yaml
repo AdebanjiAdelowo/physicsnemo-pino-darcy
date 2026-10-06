@@ -22,6 +22,5 @@ study:
   seeds: [0]
 
 evaluation:
-  plot_samples: 2
   timing_warmup: 1
   timing_repeats: 3
