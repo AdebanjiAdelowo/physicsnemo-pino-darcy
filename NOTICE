@@ -1,0 +1,27 @@
+physicsnemo-pino-darcy
+Copyright 2026 Adebanji Adelowo
+
+This repository contains material adapted from NVIDIA PhysicsNeMo
+(https://github.com/NVIDIA/physicsnemo), Copyright (c) 2023 - 2026 NVIDIA
+CORPORATION & AFFILIATES, licensed under the Apache License, Version 2.0.
+
+Adapted from examples/cfd/darcy_physics_informed at commit
+b45a5c810c741e6b41f8515be24c51121f8fc21f:
+
+  configs/official.yaml        from conf/config_pino.yaml (file kept unchanged; keys added below a marker)
+  src/pino_darcy/physics.py    Diffusion class copied from utils.py; PhysicsInformer construction,
+                               border treatment and L1 reduction from darcy_physics_informed_fno.py
+  src/pino_darcy/model.py      model construction from darcy_physics_informed_fno.py
+  src/pino_darcy/engine.py     training loop structure from darcy_physics_informed_fno.py
+  src/pino_darcy/data.py       dataset id, file name, normalisation constants, crop and splits
+                               from utils.py and download_data.py
+
+Each of these files carries the original NVIDIA copyright and licence header and
+a statement of the changes. The FNO model, the PhysicsInformer, the PDE base
+class, the finite-difference derivatives and the checkpoint utilities are
+imported from the PhysicsNeMo package and are not copied.
+
+The Darcy flow dataset (Darcy_241) is downloaded at run time from the data
+release of Li et al., "Fourier Neural Operator for Parametric Partial
+Differential Equations" (https://github.com/neuraloperator/neuraloperator).
+It is not redistributed in this repository.

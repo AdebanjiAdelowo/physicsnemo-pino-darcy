@@ -1,0 +1,232 @@
+{
+  "environment": {
+    "timestamp_utc": "2026-10-06T01:04:26+00:00",
+    "git_commit": "56f1f76dc5fafa09d095b45cd6dc89de52753a69",
+    "git_dirty": false,
+    "upstream": {
+      "repository": "https://github.com/NVIDIA/physicsnemo",
+      "commit": "b45a5c810c741e6b41f8515be24c51121f8fc21f",
+      "example": "examples/cfd/darcy_physics_informed"
+    },
+    "device": "cpu",
+    "gpu_name": null,
+    "cuda_version": null,
+    "python_version": "3.12.2",
+    "torch_version": "2.14.1",
+    "torch_threads": 5,
+    "physicsnemo": {
+      "version": "2.3.0a0",
+      "commit": "b45a5c810c741e6b41f8515be24c51121f8fc21f",
+      "url": "https://github.com/nvidia/physicsnemo"
+    },
+    "warp_version": "1.18.0",
+    "sympy_version": "1.14.0",
+    "numpy_version": "2.5.3",
+    "platform": "macOS-26.6.2-arm64-arm-64bit",
+    "processor": "arm"
+  },
+  "dataset": {
+    "source": "https://drive.google.com/uc?id=1ViDqN7nc_VCnMackiXv_d7CHZANAFKzV",
+    "archive": "Darcy_241.zip",
+    "archive_sha256": "2c2ad2b5d6238d62365aba5127d3e6dee365163ac4de884463fa5b677c06bf1a",
+    "mat_file": "piececonst_r241_N1024_smooth1.mat",
+    "mat_keys": {
+      "Kcoeff": [
+        1024,
+        241,
+        241
+      ],
+      "Kcoeff_x": [
+        1024,
+        241,
+        241
+      ],
+      "Kcoeff_y": [
+        1024,
+        241,
+        241
+      ],
+      "coeff": [
+        1024,
+        241,
+        241
+      ],
+      "sol": [
+        1024,
+        241,
+        241
+      ]
+    },
+    "splits": {
+      "train": [
+        0,
+        102
+      ],
+      "validation": [
+        102,
+        204
+      ],
+      "test": [
+        204,
+        460
+      ]
+    },
+    "files": {
+      "train.hdf5": "7617caa38eb4fb541f8a1afc5e99ae32feb43f9da22b68e346dd8fd2b3d1de46",
+      "validation.hdf5": "86546b8d735f390fdd40a06186f4ce92ea4c04b5ffe2e4f1553731da10743cab",
+      "test.hdf5": "f6c5240a0f6bba92cc016d3021ff819d734f517d54b49d78b3d81f572238112a"
+    }
+  },
+  "samples": 460,
+  "content": {
+    "coeff_values": [
+      3.0,
+      12.0
+    ],
+    "Kcoeff_min_max": [
+      2.999999761581421,
+      11.999999046325684
+    ],
+    "Kcoeff_equals_coeff_fraction": 0.8480313849548943,
+    "sol_min_max": [
+      1.2073296602466144e-06,
+      0.01730966567993164
+    ],
+    "coeff_std": 4.499949234876697,
+    "sol_std": 0.0038945909886292976,
+    "upstream_scales": {
+      "K_SCALE": 4.49996,
+      "U_SCALE": 0.00388433
+    }
+  },
+  "grid": {
+    "first_row_mean": 9.090292423032466e-05,
+    "second_to_first_row_ratio": 2.9710111451366914,
+    "max_abs_on_outer_rows": 0.000887925794813782
+  },
+  "forcing": {
+    "spacing_1_240": {
+      "mean": 0.9917199903715865,
+      "std": 0.0003267713133785637
+    },
+    "spacing_1_241": {
+      "mean": 1.0000015409856275,
+      "std": 0.0003295000807697697
+    },
+    "normalised_forcing_of_the_data": 57.210432056087576,
+    "normalised_forcing_in_upstream_script": 0.0174793296268
+  },
+  "reference_residual_normalised": {
+    "train": {
+      "shipped": {
+        "l1": 79.1632331696596,
+        "rms": 182.03187305738814,
+        "signed_mean": 56.804640976368674,
+        "abs_median": 56.72053146362305,
+        "abs_p95": 152.6121597290035,
+        "abs_mean_smooth": 56.71913399492684,
+        "abs_mean_interface": 204.3411091013736,
+        "interface_fraction": 0.1703698931454225
+      },
+      "consistent": {
+        "l1": 26.605394362827727,
+        "rms": 174.3859147088888,
+        "signed_mean": 0.08619029925363227,
+        "abs_median": 0.010162353515625,
+        "abs_p95": 102.28365478515622,
+        "abs_mean_smooth": 0.014816234704029018,
+        "abs_mean_interface": 161.4288925565879,
+        "interface_fraction": 0.1703698931454225
+      }
+    },
+    "validation": {
+      "shipped": {
+        "l1": 79.47967220632408,
+        "rms": 185.41421626310867,
+        "signed_mean": 56.825729434916624,
+        "abs_median": 56.72053146362305,
+        "abs_p95": 153.4799247741699,
+        "abs_mean_smooth": 56.719132006773,
+        "abs_mean_interface": 202.71565702157451,
+        "interface_fraction": 0.17450825489632796
+      },
+      "consistent": {
+        "l1": 27.260852485341964,
+        "rms": 177.96541023481024,
+        "signed_mean": 0.10745488929126472,
+        "abs_median": 0.010162353515625,
+        "abs_p95": 105.31219749450682,
+        "abs_mean_smooth": 0.015060696359581821,
+        "abs_mean_interface": 161.48432659475162,
+        "interface_fraction": 0.17450825489632796
+      }
+    },
+    "test": {
+      "shipped": {
+        "l1": 78.74001012618103,
+        "rms": 181.4518879413061,
+        "signed_mean": 56.803088307048796,
+        "abs_median": 56.72053146362305,
+        "abs_p95": 148.95330810546875,
+        "abs_mean_smooth": 56.71913290923905,
+        "abs_mean_interface": 209.07780624635123,
+        "interface_fraction": 0.16220048062248635
+      },
+      "consistent": {
+        "l1": 26.03351966933813,
+        "rms": 173.77075553065552,
+        "signed_mean": 0.08462469169858781,
+        "abs_median": 0.010162353515625,
+        "abs_p95": 98.09916152954072,
+        "abs_mean_smooth": 0.014657083972199886,
+        "abs_mean_interface": 165.91326244980485,
+        "interface_fraction": 0.16220048062248635
+      }
+    }
+  },
+  "discrete_operators_physical_units": {
+    "note": "residual of -div(k grad u) = 1, spacing 1/241, float64 arithmetic on the float32 data",
+    "Kcoeff": {
+      "constant_k_fraction": 0.835357323089125,
+      "expanded_central": {
+        "abs_mean": 0.4679394692763604,
+        "abs_mean_constant_k": 0.00018692734219106976,
+        "abs_mean_varying_k": 2.8412033072409164,
+        "abs_median_varying_k": 0.7102456612889525
+      },
+      "conservative_arithmetic_mean": {
+        "abs_mean": 0.46816891917906545,
+        "abs_mean_constant_k": 0.00018692734219106976,
+        "abs_mean_varying_k": 2.8425969307352017,
+        "abs_median_varying_k": 0.7105653740191058
+      },
+      "conservative_harmonic_mean": {
+        "abs_mean": 0.467001946530714,
+        "abs_mean_constant_k": 0.00018692734219106976,
+        "abs_mean_varying_k": 2.8355090196890087,
+        "abs_median_varying_k": 0.71046545536206
+      }
+    },
+    "coeff": {
+      "constant_k_fraction": 0.9885220009697188,
+      "expanded_central": {
+        "abs_mean": 0.1265056089067069,
+        "abs_mean_constant_k": 0.029275149951092944,
+        "abs_mean_varying_k": 8.500303828303524,
+        "abs_median_varying_k": 6.4132865911815315
+      },
+      "conservative_arithmetic_mean": {
+        "abs_mean": 0.06149697361291663,
+        "abs_mean_constant_k": 0.029275149951092944,
+        "abs_mean_varying_k": 2.836543522845712,
+        "abs_median_varying_k": 1.8455395181081258
+      },
+      "conservative_harmonic_mean": {
+        "abs_mean": 0.12986397761399568,
+        "abs_mean_constant_k": 0.029275149951092944,
+        "abs_mean_varying_k": 8.792895655365783,
+        "abs_median_varying_k": 8.425555008463565
+      }
+    }
+  }
+}
