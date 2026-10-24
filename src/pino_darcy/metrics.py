@@ -21,7 +21,11 @@ def relative_l2(prediction: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
 
 
 def summarise(values: torch.Tensor) -> dict:
-    """Mean, sample standard deviation, median and maximum of a 1D tensor."""
+    """Mean, sample standard deviation, median and maximum of a 1D tensor.
+
+    The median is ``torch.median``: for an even count, the lower of the two middle values,
+    not their average. The stored results use this definition.
+    """
     values = values.double()
     return {
         "mean": values.mean().item(),
