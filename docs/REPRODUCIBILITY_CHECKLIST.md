@@ -29,7 +29,7 @@ State on 2026-10-24, audit of the repository at the commit that adds this file. 
 - [x] Every number in the README results tables traced to the result files.
 - [x] Checkpoints of the reduced study re-evaluated: test relative L2 reproduced (`results/audit/local_solver_residual.json`, `stored_rel_l2_mean` against `rel_l2_mean`).
 - [ ] Re-training a run and comparing histories (bitwise or to tolerance) on MPS.
-- [ ] More than one training seed (`docs/EXPERIMENT_GAPS.md`, G1).
+- [x] More than one training seed at weight 0.1: seeds 0, 1, 2 (`docs/EXPERIMENT_GAPS.md`, G1; `docs/SCIENTIFIC_AUDIT.md`, F14). Other weights: one seed.
 - [ ] The 50-epoch study (`configs/full.yaml`, G2).
 
 ## Provenance of the audit files

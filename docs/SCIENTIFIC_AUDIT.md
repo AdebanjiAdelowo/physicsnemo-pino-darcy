@@ -9,7 +9,7 @@ Classification:
 - **UNVERIFIED**: not checked, or not checkable with what exists.
 - **INCORRECT**: contradicted by the evidence.
 
-Everything measured in this audit is CPU or Apple MPS inference and NumPy/SciPy computation. No model was trained.
+Everything measured in the original audit is CPU or Apple MPS inference and NumPy/SciPy computation; no model was trained for it. The addendum F14 (same date) adds six training runs, G1 of `EXPERIMENT_GAPS.md`, and updates F6 to F9 where they bear on seeds; the seed-0 findings are kept as they were.
 
 ## Summary
 
@@ -22,14 +22,15 @@ The implementation reproduces the upstream example faithfully, the tracked numbe
 | F3 | What the reference pressure solves | VERIFIED (new) |
 | F4 | The `consistent` residual is consistent with the data | SUPPORTED BUT LIMITED: only away from jumps |
 | F5 | The cell-grid residual is a valid diagnostic near jumps | INCORRECT as a measure of PDE violation there; the README already warns about this |
-| F6 | `consistent`, weight 0.1, is as accurate as data-only (0.0475 against 0.0480) | VERIFIED as "no detectable difference"; any improvement UNVERIFIED |
-| F7 | `shipped` raises the error from weight 0.01 upwards | SUPPORTED BUT LIMITED (one seed) |
-| F8 | Physics weighting lowers the PDE residual | VERIFIED for this seed, also under the exact residual (new) |
-| F9 | Lower residual is not closer agreement with the reference | VERIFIED; region-resolved error added (new) |
+| F6 | `consistent`, weight 0.1, is as accurate as data-only (0.0475 against 0.0480) | VERIFIED as "no detectable difference", now over three seeds (F14); any improvement UNVERIFIED |
+| F7 | `shipped` raises the error from weight 0.01 upwards | SUPPORTED BUT LIMITED: at 0.1 worse in 3 of 3 seeds, interval over seeds just includes zero (F14); other weights one seed |
+| F8 | Physics weighting lowers the PDE residual | VERIFIED at weight 0.1 for three seeds, under the training and the exact residual (F14); other weights one seed |
+| F9 | Lower residual is not closer agreement with the reference | VERIFIED; the higher error near jumps at weight 0.1 reproduces in 3 of 3 seeds (F14) |
 | F10 | Splits are disjoint, no leakage | VERIFIED |
 | F11 | Tracked summaries match the per-run records | VERIFIED, with one labelling issue (median) |
 | F12 | Implementation matches upstream | VERIFIED |
 | F13 | Smaller README statements | one INCORRECT figure (corrected), others VERIFIED |
+| F14 | Seed study at weight 0.1 (G1, addendum) | residual reduction REPRODUCED; no accuracy improvement; see section |
 
 ## F1. Forcing term
 
@@ -129,11 +130,15 @@ These intervals describe the variability over test samples for fixed trained mod
 
 **Verdict: VERIFIED** that the error is the same within the test-sample resolution; **UNVERIFIED** that it is lower. The README's wording is correct. A claim of improved accuracy from physics weighting is not supported. (At weight 0.001 the interval excludes zero, but a 0.3 % relative change on one seed is not evidence of an effect.)
 
+**Update after G1 (F14).** Over seeds 0, 1, 2 the paired difference at weight 0.1 is -0.00043, 95 % t interval over seeds [-0.0070, +0.0061], lower in two seeds and higher in one. The verdict stands: no detectable difference, improvement UNVERIFIED. The test-sample intervals of single seeds exclude zero in opposite directions for seeds 1 and 2, which confirms that they do not measure the effect of the setting.
+
 ## F7. The shipped residual degrades accuracy
 
 **Evidence.** Table of F6: from weight 0.01 the error rises with intervals excluding zero; at weight 1 every test sample is worse and the error doubles. The mechanism is algebraically clear: the shipped residual of the exact solution is 56.7 on every constant-permeability cell, so the PDE term and the data term have different minimisers; the signed mean residual of the shipped models moves to -7.8, -17.4, -31.2 (consistent definition) as the weight grows, against ±0.5 for the consistent models.
 
 **Verdict: SUPPORTED BUT LIMITED.** Established for seed 0 and 15 epochs. The size at weight 1 (+0.050 against a per-sample spread of 0.019) makes it very likely to survive more seeds; the 9 % at the upstream default 0.1 needs G1 and G2 of `EXPERIMENT_GAPS.md`.
+
+**Update after G1 (F14).** At weight 0.1 the error is higher than data-only in all three seeds (+0.0041, +0.0022, +0.0056; mean +0.0040, +8.1 %), with a 95 % t interval over seeds of [-0.0002, +0.0081], t-test p = 0.054. The direction is reproduced; with three seeds the size is not established at the 5 % level. The upstream budget (G2) remains open.
 
 ## F8. Physics weighting lowers the residual (exact residual, new)
 
@@ -156,6 +161,8 @@ The recomputed test errors equal the stored ones to 1.0e-07 relative.
 
 **Verdict: VERIFIED for seed 0.** The residual reduction reported with the cell-grid residual also appears under the exact operator, for both definitions, so it is not an artefact of the stencil. For `consistent` it decreases monotonically with the weight; for `shipped` it rises again from weight 0.1 (0.896) to 1 (1.005), as expected from a loss that targets the wrong forcing. All models remain three to four orders of magnitude above the reference, most of all at interface nodes, where even the best model is about 16,000 times above it.
 
+**Update after G1 (F14).** At weight 0.1 the reduction reproduces in every seed for both definitions and both residuals.
+
 ## F9. Residual against accuracy, by region (new)
 
 Relative L2 error restricted to cells with locally constant `Kcoeff` and to the others (border of 2 excluded), same file:
@@ -173,6 +180,8 @@ Relative L2 error restricted to cells with locally constant `Kcoeff` and to the 
 | `consistent` 1 | 0.0491 | 0.0646 | 0.0537 |
 
 At `consistent` weight 0.1, the error falls on constant-permeability cells and rises near jumps; the overall error is unchanged. This is consistent with the README's reading (smoothing near jumps) and with F4: near jumps the PDE term enforces an operator and a coefficient that the data do not satisfy. **VERIFIED** as a measurement for one seed; the attribution to F4 is **SUPPORTED BUT LIMITED** (G3 and G4 would test it).
+
+**Update after G1 (F14).** The higher error near jumps at `consistent` 0.1 reproduces in all three seeds (+0.0022, +0.0020, +0.0038; interval [+0.0003, +0.0051]). The lower error on constant-permeability cells does not: -0.0011, -0.0044, +0.0017 (interval [-0.0088, +0.0063]).
 
 ## F10. Data splitting and leakage
 
@@ -207,9 +216,42 @@ Architecture, scaling, crop, splits, PDE class, finite-difference module, border
 | Validation error still falling at epoch 15 | minimum at the last epoch in 8 of 9 runs (`shipped` 1: epoch 14) | VERIFIED |
 | 67 minutes of training, 171 to 238 ms per step | 66.7 min, 171 to 238 ms | VERIFIED |
 
+## F14. Seed study at weight 0.1 (addendum, G1)
+
+**Design.** G1 exactly as specified in `EXPERIMENT_GAPS.md`: data-only, `shipped` 0.1 and `consistent` 0.1 trained with seeds 1 and 2, compared with the seed-0 runs of the reduced study. Command:
+
+```bash
+python scripts/train.py --config local name=local_seeds "study.seeds=[1,2]" "study.residuals=[shipped,consistent]" "study.physics_weights=[0,0.1]" evaluation.plot_samples=3
+```
+
+`evaluation.plot_samples=3` only selects how many test samples are stored in `fields.npz`; it is the value the seed-0 study had at training time. An earlier attempt with the same configuration at 15:07 UTC stopped before its first run finished and wrote no run records; its directory is kept as `runs/local_seeds_aborted_20261024T150752Z/` (untracked) and was not used.
+
+**Provenance.** Trained at commit `4c18b90` (clean tree) on Apple M3 Pro, 18 GB, macOS 26.6.2, PyTorch 2.14.1, PhysicsNeMo commit `b45a5c8`, FNO on MPS and residual on CPU, as for seed 0 (commit `d1bd2ca`, which differs from `4c18b90` in plotting, stored evaluation fields, the reference solver and the lock; `engine.py`, `physics.py`, `model.py`, `data.py` and the training settings are unchanged). `results/local_seeds/run_manifest.json` lists for all nine runs the hash of the training settings (identical: `cc5a3158...`; excluded only `name`, `output_dir`, `study`, `evaluation` and the unused top-level `physics_weight`), a per-run configuration hash, dataset file hashes (identical), and SHA-256 of both checkpoint files. The training took 1063.5 s for the six runs (148 to 203 s each, 64 to 90 ms per step); evaluation of the summaries and of the exact residual added about 3 minutes. The stored test errors are recomputed from the checkpoints by `scripts/evaluate_solver_residual.py` to better than 1e-5 relative.
+
+**Method.** `scripts/seed_study.py`. For each seed, the model is compared with the data-only model of the same seed on the same 256 test samples. Errors: paired differences; residuals: log ratios. Mean over seeds with a Student-t 95 % interval (2 degrees of freedom), t-test p-value and exact sign test (smallest attainable two-sided p with three seeds: 0.25). Per seed, a test-sample bootstrap (10,000 resamples) of the error difference, as in F6. No correction for multiple comparisons; the primary comparison is the overall relative L2 error of `consistent` 0.1 against data-only.
+
+**Results** (per-seed values in the README and `results/audit/seed_study.json`).
+
+| Model minus data-only | Overall error | Constant-`Kcoeff` cells | Near jumps | Exact residual (ratio) | Exact residual, interface nodes | Training residual (ratio) |
+|---|---|---|---|---|---|---|
+| `shipped` 0.1 | +0.0040 [-0.0002, +0.0081], p = 0.054 | +0.0022 [-0.0022, +0.0066] | +0.0042 [+0.0022, +0.0062] | 0.30 [0.10, 0.92] | 0.69 [0.56, 0.84] | 0.23 [0.06, 0.85] |
+| `consistent` 0.1 | -0.0004 [-0.0070, +0.0061], p = 0.80 | -0.0013 [-0.0088, +0.0063] | +0.0027 [+0.0003, +0.0051] | 0.19 [0.06, 0.62] | 0.66 [0.54, 0.82] | 0.11 [0.03, 0.41] |
+
+Seed spread (mean ± standard deviation over seeds): overall error 0.0489 ± 0.0013 (data-only), 0.0529 ± 0.0009 (`shipped`), 0.0485 ± 0.0018 (`consistent`); exact residual 3.22 ± 1.49, 0.894 ± 0.004, 0.584 ± 0.017. Per-seed test-sample bootstrap of `consistent` minus data-only: seed 0 -0.0005 [-0.0013, +0.0004], seed 1 -0.0031 [-0.0041, -0.0020], seed 2 +0.0022 [+0.0013, +0.0032].
+
+**Interpretation.**
+
+1. *Residual.* The reduction is reproducible in direction for both definitions, under the smoothed-coefficient training residual and under the exact operator: every seed, both settings. Its size is not a property of the physics term alone: the weighted models land at nearly the same exact residual in every seed, while the data-only residual varies by a factor of 2.5, so the ratio is set mostly by how rough the data-only model happens to be. At interface nodes the exact residual falls by only a third, which is consistent with F4 (the training residual enforces a coefficient and an operator that the data do not satisfy at jumps). The ratio intervals exclude 1 but are wide; with three seeds they rest on a t distribution with 2 degrees of freedom.
+2. *Accuracy, `consistent`.* No effect detected. The mean change (-0.9 %) is smaller than the seed-to-seed standard deviation of the data-only error (2.7 %), the sign differs between seeds, and the interval covers -14 % to +13 % of the error. A practically relevant improvement or degradation of that size cannot be excluded with three seeds; an improvement is not supported. The reduced residual does not imply a reduced error.
+3. *Accuracy, `shipped`.* Worse in every seed and by more than the data-only seed spread in two of three (+8 % on average). Statistically borderline at n = 3 (p = 0.054; the sign test cannot reach significance with three seeds). This agrees in direction with F7 and with the algebraic mechanism there.
+4. *Regions.* Near jumps both weighted settings are worse in every seed with intervals excluding zero (nominal p = 0.04 and 0.01, uncorrected for the number of comparisons). Away from jumps no consistent effect. The seed-0 picture of F9 (better away from jumps, worse near them, unchanged overall) is half reproduced: the degradation near jumps is, the improvement away from them is not.
+5. *Single-seed evidence.* The test-sample intervals of seeds 1 and 2 each exclude zero, in opposite directions. Any accuracy conclusion from one seed with test-sample intervals, including the weight-0.001 interval of F6, should be read as a property of one trained pair, not of the setting.
+
+**Verdict.** Residual reduction at weight 0.1: **VERIFIED** over three seeds (direction; size depends on the data-only seed). Accuracy improvement from `consistent` weighting: **UNVERIFIED**, no detectable effect. Accuracy degradation from `shipped` at 0.1: **SUPPORTED BUT LIMITED**, consistent direction, interval just includes zero. All at 15 epochs; G2 is open.
+
 ## Software checks
 
-- `python -m pytest -q`: 48 passed (41 existing, 7 new), offline and on CPU.
+- `python -m pytest -q`: 48 passed (41 existing, 7 new), offline and on CPU. After the addendum: 59 passed (accelerator lock, paired statistics, and the agreement of `results/audit/seed_study.json` with the per-run records).
 - `ruff check --select E,F,W`: clean. `--select B` adds nine `B905` (`zip` without `strict=`), stylistic only.
 - No implementation error that changes a tracked number was found.
 
@@ -221,6 +263,7 @@ Architecture, scaling, crop, splits, PDE class, finite-difference module, border
 - `requirements.lock`: exact environment.
 - README: the corrected ratio (F13), the coefficient finding (F3, F4), test count, links to these documents.
 - Not changed: `results/local/`, `results/data_check.json`, `figures/`, training and evaluation code.
+- Addendum (F14): `src/pino_darcy/gpulock.py` and its use in `scripts/train.py`, `scripts/evaluate.py`, `scripts/evaluate_solver_residual.py` (a machine-wide accelerator lock; no change to training or evaluation); `metrics.paired_seed_interval`, `metrics.paired_bootstrap`; `scripts/seed_study.py`; new results `results/local_seeds/`, `results/audit/local_seeds_solver_residual.json`, `results/audit/seed_study.json`, `figures/seed_study.png`; tests `tests/test_gpulock.py`, `tests/test_seed_study.py`. Existing results and figures unchanged.
 
 ## Claims the evidence supports
 
@@ -229,10 +272,11 @@ Safe to state, with the qualifiers given:
 1. The upstream PINO Darcy example at commit `b45a5c8` uses a forcing constant that is the reciprocal of the value implied by its own normalisation (0.0175 instead of 57.2), and a grid spacing of 1/240 where the stored fields have 1/241. Both are verified from the data and from the original solver.
 2. The reference pressure of `Darcy_241` is reproduced to float32 rounding by the original FNO solver applied to the two-valued coefficient; the smoothed field used as model input and in the residual is not the coefficient of that equation.
 3. In a reduced, single-seed study (15 epochs), training with the shipped residual increased the test error at weights of 0.01 and above (doubling it at weight 1), while the corrected residual reduced the PDE residual by about an order of magnitude at weight 0.1 with no detectable change in test error.
-4. A lower finite-difference residual did not imply closer agreement with the reference; near permeability jumps the corrected residual traded accuracy for residual.
+4. At weight 0.1 and 15 epochs, over three training seeds: both residual definitions lower the PDE residual in every seed, under the training residual and under the exact operator of the data generator; the corrected residual has no detectable effect on the test error (-0.0004, 95 % interval over seeds -0.0070 to +0.0061); the shipped residual raised the error in every seed (+8 % on average, interval just including zero).
+5. A lower finite-difference residual did not imply closer agreement with the reference; near permeability jumps the weighted models had a higher error in every seed.
 
-Not supported: that physics weighting improves accuracy; that any result holds at the upstream budget or across seeds; that the corrected residual is exact at jumps; any statement about the DeepONet variant or about data-scarce regimes.
+Not supported: that physics weighting improves accuracy; that any result holds at the upstream budget, or across seeds at weights other than 0.1; that the corrected residual is exact at jumps; any statement about the DeepONet variant or about data-scarce regimes.
 
 ## Recommendation
 
-The project is scientifically defensible as a careful reproduction-and-diagnosis study of one upstream example, and its tracked results are reproducible from its records. It is not yet evidence for a performance claim. Before any accuracy statement, run G1 (seeds, about 45 minutes locally); for a stronger contribution, implement G3 and G4, which test the coefficient and operator mismatch identified here.
+The project is scientifically defensible as a careful reproduction-and-diagnosis study of one upstream example, and its tracked results are reproducible from its records. It is not evidence for a performance claim. G1 has been run (F14): the residual finding is reproducible over seeds, an accuracy gain is not supported, and three seeds leave intervals of about ±14 % on the error. Next, in order: more seeds at weight 0.1 if a sharper accuracy statement is wanted (about 3 minutes per run locally under light load), G2 for the upstream budget, and G3 and G4, which test the coefficient and operator mismatch identified here and the jump-region degradation that F14 reproduces.

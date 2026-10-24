@@ -14,7 +14,8 @@ The question:
 - In the reduced local study (15 epochs, one seed), the residual as shipped lowers its own residual and raises the prediction error at every weight from 0.01 upwards: relative $L^2$ error 0.052 at the upstream default weight 0.1 and 0.098 at weight 1, against 0.048 for the data-only model.
 - The data-consistent residual lowers the residual by a factor of 9 at weight 0.1 with similar prediction error (0.0475 against 0.0480). At weight 1 the error rises to 0.054.
 - A lower mean residual is not the same as agreement with the reference. With the data-consistent residual at weights 0.1 and 1, the trained models have a smaller mean residual than the reference solutions of the dataset, with the largest residual reductions near permeability changes.
-- The study at the upstream training budget (50 epochs, three seeds, CUDA) has not been run. The conclusions above rest on one seed.
+- Over three training seeds (0, 1, 2) at weight 0.1, the residual reduction reproduces in every seed, under the training residual and under the exact discrete operator that generated the data. The shipped residual raised the error in all three seeds (mean +0.0040, or +8 %; 95 % interval over seeds -0.0002 to +0.0081). The data-consistent residual did not change the error detectably (mean -0.0004; interval -0.0070 to +0.0061; lower in two seeds, higher in one). A lower residual did not translate into a lower error.
+- The study at the upstream training budget (50 epochs, CUDA) has not been run. All results use 15 epochs.
 
 ## Problem
 
@@ -116,7 +117,7 @@ Architecture, data, batch size, optimiser (Adam, learning rate $10^{-3}$, expone
 
 ## Results
 
-The reported experiment uses 15 epochs and one seed on an Apple M3 Pro. The 50-epoch, three-seed CUDA experiment is provided as a reproducible configuration; no results from that configuration are available. Experiment records and execution details are described in [`results/README.md`](results/README.md).
+The reported experiments use 15 epochs on an Apple M3 Pro: the weight sweep with one seed, and a seed study of three settings with three seeds. The 50-epoch, three-seed CUDA experiment is provided as a reproducible configuration; no results from that configuration are available. Experiment records and execution details are described in [`results/README.md`](results/README.md).
 
 ### Reduced study
 
@@ -134,13 +135,13 @@ Test set of 256 samples, one seed, 15 epochs (1530 optimiser steps). Residuals a
 | `consistent` | 0.1 | 0.0475 | 0.0070 | 56.2 | 16.1 |
 | `consistent` | 1 | 0.0537 | 0.0125 | 55.1 | 8.3 |
 
-The per-sample test error has a standard deviation of about 0.019, corresponding to a standard error of the mean near 0.0012 for an individual model. All models share the same test samples, so this individual-model uncertainty does not establish the significance of differences between models. With one training seed, variation across training runs is unknown; the difference between 0.0480 and 0.0475 is not evidence of a reproducible accuracy gain.
+The per-sample test error has a standard deviation of about 0.019, corresponding to a standard error of the mean near 0.0012 for an individual model. All models share the same test samples, so this individual-model uncertainty does not establish the significance of differences between models. Variation across training runs is measured in the seed study below; it is larger than the difference between 0.0480 and 0.0475.
 
 ![Error, data loss and residuals against the physics weight](figures/local_weight_sweep.png)
 
 ![Prediction error against PDE residual](figures/local_tradeoff.png)
 
-**Prediction error.** With the residual as shipped, the error is unchanged at weight 0.001 and grows with the weight: by 9 % at the upstream default 0.1 and by a factor of 2.0 at weight 1. With the data-consistent residual the error stays at the data-only level up to weight 0.1 and is 12 % higher at weight 1. The small accuracy differences at weak and moderate weights require additional training seeds before an accuracy improvement can be established.
+**Prediction error.** With the residual as shipped, the error is unchanged at weight 0.001 and grows with the weight: by 9 % at the upstream default 0.1 and by a factor of 2.0 at weight 1. With the data-consistent residual the error stays at the data-only level up to weight 0.1 and is 12 % higher at weight 1. At weight 0.1 the seed study below tests whether these differences reproduce.
 
 **PDE residual.** Every physics-weighted model has a lower residual than the data-only model under both definitions, and the residual a model was trained with decreases monotonically with its weight. The data-only model has a residual of 147.5 under the data-consistent definition, 5.7 times that of the reference solutions: fitting the pressure to 4.8 % does not give a small residual, because second differences amplify small oscillations of the prediction.
 
@@ -165,9 +166,44 @@ Where the permeability is constant, the residual of the trained models is severa
 
 *The validation error is still decreasing at epoch 15 for every weight, so the reduced study compares models that are not converged.*
 
+### Seed study at weight 0.1
+
+The data-only model and both residual definitions at weight 0.1, trained with seeds 1 and 2 in addition to seed 0 (G1 of [`docs/EXPERIMENT_GAPS.md`](docs/EXPERIMENT_GAPS.md)). Everything else is identical: configuration, data split, 15 epochs, optimiser and schedule; the training settings of all nine runs have the same hash (`results/local_seeds/run_manifest.json`). The seed sets the initial weights and the sample order. Analysis: `scripts/seed_study.py`, output in `results/audit/seed_study.json`.
+
+Two residuals are reported. The **training residual** is the cell-grid residual of the loss (data-consistent definition, smoothed `Kcoeff`, normalised units). The **exact residual** is that of the discrete problem the reference pressure solves (two-valued `coeff`, node grid, physical units; the reference scores 0.0004, see [`docs/SCIENTIFIC_AUDIT.md`](docs/SCIENTIFIC_AUDIT.md), F3).
+
+| Setting | Seed | Relative $L^2$ error | Error, constant-permeability cells | Error, near jumps | Exact residual | Training residual |
+|---|---|---|---|---|---|---|
+| data only | 0 | 0.0480 | 0.0434 | 0.0623 | 2.84 | 147.5 |
+| data only | 1 | 0.0504 | 0.0459 | 0.0641 | 4.87 | 282.7 |
+| data only | 2 | 0.0483 | 0.0439 | 0.0622 | 1.96 | 97.4 |
+| `shipped` 0.1 | 0 | 0.0521 | 0.0459 | 0.0660 | 0.896 | 35.6 |
+| `shipped` 0.1 | 1 | 0.0527 | 0.0462 | 0.0679 | 0.896 | 36.5 |
+| `shipped` 0.1 | 2 | 0.0539 | 0.0477 | 0.0674 | 0.890 | 36.1 |
+| `consistent` 0.1 | 0 | 0.0475 | 0.0423 | 0.0645 | 0.565 | 16.1 |
+| `consistent` 0.1 | 1 | 0.0474 | 0.0416 | 0.0661 | 0.587 | 18.3 |
+| `consistent` 0.1 | 2 | 0.0506 | 0.0456 | 0.0660 | 0.599 | 18.2 |
+
+Paired by seed against the data-only model of the same seed. Mean over the three seeds with a 95 % Student-t interval over seeds (2 degrees of freedom); residuals as geometric-mean ratios.
+
+| Comparison | Error difference | Constant-permeability cells | Near jumps | Exact residual ratio | Training residual ratio |
+|---|---|---|---|---|---|
+| `shipped` 0.1 | +0.0040 [-0.0002, +0.0081], 3 of 3 seeds worse | +0.0022 [-0.0022, +0.0066] | +0.0042 [+0.0022, +0.0062] | 0.30 [0.10, 0.92] | 0.23 [0.06, 0.85] |
+| `consistent` 0.1 | -0.0004 [-0.0070, +0.0061], 2 of 3 seeds better | -0.0013 [-0.0088, +0.0063] | +0.0027 [+0.0003, +0.0051] | 0.19 [0.06, 0.62] | 0.11 [0.03, 0.41] |
+
+![Seed study: error and exact residual per seed, paired error differences](figures/seed_study.png)
+
+**Residual.** Both physics-weighted settings lower the residual in every seed, under both residuals. Their exact residual barely depends on the seed (0.894 ± 0.004 for `shipped`, 0.584 ± 0.017 for `consistent`, mean ± standard deviation over seeds), whereas that of the data-only model varies by a factor of 2.5 (1.96 to 4.87). The reduction factor therefore depends mostly on the data-only seed. Near jumps of `coeff` the exact residual falls only to 0.66 to 0.69 of the data-only value.
+
+**Error.** The data-only error varies between seeds with a standard deviation of 0.0013 (2.7 %). The data-consistent residual changes the error by -0.0004 on average (-0.9 %), smaller than that spread, with an interval from -14 % to +13 % of the data-only error; its sign differs between seeds. The shipped residual raises the error in every seed, by 0.0022 to 0.0056 (+8 % on average); with three seeds the interval just includes zero (t-test p = 0.054, and an exact sign test cannot fall below 0.25). Near permeability jumps both weighted settings raise the error in every seed (+0.0027 for `consistent`, +0.0042 for `shipped`, intervals excluding zero); away from jumps the data-consistent residual lowers it in two seeds and raises it in one.
+
+**Single-seed intervals mislead.** The per-seed bootstrap over test samples of the `consistent` minus data-only difference excludes zero in opposite directions for seed 1 (-0.0031 [-0.0041, -0.0020]) and seed 2 (+0.0022 [+0.0013, +0.0032]). Intervals over test samples describe one pair of trained models and do not measure the effect of the training setting.
+
 ### Compute
 
 Apple M3 Pro, PyTorch 2.14.1, PhysicsNeMo 2.3.0a0, Warp 1.18.0. The FNO ran on MPS and the residual on CPU (see the adaptations below). The nine runs took 358 to 477 s each, 67 minutes of training in total, at 171 to 238 ms per optimiser step. Other jobs were running on the machine, so these times, and the inference times in the result files, are indicative only and are not compared between settings.
+
+The six additional runs of the seed study took 148 to 203 s each, 17.7 minutes of training in total (19.5 minutes including evaluation), at 64 to 90 ms per optimiser step, under the same software versions. The machine was less loaded than during the weight sweep, so the times of the two studies are not comparable.
 
 ## What NVIDIA provides and what this repository adds
 
@@ -240,11 +276,18 @@ pip install -r requirements.txt
 python scripts/prepare_data.py        # downloads Darcy_241.zip (0.8 GB), writes the three splits
 python scripts/verify_data.py         # results/data_check.json, figures/data_check.png
 python scripts/verify_reference.py    # results/audit/reference_check.json
-python -m pytest -q                   # 48 tests, no training run needed
+python -m pytest -q                   # 59 tests, no training run needed
 python scripts/train.py --config smoke device=cpu
 python scripts/train.py --config local            # reduced study, trains and evaluates
 python scripts/plot_results.py --study runs/local --out runs/local/figures
+python scripts/train.py --config local name=local_seeds "study.seeds=[1,2]" "study.residuals=[shipped,consistent]" "study.physics_weights=[0,0.1]" evaluation.plot_samples=3
+python scripts/evaluate_solver_residual.py --config local          # needs runs/local
+python scripts/evaluate_solver_residual.py --config local name=local_seeds "study.seeds=[1,2]" "study.residuals=[shipped,consistent]" "study.physics_weights=[0,0.1]"
+python scripts/results.py publish runs/local_seeds
+python scripts/seed_study.py          # results/audit/seed_study.json, figures/seed_study.png
 ```
+
+Training and evaluation on MPS or CUDA hold an exclusive lock on `~/.cache/physicsnemo/gpu.lock` (or the path in `PHYSICSNEMO_GPU_LOCK`) from before the device is used until the work is done, so that jobs of different projects on one machine do not share the accelerator. A job that finds the lock taken waits. The operating system releases the lock when the process exits, including after a failure.
 
 If the automatic download fails, place `Darcy_241.zip` from the [FNO data folder](https://drive.google.com/drive/folders/1UnbQh2WWc6knEHbLn-ZaXrKUZhp7pjt-) in `datasets/`. Its SHA-256 is recorded in `results/data_check.json`.
 
@@ -268,11 +311,11 @@ python scripts/plot_results.py --study results/full --out figures
 
 ## Tests
 
-`python -m pytest -q` runs 48 tests in about 25 seconds: the upstream part of `official.yaml` against its checksum, the equality of the training settings of `full` and `official`, split construction and normalisation on a synthetic file, the residual against an analytic solution, the two forcing constants, rejection of batches larger than one, the equality of the loss with the upstream expression, separate data and PDE columns in the history, checkpoint round trips, figure generation, static checks of the launcher, and the re-implemented data-generation solver and its residual on synthetic fields.
+`python -m pytest -q` runs 59 tests in about 25 seconds: the upstream part of `official.yaml` against its checksum, the equality of the training settings of `full` and `official`, split construction and normalisation on a synthetic file, the residual against an analytic solution, the two forcing constants, rejection of batches larger than one, the equality of the loss with the upstream expression, separate data and PDE columns in the history, checkpoint round trips, figure generation, static checks of the launcher, the re-implemented data-generation solver and its residual on synthetic fields, the accelerator lock across processes, the paired statistics, and the agreement of the tracked seed study with its per-run records.
 
 ## Limitations
 
-- The reported study is reduced: 15 of 50 epochs, one seed, models not converged. Whether the ordering of the settings holds at the upstream budget and across seeds is not established.
+- The reported studies are reduced: 15 of 50 epochs, models not converged. The weight sweep uses one seed; three seeds were trained only at weight 0.1. Three seeds give wide intervals: an accuracy change of the data-consistent residual between -14 % and +13 % cannot be excluded. Whether the results hold at the upstream budget is not established.
 - Only the FNO variant with finite differences is studied. The DeepONet variant with automatic differentiation is not.
 - The finite-difference residual of the reference solutions is large near permeability changes under every discretisation tested, so the mean residual is not a measure of distance to the reference, and a model can score below the reference by smoothing.
 - The residual is evaluated in single precision. Second differences on this grid carry rounding noise of order 0.01 in normalised units, which is the level of the reference residual in cells with constant permeability.
@@ -282,7 +325,7 @@ python scripts/plot_results.py --study results/full --out figures
 
 ## Possible extensions
 
-- The 50-epoch, three-seed study on CUDA, including the upstream default configuration.
+- The 50-epoch, three-seed study on CUDA, including the upstream default configuration, and more seeds at the reduced budget to narrow the intervals of the seed study.
 - A residual in conservative (flux) form, or one restricted to cells with constant permeability, to separate the forcing mismatch from the interface behaviour.
 - The DeepONet variant of the example with automatic differentiation.
 - Physics weighting as a function of the number of training samples, and a residual evaluated on unlabelled permeability fields.

@@ -22,6 +22,9 @@ Run names: `dataonly_seed<S>` for weight 0, otherwise `<residual>_w<weight>_seed
 | `full` | `configs/full.yaml`: 50 epochs, 3 seeds, CUDA | NOT RUN |
 | `audit/reference_check.json` | `scripts/verify_reference.py`: the reference pressure regenerated with the original solver, and its residual under that solver's operator, 460 samples, CPU | VERIFIED |
 | `audit/local_solver_residual.json` | `scripts/evaluate_solver_residual.py --config local`: the checkpoints of `local` under that operator, and the test error by region; inference only | LOCAL/REDUCED |
+| `local_seeds` | `configs/local.yaml` with seeds 1 and 2, weights 0 and 0.1, both residuals (6 runs), Apple MPS; `run_manifest.json` adds configuration, dataset and checkpoint hashes for these and the matching seed-0 runs | LOCAL/REDUCED |
+| `audit/local_seeds_solver_residual.json` | as `local_solver_residual.json`, for `local_seeds` | LOCAL/REDUCED |
+| `audit/seed_study.json` | `scripts/seed_study.py`: seeds 0 to 2 at weight 0.1, per-seed metrics, paired differences with intervals over seeds, seed spread | LOCAL/REDUCED |
 
 Units: all losses and residuals are in the normalised variables $k' = k / 4.49996$ and $u' = u / 3.88433 \times 10^{-3}$. `*_pde_l1_*` is the mean absolute residual over all 240 × 240 cells with the two outer rows and columns set to zero, which is the quantity in the training loss; the other residual statistics are taken over the interior cells. `test_rel_l2_*` are relative $L^2$ errors as fractions. Times are wall-clock with the device synchronised. Memory fields are CUDA peak allocations and are empty on other devices.
 

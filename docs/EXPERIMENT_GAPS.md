@@ -1,10 +1,10 @@
 # Experiment gaps
 
-Experiments and controls that the current evidence does not cover, in order of scientific value per unit of compute. None of them has been run. Every command below is exact and runs from the repository root with the project environment (`.venv`, `requirements.lock`). Runtime estimates are projections from the measured cost of the reduced study on an Apple M3 Pro (171 ms per optimiser step without the PDE term, 217 to 238 ms with it; 102 steps per epoch) and are not measurements.
+Experiments and controls that the current evidence does not cover, in order of scientific value per unit of compute. G1 has been run (2026-10-24); the others have not. Every command below is exact and runs from the repository root with the project environment (`.venv`, `requirements.lock`). Runtime estimates are projections from the measured cost of the reduced study on an Apple M3 Pro (171 ms per optimiser step without the PDE term, 217 to 238 ms with it; 102 steps per epoch) and are not measurements.
 
 | ID | Gap | Why it matters | Cost | Status |
 |---|---|---|---|---|
-| G1 | Training seeds | All conclusions rest on seed 0. The accuracy differences between data-only and `consistent` at weights up to 0.1 (at most 0.0005) are far below any plausible seed-to-seed spread, which is unmeasured. | 6 runs, about 45 min MPS | PENDING |
+| G1 | Training seeds | All conclusions rested on seed 0. The accuracy differences between data-only and `consistent` at weights up to 0.1 (at most 0.0005) were below the unmeasured seed-to-seed spread. | 6 runs; measured 17.7 min training on MPS | DONE: `SCIENTIFIC_AUDIT.md` F14 |
 | G2 | Upstream training budget | Validation error is still falling at epoch 15 in 8 of 9 runs. Rankings of non-converged models may change. | 27 runs of 5100 steps; about 8.4 h MPS (too long locally); CUDA time unknown, projected by the notebook from a one-epoch probe before anything starts | PENDING (CUDA) |
 | G3 | Residual coefficient `coeff` instead of `Kcoeff` | The residual uses the smoothed model input, not the coefficient the data were generated with (audit F4). The bias it introduces (1.7 % mean relative L2 between the two solutions) is of the order of the effects being measured. | 4 runs, about 30 min MPS, after a code change | NOT IMPLEMENTED |
 | G4 | Training with the solver-consistent residual | `pino_darcy.reference.solver_residual` is zero for the reference everywhere, including at jumps. Training with it would separate "physics helps" from "the discrete operator is wrong at jumps". Needs a differentiable torch port and a treatment of the cropped edge (extension plus margin, validated in `results/audit/reference_check.json`). | implementation plus about 8 runs | NOT IMPLEMENTED |
@@ -12,13 +12,28 @@ Experiments and controls that the current evidence does not cover, in order of s
 | G6 | Training-set size | Physics weighting at 102 samples only. A sweep over 25, 50, 102 samples would show whether the effect depends on data scarcity. | 3 sizes x 3 settings x 3 seeds | NOT DESIGNED |
 | G7 | DeepONet variant with automatic differentiation | Out of scope; listed for completeness. | not estimated | OUT OF SCOPE |
 
-## G1: training seeds (recommended next step, local)
+## G1: training seeds (done)
 
 ```bash
 python scripts/train.py --config local name=local_seeds "study.seeds=[1,2]" "study.residuals=[shipped,consistent]" "study.physics_weights=[0,0.1]"
 ```
 
 Six runs (data-only, `shipped` 0.1, `consistent` 0.1 for seeds 1 and 2), written to `runs/local_seeds/`. Before starting: check `memory_pressure` and that no other training job is running on the machine (the reduced study shared the machine and its timings vary for that reason). Expected scientific value: the first estimate of seed-to-seed spread, which decides whether the 0.0480 against 0.0475 difference, and the 9 % degradation of `shipped` at the upstream default, are reproducible. To compare with seed 0, run `python scripts/evaluate_solver_residual.py --config local name=local_seeds "study.seeds=[1,2]" "study.residuals=[shipped,consistent]" "study.physics_weights=[0,0.1]"` as well.
+
+**Executed 2026-10-24** at commit `4c18b90`, with `evaluation.plot_samples=3` added (evaluation output only; the seed-0 value). Records in `results/local_seeds/` (published with `scripts/results.py publish runs/local_seeds`), analysis by `scripts/seed_study.py` in `results/audit/seed_study.json` and `figures/seed_study.png`. Outcome over seeds 0, 1, 2:
+
+- Seed-to-seed standard deviation of the data-only error: 0.0013 (2.7 %).
+- `consistent` 0.1 minus data-only: -0.0004, 95 % t interval over seeds [-0.0070, +0.0061]; lower in two seeds, higher in one. The 0.0480 against 0.0475 difference of seed 0 is not reproducible as an effect.
+- `shipped` 0.1 minus data-only: +0.0040 (+8 %), [-0.0002, +0.0081]; worse in all three seeds. The 9 % degradation reproduces in direction and approximate size; the interval just includes zero.
+- The residual reduction reproduces in every seed under both residuals; the error near jumps is higher in every seed for both weighted settings.
+
+Remaining gap: with three seeds an effect of `consistent` 0.1 between -14 % and +13 % cannot be excluded. Each further seed costs three runs of about 3 minutes each on an unloaded M3 Pro:
+
+```bash
+python scripts/train.py --config local name=local_seeds_more "study.seeds=[3,4,5,6,7]" "study.residuals=[shipped,consistent]" "study.physics_weights=[0,0.1]" evaluation.plot_samples=3
+```
+
+(not run; `scripts/seed_study.py` reads seeds 0 to 2 and would need its `SEEDS` and `STUDIES` extended).
 
 ## G2: upstream budget on CUDA
 
@@ -38,4 +53,5 @@ Peak memory is unmeasured on CUDA; the FNO at 240 x 240 with batch size 1 is sma
 - **Paired statistics.** The README reports the per-sample standard deviation; paired differences over the shared test samples are more informative and are given in the audit (F6). They still measure test-sample variability only.
 - **Region-resolved error.** The summary reports residuals by region but not the error by region. `results/audit/local_solver_residual.json` adds it for the reduced study.
 - **Tuning parity.** Learning rate and schedule are the upstream values for all weights. A physics weight that changes the loss scale by a factor of 2 to 3 (weight 1) may prefer a different learning rate; the comparison is at fixed hyperparameters, which should be stated as such.
+- **Seed variability at other weights.** Only weight 0.1 has more than one seed.
 - **Bitwise reproducibility on MPS.** Seeds are set, but MPS kernels are not guaranteed deterministic; re-running a run and comparing histories has not been done.
