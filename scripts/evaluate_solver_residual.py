@@ -28,6 +28,7 @@ from pino_darcy import engine
 from pino_darcy import physics as P
 from pino_darcy import reference as R
 from pino_darcy.config import load_config
+from pino_darcy.gpulock import gpu_lock
 from pino_darcy.model import build_fno
 from pino_darcy.provenance import collect_metadata, write_json
 
@@ -60,6 +61,11 @@ def main() -> None:
     parser.add_argument("overrides", nargs="*")
     args = parser.parse_args()
     cfg = load_config(args.config, args.overrides)
+    with gpu_lock(cfg.device):
+        evaluate(cfg)
+
+
+def evaluate(cfg) -> None:
     out_dir, device, sets = engine.prepare_study(cfg, ROOT, write_metadata=False, with_train=False)
     with h5py.File(ROOT / cfg.data.dir / "test.hdf5") as f:
         coeff = np.asarray(f["coeff"][:, 0], dtype=np.float64)

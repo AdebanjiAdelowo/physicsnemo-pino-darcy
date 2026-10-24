@@ -10,6 +10,7 @@ import argparse
 
 from _bootstrap import ROOT
 from pino_darcy.config import load_config
+from pino_darcy.gpulock import gpu_lock
 from pino_darcy.study import evaluate_study, train_study
 
 
@@ -22,9 +23,10 @@ def main() -> None:
     args = parser.parse_args()
 
     cfg = load_config(args.config, args.overrides)
-    out_dir = train_study(cfg, ROOT, resume=args.resume)
-    if not args.no_evaluate:  # evaluation loads the checkpoints written above
-        evaluate_study(cfg, ROOT)
+    with gpu_lock(cfg.device):  # held from before the device is first used until the last run is evaluated
+        out_dir = train_study(cfg, ROOT, resume=args.resume)
+        if not args.no_evaluate:  # evaluation loads the checkpoints written above
+            evaluate_study(cfg, ROOT)
     print(f"Study written to {out_dir}")
 
 

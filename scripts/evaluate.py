@@ -15,6 +15,7 @@ import argparse
 
 from _bootstrap import ROOT
 from pino_darcy.config import load_config
+from pino_darcy.gpulock import gpu_lock
 from pino_darcy.study import evaluate_study, verify_study
 
 
@@ -26,11 +27,12 @@ def main() -> None:
     parser.add_argument("overrides", nargs="*")
     args = parser.parse_args()
     cfg = load_config(args.config, args.overrides)
-    if args.verify:
-        worst = max(r["relative_difference"] for r in verify_study(cfg, ROOT))
-        print(f"largest relative difference of the test error: {worst:.2e} (tolerance {args.tolerance:g})")
-        raise SystemExit(0 if worst <= args.tolerance else 1)
-    summary = evaluate_study(cfg, ROOT)
+    with gpu_lock(cfg.device):
+        if args.verify:
+            worst = max(r["relative_difference"] for r in verify_study(cfg, ROOT))
+            print(f"largest relative difference of the test error: {worst:.2e} (tolerance {args.tolerance:g})")
+            raise SystemExit(0 if worst <= args.tolerance else 1)
+        summary = evaluate_study(cfg, ROOT)
     reference = summary["reference_residual"]["test"]
     print(f"reference solution: PDE L1 shipped {reference['shipped']['l1']:.3e}, consistent {reference['consistent']['l1']:.3e}")
     for e in summary["by_setting"]:
