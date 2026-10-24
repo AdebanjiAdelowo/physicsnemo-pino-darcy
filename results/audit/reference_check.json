@@ -1,0 +1,140 @@
+{
+  "environment": {
+    "timestamp_utc": "2026-10-24T11:59:19+00:00",
+    "git_commit": "6901c50228ad53bb07f1df7282057a2ff720a757",
+    "git_dirty": false,
+    "upstream": {
+      "repository": "https://github.com/NVIDIA/physicsnemo",
+      "commit": "b45a5c810c741e6b41f8515be24c51121f8fc21f",
+      "example": "examples/cfd/darcy_physics_informed"
+    },
+    "device": "cpu",
+    "gpu_name": null,
+    "cuda_version": null,
+    "python_version": "3.12.2",
+    "torch_version": "2.14.1",
+    "torch_threads": 5,
+    "physicsnemo": {
+      "version": "2.3.0a0",
+      "commit": "b45a5c810c741e6b41f8515be24c51121f8fc21f",
+      "url": "https://github.com/nvidia/physicsnemo"
+    },
+    "warp_version": "1.18.0",
+    "sympy_version": "1.14.0",
+    "numpy_version": "2.5.3",
+    "platform": "macOS-26.6.2-arm64-arm-64bit",
+    "processor": "arm"
+  },
+  "dataset": {
+    "source": "https://drive.google.com/uc?id=1ViDqN7nc_VCnMackiXv_d7CHZANAFKzV",
+    "archive": "Darcy_241.zip",
+    "archive_sha256": "2c2ad2b5d6238d62365aba5127d3e6dee365163ac4de884463fa5b677c06bf1a",
+    "mat_file": "piececonst_r241_N1024_smooth1.mat",
+    "mat_keys": {
+      "Kcoeff": [
+        1024,
+        241,
+        241
+      ],
+      "Kcoeff_x": [
+        1024,
+        241,
+        241
+      ],
+      "Kcoeff_y": [
+        1024,
+        241,
+        241
+      ],
+      "coeff": [
+        1024,
+        241,
+        241
+      ],
+      "sol": [
+        1024,
+        241,
+        241
+      ]
+    },
+    "splits": {
+      "train": [
+        0,
+        102
+      ],
+      "validation": [
+        102,
+        204
+      ],
+      "test": [
+        204,
+        460
+      ]
+    },
+    "files": {
+      "train.hdf5": "7617caa38eb4fb541f8a1afc5e99ae32feb43f9da22b68e346dd8fd2b3d1de46",
+      "validation.hdf5": "86546b8d735f390fdd40a06186f4ce92ea4c04b5ffe2e4f1553731da10743cab",
+      "test.hdf5": "f6c5240a0f6bba92cc016d3021ff819d734f517d54b49d78b3d81f572238112a"
+    }
+  },
+  "samples": 460,
+  "solver": "pino_darcy.reference: re-implementation of solve_gwf.m (FNO data generation); coefficient spline-interpolated from cell centres (i+1/2)/241 to nodes i/240, conservative five-point scheme with arithmetic face means, h = 1/240, p = 0 on boundary nodes, solution spline-interpolated back.",
+  "units": "physical: forcing f = 1; multiply by 1/(K_SCALE*U_SCALE) = 57.21 for the normalised units of the training residual",
+  "regeneration_from": {
+    "coeff": {
+      "rel_l2_mean": 2.4654122428470613e-08,
+      "rel_l2_max": 2.7401593932483595e-08,
+      "rel_l2_min": 2.2633360677615962e-08
+    },
+    "Kcoeff": {
+      "rel_l2_mean": 0.017124257471582693,
+      "rel_l2_max": 0.05089343777286425,
+      "rel_l2_min": 0.003735457886972885
+    }
+  },
+  "solver_residual_of_reference": {
+    "coeff": {
+      "abs_mean": 0.00028507556071647605,
+      "abs_max": 0.004542665450205652,
+      "abs_mean_interface_nodes": 0.00033279530479132205,
+      "abs_mean_other_nodes": 0.00028355017901772413
+    },
+    "Kcoeff": {
+      "abs_mean": 0.47690976834226173,
+      "abs_max": 418.81338857198756,
+      "abs_mean_interface_nodes": 10.204430142873314,
+      "abs_mean_other_nodes": 0.16596548644767956
+    }
+  },
+  "interface_node_fraction": 0.030975282828290516,
+  "cropped_extended_residual_by_margin": {
+    "2": {
+      "abs_mean": 0.0002935324168751026,
+      "abs_max": 2.1959362058013054
+    },
+    "4": {
+      "abs_mean": 0.0002920267373063053,
+      "abs_max": 0.007082549422149809
+    },
+    "6": {
+      "abs_mean": 0.0002966928091112811,
+      "abs_max": 0.004542665450205652
+    },
+    "8": {
+      "abs_mean": 0.0003012484624008685,
+      "abs_max": 0.004542665450205652
+    },
+    "10": {
+      "abs_mean": 0.0003057449872018139,
+      "abs_max": 0.004542665450205652
+    },
+    "12": {
+      "abs_mean": 0.00031007146002860845,
+      "abs_max": 0.004542665450205652
+    },
+    "16": {
+      "abs_mean": 0.0003179579928565013,
+      "abs_max": 0.004542665450205652
+    }
+  }
+}
