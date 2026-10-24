@@ -12,8 +12,8 @@ The question:
 - The forcing term of the upstream residual does not match the dataset. In the normalised variables the data satisfy $-\nabla\cdot(k'\nabla u') = 57.2$; the upstream script uses $0.0175$, the reciprocal. The reference solutions of the dataset therefore have a residual of 56.7 in almost every cell under the upstream definition.
 - The study sweeps the physics weight for both definitions: the residual **as shipped** (the upstream behaviour) and a **data-consistent** residual (corrected forcing and grid spacing), with one shared data-only model.
 - In the reduced local study (15 epochs, one seed), the residual as shipped lowers its own residual and raises the prediction error at every weight from 0.01 upwards: relative $L^2$ error 0.052 at the upstream default weight 0.1 and 0.098 at weight 1, against 0.048 for the data-only model.
-- The data-consistent residual lowers the residual by a factor of 9 at weight 0.1 with no measurable change in prediction error (0.0475 against 0.0480). At weight 1 the error rises to 0.054.
-- A lower mean residual is not the same as agreement with the reference. With the data-consistent residual at weights 0.1 and 1, the trained models have a smaller mean residual than the reference solutions of the dataset, because they smooth the pressure where the permeability changes.
+- The data-consistent residual lowers the residual by a factor of 9 at weight 0.1 with similar prediction error (0.0475 against 0.0480). At weight 1 the error rises to 0.054.
+- A lower mean residual is not the same as agreement with the reference. With the data-consistent residual at weights 0.1 and 1, the trained models have a smaller mean residual than the reference solutions of the dataset, with the largest residual reductions near permeability changes.
 - The study at the upstream training budget (50 epochs, three seeds, CUDA) has not been run. The conclusions above rest on one seed.
 
 ## Problem
@@ -114,11 +114,7 @@ Architecture, data, batch size, optimiser (Adam, learning rate $10^{-3}$, expone
 
 ## Results
 
-| Result set | Configuration | Hardware | Status |
-|---|---|---|---|
-| Dataset check | 460 samples | CPU | VERIFIED |
-| Reduced study | `local`, 9 runs | Apple M3 Pro, MPS | LOCAL/REDUCED |
-| Study at the upstream budget | `full`, 27 runs | NVIDIA GPU | NOT RUN |
+The reported experiment uses 15 epochs and one seed on an Apple M3 Pro. The 50-epoch, three-seed CUDA experiment is provided as a reproducible configuration; no results from that configuration are available. Experiment records and execution details are described in [`results/README.md`](results/README.md).
 
 ### Reduced study
 
@@ -136,13 +132,13 @@ Test set of 256 samples, one seed, 15 epochs (1530 optimiser steps). Residuals a
 | `consistent` | 0.1 | 0.0475 | 0.0070 | 56.2 | 16.1 |
 | `consistent` | 1 | 0.0537 | 0.0125 | 55.1 | 8.3 |
 
-The per-sample test error has a standard deviation of about 0.019, which gives a standard error of the mean near 0.0012. Differences below that size, including 0.0480 against 0.0475, are not resolved, and with one seed the run-to-run variation is unknown.
+The per-sample test error has a standard deviation of about 0.019, corresponding to a standard error of the mean near 0.0012 for an individual model. All models share the same test samples, so this individual-model uncertainty does not establish the significance of differences between models. With one training seed, variation across training runs is unknown; the difference between 0.0480 and 0.0475 is not evidence of a reproducible accuracy gain.
 
 ![Error, data loss and residuals against the physics weight](figures/local_weight_sweep.png)
 
 ![Prediction error against PDE residual](figures/local_tradeoff.png)
 
-**Prediction error.** With the residual as shipped, the error is unchanged at weight 0.001 and grows with the weight: by 9 % at the upstream default 0.1 and by a factor of 2.0 at weight 1. With the data-consistent residual the error stays at the data-only level up to weight 0.1 and is 12 % higher at weight 1. No setting improves on the data-only model by more than the resolution of the test set.
+**Prediction error.** With the residual as shipped, the error is unchanged at weight 0.001 and grows with the weight: by 9 % at the upstream default 0.1 and by a factor of 2.0 at weight 1. With the data-consistent residual the error stays at the data-only level up to weight 0.1 and is 12 % higher at weight 1. The small accuracy differences at weak and moderate weights require additional training seeds before an accuracy improvement can be established.
 
 **PDE residual.** Every physics-weighted model has a lower residual than the data-only model under both definitions, and the residual a model was trained with decreases monotonically with its weight. The data-only model has a residual of 147.5 under the data-consistent definition, 5.7 times that of the reference solutions: fitting the pressure to 4.8 % does not give a small residual, because second differences amplify small oscillations of the prediction.
 
@@ -157,7 +153,7 @@ The per-sample test error has a standard deviation of about 0.019, which gives a
 | `consistent`, weight 0.1 | 11.9 | 41.5 |
 | `consistent`, weight 1 | 5.5 | 24.7 |
 
-Where the permeability is constant, the residual of the trained models is several hundred times that of the reference. Near permeability changes it is four to seven times smaller than that of the reference. The mean absolute residual therefore rewards a pressure that is smoother across permeability changes than the reference is. In the error maps below, the largest errors of all three models lie along those changes.
+Where the permeability is constant, the residual of the trained models is several hundred times that of the reference. Near permeability changes it is four to seven times smaller than that of the reference. These measurements are consistent with smoothing near permeability changes, but do not by themselves identify the cause. They show that a lower finite-difference residual need not imply closer agreement with the reference pressure. In the error maps below, the largest errors of all three models lie along those changes.
 
 ![Permeability, reference, prediction and absolute error](figures/local_fields.png)
 
