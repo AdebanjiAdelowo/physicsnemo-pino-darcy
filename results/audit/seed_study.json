@@ -1,0 +1,551 @@
+{
+  "design": "G1 of docs/EXPERIMENT_GAPS.md: seeds 0, 1, 2; data only, shipped 0.1, consistent 0.1; local config (15 epochs, 102 training samples)",
+  "metrics": {
+    "rel_l2": "test relative L2 error",
+    "rel_l2_constant_k": "relative L2 error, cells of constant Kcoeff",
+    "rel_l2_near_jumps": "relative L2 error, cells near jumps of Kcoeff",
+    "exact_residual": "exact residual, mean |r| (coeff, solver operator, physical units)",
+    "exact_residual_interface": "exact residual at nodes within two cells of a jump of coeff",
+    "exact_residual_other": "exact residual at the other nodes",
+    "cellgrid_residual": "cell-grid training residual, mean |r| (consistent definition, Kcoeff, normalised)",
+    "cellgrid_residual_constant_k": "cell-grid residual on cells of constant Kcoeff",
+    "cellgrid_residual_near_jumps": "cell-grid residual on cells near jumps of Kcoeff"
+  },
+  "reference_exact_residual": {
+    "abs_mean": 0.00041085064810277873,
+    "abs_mean_interface_nodes": 0.0004723484638363088,
+    "abs_mean_other_nodes": 0.0004088357303521257
+  },
+  "per_seed": {
+    "data only": {
+      "seed0": {
+        "rel_l2": 0.048000936694734264,
+        "rel_l2_constant_k": 0.04340491504624115,
+        "rel_l2_near_jumps": 0.06229488205240509,
+        "exact_residual": 2.84031993958752,
+        "exact_residual_interface": 12.15836525266384,
+        "exact_residual_other": 2.535023000521202,
+        "cellgrid_residual": 147.46517799437692,
+        "cellgrid_residual_constant_k": 139.6739595287423,
+        "cellgrid_residual_near_jumps": 218.7884041180785
+      },
+      "seed1": {
+        "rel_l2": 0.05041687303310027,
+        "rel_l2_constant_k": 0.04594782845145753,
+        "rel_l2_near_jumps": 0.06411938949366361,
+        "exact_residual": 4.867378978571047,
+        "exact_residual_interface": 13.722149901613053,
+        "exact_residual_other": 4.577260786599553,
+        "cellgrid_residual": 282.6662403073982,
+        "cellgrid_residual_constant_k": 283.2817948428814,
+        "cellgrid_residual_near_jumps": 339.0618669976363
+      },
+      "seed2": {
+        "rel_l2": 0.04833694424451096,
+        "rel_l2_constant_k": 0.043926902112511435,
+        "rel_l2_near_jumps": 0.062249528123806366,
+        "exact_residual": 1.9577255878011064,
+        "exact_residual_interface": 12.22497188139863,
+        "exact_residual_other": 1.6213289766281098,
+        "cellgrid_residual": 97.43374094737926,
+        "cellgrid_residual_constant_k": 84.98266184029261,
+        "cellgrid_residual_near_jumps": 182.28143605461412
+      }
+    },
+    "shipped 0.1": {
+      "seed0": {
+        "rel_l2": 0.0520714392332593,
+        "rel_l2_constant_k": 0.045921508831957024,
+        "rel_l2_near_jumps": 0.06598847464698943,
+        "exact_residual": 0.8960307699960415,
+        "exact_residual_interface": 8.752824473425816,
+        "exact_residual_other": 0.6386103574588212,
+        "cellgrid_residual": 35.63042056386812,
+        "cellgrid_residual_constant_k": 32.70438637840915,
+        "cellgrid_residual_near_jumps": 58.25351373880118
+      },
+      "seed1": {
+        "rel_l2": 0.05265541073458735,
+        "rel_l2_constant_k": 0.046212949712245203,
+        "rel_l2_near_jumps": 0.06792839116349964,
+        "exact_residual": 0.8963334118491976,
+        "exact_residual_interface": 8.61510187789448,
+        "exact_residual_other": 0.6434352656319597,
+        "cellgrid_residual": 36.48110405815028,
+        "cellgrid_residual_constant_k": 32.892805905643435,
+        "cellgrid_residual_near_jumps": 62.704220727025046
+      },
+      "seed2": {
+        "rel_l2": 0.05388678270537639,
+        "rel_l2_constant_k": 0.04766257984882062,
+        "rel_l2_near_jumps": 0.06736773090014139,
+        "exact_residual": 0.8898079952766246,
+        "exact_residual_interface": 8.853469428784933,
+        "exact_residual_other": 0.6288861626688086,
+        "cellgrid_residual": 36.116456633850206,
+        "cellgrid_residual_constant_k": 31.64404923649496,
+        "cellgrid_residual_near_jumps": 66.82932952501304
+      }
+    },
+    "consistent 0.1": {
+      "seed0": {
+        "rel_l2": 0.04752303160057636,
+        "rel_l2_constant_k": 0.042281381165598625,
+        "rel_l2_near_jumps": 0.0644971455667766,
+        "exact_residual": 0.5652963254860152,
+        "exact_residual_interface": 8.300569249017004,
+        "exact_residual_other": 0.31185742633379654,
+        "cellgrid_residual": 16.148191241672546,
+        "cellgrid_residual_constant_k": 11.895673750106928,
+        "cellgrid_residual_near_jumps": 41.51674970630245
+      },
+      "seed1": {
+        "rel_l2": 0.047366545113618486,
+        "rel_l2_constant_k": 0.041557466024575176,
+        "rel_l2_near_jumps": 0.06614401918150156,
+        "exact_residual": 0.5865649662805813,
+        "exact_residual_interface": 8.277554880671982,
+        "exact_residual_other": 0.3345769580275489,
+        "cellgrid_residual": 18.286625194149998,
+        "cellgrid_residual_constant_k": 13.291142777851356,
+        "cellgrid_residual_near_jumps": 47.94345245242616
+      },
+      "seed2": {
+        "rel_l2": 0.050570096405863296,
+        "rel_l2_constant_k": 0.04561368961242311,
+        "rel_l2_near_jumps": 0.06602710012784432,
+        "exact_residual": 0.5986723704410296,
+        "exact_residual_interface": 8.644581584387002,
+        "exact_residual_other": 0.33505576712015694,
+        "cellgrid_residual": 18.185946957025962,
+        "cellgrid_residual_constant_k": 12.396638660212195,
+        "cellgrid_residual_near_jumps": 51.921832395718674
+      }
+    }
+  },
+  "seed_spread": {
+    "data only": {
+      "rel_l2": {
+        "mean": 0.04891825132411517,
+        "std_over_seeds": 0.001308673197692158
+      },
+      "rel_l2_constant_k": {
+        "mean": 0.0444265485367367,
+        "std_over_seeds": 0.0013430700125228428
+      },
+      "rel_l2_near_jumps": {
+        "mean": 0.06288793322329168,
+        "std_over_seeds": 0.001066713482659976
+      },
+      "exact_residual": {
+        "mean": 3.2218081686532245,
+        "std_over_seeds": 1.491868179596146
+      },
+      "exact_residual_interface": {
+        "mean": 12.70182901189184,
+        "std_over_seeds": 0.8842511799533926
+      },
+      "exact_residual_other": {
+        "mean": 2.9112042545829553,
+        "std_over_seeds": 1.5134455617004758
+      },
+      "cellgrid_residual": {
+        "mean": 175.85505308305144,
+        "std_over_seeds": 95.82410166786205
+      },
+      "cellgrid_residual_constant_k": {
+        "mean": 169.3128054039721,
+        "std_over_seeds": 102.41817429541655
+      },
+      "cellgrid_residual_near_jumps": {
+        "mean": 246.7105690567763,
+        "std_over_seeds": 82.03512267814207
+      }
+    },
+    "shipped 0.1": {
+      "rel_l2": {
+        "mean": 0.05287121089107435,
+        "std_over_seeds": 0.000926712070221595
+      },
+      "rel_l2_constant_k": {
+        "mean": 0.04659901279767428,
+        "std_over_seeds": 0.0009325318229899053
+      },
+      "rel_l2_near_jumps": {
+        "mean": 0.06709486557021015,
+        "std_over_seeds": 0.0009983289232342917
+      },
+      "exact_residual": {
+        "mean": 0.8940573923739544,
+        "std_over_seeds": 0.003683195594985106
+      },
+      "exact_residual_interface": {
+        "mean": 8.740465260035077,
+        "std_over_seeds": 0.11966342359345487
+      },
+      "exact_residual_other": {
+        "mean": 0.6369772619198631,
+        "std_over_seeds": 0.007410759072970654
+      },
+      "cellgrid_residual": {
+        "mean": 36.075993751956204,
+        "std_over_seeds": 0.4267827731638214
+      },
+      "cellgrid_residual_constant_k": {
+        "mean": 32.41374717351585,
+        "std_over_seeds": 0.6732025440025123
+      },
+      "cellgrid_residual_near_jumps": {
+        "mean": 62.595687996946424,
+        "std_over_seeds": 4.288937935536472
+      }
+    },
+    "consistent 0.1": {
+      "rel_l2": {
+        "mean": 0.04848655770668605,
+        "std_over_seeds": 0.0018060930591686083
+      },
+      "rel_l2_constant_k": {
+        "mean": 0.043150845600865635,
+        "std_over_seeds": 0.002163380168116351
+      },
+      "rel_l2_near_jumps": {
+        "mean": 0.06555608829204083,
+        "std_over_seeds": 0.000918932689493385
+      },
+      "exact_residual": {
+        "mean": 0.5835112207358754,
+        "std_over_seeds": 0.016896275198949765
+      },
+      "exact_residual_interface": {
+        "mean": 8.407568571358663,
+        "std_over_seeds": 0.20558159340310317
+      },
+      "exact_residual_other": {
+        "mean": 0.3271633838271674,
+        "std_over_seeds": 0.013257509782325226
+      },
+      "cellgrid_residual": {
+        "mean": 17.540254464282835,
+        "std_over_seeds": 1.2066126299130593
+      },
+      "cellgrid_residual_constant_k": {
+        "mean": 12.527818396056828,
+        "std_over_seeds": 0.7069225871131116
+      },
+      "cellgrid_residual_near_jumps": {
+        "mean": 47.12734485148243,
+        "std_over_seeds": 5.250329528290191
+      }
+    }
+  },
+  "paired_against_data_only": {
+    "shipped 0.1": {
+      "rel_l2": {
+        "n_seeds": 3,
+        "per_seed": [
+          0.004070502538525034,
+          0.0022385377014870755,
+          0.0055498384608654305
+        ],
+        "mean": 0.00395295956695918,
+        "std": 0.0016587767910084576,
+        "ci_low": -0.00016767041496112533,
+        "ci_high": 0.008073589548879486,
+        "t_p_value": 0.05398690548726804,
+        "seeds_negative": 0,
+        "sign_test_p_value": 0.25,
+        "relative_change": 0.08080745856527571,
+        "scale": "difference model - data only"
+      },
+      "rel_l2_constant_k": {
+        "n_seeds": 3,
+        "per_seed": [
+          0.002516593785715872,
+          0.0002651212607876763,
+          0.003735677736309187
+        ],
+        "mean": 0.0021724642609375782,
+        "std": 0.0017606843583715319,
+        "ci_low": -0.002201318152182077,
+        "ci_high": 0.006546246674057234,
+        "t_p_value": 0.16605588480819905,
+        "seeds_negative": 0,
+        "sign_test_p_value": 0.25,
+        "relative_change": 0.04890013589827147,
+        "scale": "difference model - data only"
+      },
+      "rel_l2_near_jumps": {
+        "n_seeds": 3,
+        "per_seed": [
+          0.0036935925945843356,
+          0.0038090016698360263,
+          0.005118202776335026
+        ],
+        "mean": 0.004206932346918463,
+        "std": 0.000791290187168651,
+        "ci_low": 0.0022412585520348396,
+        "ci_high": 0.006172606141802086,
+        "t_p_value": 0.011588272742089284,
+        "seeds_negative": 0,
+        "sign_test_p_value": 0.25,
+        "relative_change": 0.06689570051509261,
+        "scale": "difference model - data only"
+      },
+      "exact_residual": {
+        "scale": "ratio model / data only (geometric mean over seeds, interval from log ratios)",
+        "per_seed": [
+          0.3154682532440926,
+          0.1841511449581723,
+          0.4545110922701103
+        ],
+        "ratio": 0.29777725606528177,
+        "ci_low": 0.09628685630561364,
+        "ci_high": 0.9209075634199385,
+        "t_p_value": 0.04385513046762045,
+        "seeds_lower": 3
+      },
+      "exact_residual_interface": {
+        "scale": "ratio model / data only (geometric mean over seeds, interval from log ratios)",
+        "per_seed": [
+          0.7199014251943215,
+          0.627824498323092,
+          0.724211843976203
+        ],
+        "ratio": 0.6891688482045496,
+        "ci_low": 0.5638512728142393,
+        "ci_high": 0.8423386169992009,
+        "t_p_value": 0.015339356255828157,
+        "seeds_lower": 3
+      },
+      "exact_residual_other": {
+        "scale": "ratio model / data only (geometric mean over seeds, interval from log ratios)",
+        "per_seed": [
+          0.2519150151014498,
+          0.1405721228547189,
+          0.38788313274749947
+        ],
+        "ratio": 0.23948852945443458,
+        "ci_low": 0.06756821775018945,
+        "ci_high": 0.8488422167992843,
+        "t_p_value": 0.039827145957193145,
+        "seeds_lower": 3
+      },
+      "cellgrid_residual": {
+        "scale": "ratio model / data only (geometric mean over seeds, interval from log ratios)",
+        "per_seed": [
+          0.24161921511549503,
+          0.12906070430794017,
+          0.37067710099887785
+        ],
+        "ratio": 0.22610339630663476,
+        "ci_low": 0.06050909298988091,
+        "ci_high": 0.8448770803744244,
+        "t_p_value": 0.03993611521705326,
+        "seeds_lower": 3
+      },
+      "cellgrid_residual_constant_k": {
+        "scale": "ratio model / data only (geometric mean over seeds, interval from log ratios)",
+        "per_seed": [
+          0.23414805801133742,
+          0.1161133772252714,
+          0.37235888534491224
+        ],
+        "ratio": 0.21632739117872363,
+        "ci_low": 0.05037206548581616,
+        "ci_high": 0.9290375473558821,
+        "t_p_value": 0.045623741751496506,
+        "seeds_lower": 3
+      },
+      "cellgrid_residual_near_jumps": {
+        "scale": "ratio model / data only (geometric mean over seeds, interval from log ratios)",
+        "per_seed": [
+          0.2662550329100723,
+          0.18493445247106535,
+          0.36662718360958063
+        ],
+        "ratio": 0.2623292825120375,
+        "ci_low": 0.1120558743241947,
+        "ci_high": 0.6141280220988979,
+        "t_p_value": 0.02113620713579806,
+        "seeds_lower": 3
+      },
+      "rel_l2_test_sample_bootstrap": {
+        "seed0": {
+          "mean": 0.004070502538525034,
+          "ci_low": 0.003384827883564867,
+          "ci_high": 0.004760634261401719,
+          "fraction_improved": 0.203125
+        },
+        "seed1": {
+          "mean": 0.0022385377014870755,
+          "ci_low": 0.0013218581651017302,
+          "ci_high": 0.003138270660929265,
+          "fraction_improved": 0.359375
+        },
+        "seed2": {
+          "mean": 0.0055498384608654305,
+          "ci_low": 0.004989237331210461,
+          "ci_high": 0.006102332340014982,
+          "fraction_improved": 0.11328125
+        }
+      }
+    },
+    "consistent 0.1": {
+      "rel_l2": {
+        "n_seeds": 3,
+        "per_seed": [
+          -0.0004779050941579044,
+          -0.003050327919481788,
+          0.0022331521613523364
+        ],
+        "mean": -0.0004316936174291186,
+        "std": 0.0026420431613769736,
+        "ci_low": -0.006994892670677722,
+        "ci_high": 0.0061315054358194844,
+        "t_p_value": 0.8037746977956374,
+        "seeds_negative": 2,
+        "sign_test_p_value": 1.0,
+        "relative_change": -0.008824796589086314,
+        "scale": "difference model - data only"
+      },
+      "rel_l2_constant_k": {
+        "n_seeds": 3,
+        "per_seed": [
+          -0.0011235338806425271,
+          -0.004390362426882351,
+          0.0016867874999116766
+        ],
+        "mean": -0.0012757029358710671,
+        "std": 0.003041431303549371,
+        "ci_low": -0.008831037134716025,
+        "ci_high": 0.00627963126297389,
+        "t_p_value": 0.543057721775494,
+        "seeds_negative": 2,
+        "sign_test_p_value": 1.0,
+        "relative_change": -0.0287148783303789,
+        "scale": "difference model - data only"
+      },
+      "rel_l2_near_jumps": {
+        "n_seeds": 3,
+        "per_seed": [
+          0.0022022635143715136,
+          0.0020246296878379533,
+          0.0037775720040379573
+        ],
+        "mean": 0.0026681550687491415,
+        "std": 0.0009648797315269195,
+        "ci_low": 0.0002712609403595868,
+        "ci_high": 0.005065049197138696,
+        "t_p_value": 0.04093370892174663,
+        "seeds_negative": 0,
+        "sign_test_p_value": 0.25,
+        "relative_change": 0.042427138752922824,
+        "scale": "difference model - data only"
+      },
+      "exact_residual": {
+        "scale": "ratio model / data only (geometric mean over seeds, interval from log ratios)",
+        "per_seed": [
+          0.1990255807478186,
+          0.12050940945074788,
+          0.3057999416115571
+        ],
+        "ratio": 0.19429237277062392,
+        "ci_low": 0.06104351762699214,
+        "ci_high": 0.6184035190682893,
+        "t_p_value": 0.025929275268404613,
+        "seeds_lower": 3
+      },
+      "exact_residual_interface": {
+        "scale": "ratio model / data only (geometric mean over seeds, interval from log ratios)",
+        "per_seed": [
+          0.682704383074722,
+          0.603225802080689,
+          0.707124864437561
+        ],
+        "ratio": 0.6628311393004035,
+        "ci_low": 0.5386989038887928,
+        "ci_high": 0.815567130459519,
+        "t_p_value": 0.013457836861113808,
+        "seeds_lower": 3
+      },
+      "exact_residual_other": {
+        "scale": "ratio model / data only (geometric mean over seeds, interval from log ratios)",
+        "per_seed": [
+          0.1230195648203896,
+          0.07309545460181352,
+          0.20665501693368546
+        ],
+        "ratio": 0.12294291429634796,
+        "ci_low": 0.03381337261560578,
+        "ci_high": 0.44701131553801876,
+        "t_p_value": 0.01987874399197719,
+        "seeds_lower": 3
+      },
+      "cellgrid_residual": {
+        "scale": "ratio model / data only (geometric mean over seeds, interval from log ratios)",
+        "per_seed": [
+          0.10950511477555944,
+          0.06469334708758775,
+          0.18664937608058782
+        ],
+        "ratio": 0.10975901210143398,
+        "ci_low": 0.029435884635143593,
+        "ci_high": 0.40926375703686974,
+        "t_p_value": 0.01863120051936317,
+        "seeds_lower": 3
+      },
+      "cellgrid_residual_constant_k": {
+        "scale": "ratio model / data only (geometric mean over seeds, interval from log ratios)",
+        "per_seed": [
+          0.08516744130575764,
+          0.046918450178639666,
+          0.145872562611761
+        ],
+        "ratio": 0.08353406645111784,
+        "ci_low": 0.020404026037733308,
+        "ci_high": 0.34198840194358776,
+        "t_p_value": 0.01697171182568826,
+        "seeds_lower": 3
+      },
+      "cellgrid_residual_near_jumps": {
+        "scale": "ratio model / data only (geometric mean over seeds, interval from log ratios)",
+        "per_seed": [
+          0.18975754164693373,
+          0.14140030808230164,
+          0.2848443238079502
+        ],
+        "ratio": 0.19697857449193956,
+        "ci_low": 0.08222931705319363,
+        "ci_high": 0.47185797230660137,
+        "t_p_value": 0.015260881838897927,
+        "seeds_lower": 3
+      },
+      "rel_l2_test_sample_bootstrap": {
+        "seed0": {
+          "mean": -0.0004779050941579044,
+          "ci_low": -0.0012838189231842985,
+          "ci_high": 0.00035485654061631036,
+          "fraction_improved": 0.578125
+        },
+        "seed1": {
+          "mean": -0.003050327919481788,
+          "ci_low": -0.004110714035596174,
+          "ci_high": -0.0020011153865198143,
+          "fraction_improved": 0.6640625
+        },
+        "seed2": {
+          "mean": 0.0022331521613523364,
+          "ci_low": 0.0012885985788670953,
+          "ci_high": 0.003151837742552743,
+          "fraction_improved": 0.34375
+        }
+      }
+    }
+  },
+  "notes": [
+    "Seeds are the independent units of the t intervals (df = 2); the t interval for three seeds is 2.48 times its standard error on each side.",
+    "The exact two-sided sign test cannot fall below 0.25 with three seeds.",
+    "The test-sample bootstrap intervals hold each trained model fixed; they do not include seed variability."
+  ]
+}

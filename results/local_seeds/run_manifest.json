@@ -1,0 +1,287 @@
+{
+  "hardware": {
+    "cpu": "Apple M3 Pro",
+    "memory_gb": 18.0,
+    "platform": "macOS-26.6.2-arm64-arm-64bit"
+  },
+  "shared_training_config_sha256": "cc5a315812877a9fddf7ea4d412fdf59d962e59ac34a9b00f404eeff848eb5d7",
+  "excluded_from_training_hash": [
+    "name",
+    "output_dir",
+    "study",
+    "evaluation",
+    "physics_weight"
+  ],
+  "runs": [
+    {
+      "run": "dataonly_seed0",
+      "seed": 0,
+      "residual": null,
+      "physics_weight": 0.0,
+      "study_directory": "runs/local",
+      "training_config_sha256": "cc5a315812877a9fddf7ea4d412fdf59d962e59ac34a9b00f404eeff848eb5d7",
+      "run_config_sha256": "1c5f08ab4e1c09ed59f552bc51fc8a4caeae479c40330f77b7c1e16f62abf465",
+      "git_commit": "d1bd2ca0eaf4ff64a1dfa5fef0c5ed4e60377989",
+      "git_dirty": false,
+      "trained_at_utc": "2026-10-05T21:48:49+00:00",
+      "dataset_files_sha256": {
+        "train.hdf5": "7617caa38eb4fb541f8a1afc5e99ae32feb43f9da22b68e346dd8fd2b3d1de46",
+        "validation.hdf5": "86546b8d735f390fdd40a06186f4ce92ea4c04b5ffe2e4f1553731da10743cab",
+        "test.hdf5": "f6c5240a0f6bba92cc016d3021ff819d734f517d54b49d78b3d81f572238112a"
+      },
+      "dataset_archive_sha256": "2c2ad2b5d6238d62365aba5127d3e6dee365163ac4de884463fa5b677c06bf1a",
+      "device": "mps",
+      "physics_device": "cpu",
+      "torch_version": "2.14.1",
+      "physicsnemo_commit": "b45a5c810c741e6b41f8515be24c51121f8fc21f",
+      "platform": "macOS-26.6.2-arm64-arm-64bit",
+      "train_seconds": 358.22383941698354,
+      "optimisation_ms_per_step": 171.27877586997522,
+      "optimiser_steps": 1530,
+      "checkpoints_sha256": {
+        "FNO.0.15.mdlus": "50965d053eed8b74ad9def6418a64183667cda28448ff5c317484f38776f63ef",
+        "checkpoint.0.15.pt": "b20c3cdec77e4f141c29a0dfca2f23d3fdb9a2686fcb7a6eff53e9e4914d720b"
+      }
+    },
+    {
+      "run": "dataonly_seed1",
+      "seed": 1,
+      "residual": null,
+      "physics_weight": 0.0,
+      "study_directory": "runs/local_seeds",
+      "training_config_sha256": "cc5a315812877a9fddf7ea4d412fdf59d962e59ac34a9b00f404eeff848eb5d7",
+      "run_config_sha256": "75baefa72b160db8b67acaf4cea9d1466a4164b196cb5e663c4b6a408176f1b7",
+      "git_commit": "4c18b9092f61a50146e3eb78a3fa8f02cab05dd7",
+      "git_dirty": false,
+      "trained_at_utc": "2026-10-24T15:52:48+00:00",
+      "dataset_files_sha256": {
+        "train.hdf5": "7617caa38eb4fb541f8a1afc5e99ae32feb43f9da22b68e346dd8fd2b3d1de46",
+        "validation.hdf5": "86546b8d735f390fdd40a06186f4ce92ea4c04b5ffe2e4f1553731da10743cab",
+        "test.hdf5": "f6c5240a0f6bba92cc016d3021ff819d734f517d54b49d78b3d81f572238112a"
+      },
+      "dataset_archive_sha256": "2c2ad2b5d6238d62365aba5127d3e6dee365163ac4de884463fa5b677c06bf1a",
+      "device": "mps",
+      "physics_device": "cpu",
+      "torch_version": "2.14.1",
+      "physicsnemo_commit": "b45a5c810c741e6b41f8515be24c51121f8fc21f",
+      "platform": "macOS-26.6.2-arm64-arm-64bit",
+      "train_seconds": 147.72033550000015,
+      "optimisation_ms_per_step": 63.675482243137466,
+      "optimiser_steps": 1530,
+      "checkpoints_sha256": {
+        "FNO.0.15.mdlus": "fdcb3eeb8dbe2f4c0e4b5357577258a97a502632e4c8623bb6e7c52ce72ad8bd",
+        "checkpoint.0.15.pt": "0fbf6c989750db7a7f8bf82317a828e8fd7f5f6a0a02fcf70b1459ca05348589"
+      }
+    },
+    {
+      "run": "dataonly_seed2",
+      "seed": 2,
+      "residual": null,
+      "physics_weight": 0.0,
+      "study_directory": "runs/local_seeds",
+      "training_config_sha256": "cc5a315812877a9fddf7ea4d412fdf59d962e59ac34a9b00f404eeff848eb5d7",
+      "run_config_sha256": "46389d1aaa35a6784ad5454f8f7076069325e5323b6cb3d1e46c83e031beb0da",
+      "git_commit": "4c18b9092f61a50146e3eb78a3fa8f02cab05dd7",
+      "git_dirty": false,
+      "trained_at_utc": "2026-10-24T15:52:48+00:00",
+      "dataset_files_sha256": {
+        "train.hdf5": "7617caa38eb4fb541f8a1afc5e99ae32feb43f9da22b68e346dd8fd2b3d1de46",
+        "validation.hdf5": "86546b8d735f390fdd40a06186f4ce92ea4c04b5ffe2e4f1553731da10743cab",
+        "test.hdf5": "f6c5240a0f6bba92cc016d3021ff819d734f517d54b49d78b3d81f572238112a"
+      },
+      "dataset_archive_sha256": "2c2ad2b5d6238d62365aba5127d3e6dee365163ac4de884463fa5b677c06bf1a",
+      "device": "mps",
+      "physics_device": "cpu",
+      "torch_version": "2.14.1",
+      "physicsnemo_commit": "b45a5c810c741e6b41f8515be24c51121f8fc21f",
+      "platform": "macOS-26.6.2-arm64-arm-64bit",
+      "train_seconds": 183.58297241699984,
+      "optimisation_ms_per_step": 77.47666358823777,
+      "optimiser_steps": 1530,
+      "checkpoints_sha256": {
+        "FNO.0.15.mdlus": "e63b630f8e4d3014125932daefe2519c9c007b08b8e9e171078cc1ccb41c8e71",
+        "checkpoint.0.15.pt": "eefec9fb8fd778c3a9184cd7912c6dfc076d5a0aeba039fc2d564433cabfe51a"
+      }
+    },
+    {
+      "run": "shipped_w0.1_seed0",
+      "seed": 0,
+      "residual": "shipped",
+      "physics_weight": 0.1,
+      "study_directory": "runs/local",
+      "training_config_sha256": "cc5a315812877a9fddf7ea4d412fdf59d962e59ac34a9b00f404eeff848eb5d7",
+      "run_config_sha256": "1719378c14f8ba39e5db84c60f634eb164cbc13789df77cd1643873a51279446",
+      "git_commit": "d1bd2ca0eaf4ff64a1dfa5fef0c5ed4e60377989",
+      "git_dirty": false,
+      "trained_at_utc": "2026-10-05T21:48:49+00:00",
+      "dataset_files_sha256": {
+        "train.hdf5": "7617caa38eb4fb541f8a1afc5e99ae32feb43f9da22b68e346dd8fd2b3d1de46",
+        "validation.hdf5": "86546b8d735f390fdd40a06186f4ce92ea4c04b5ffe2e4f1553731da10743cab",
+        "test.hdf5": "f6c5240a0f6bba92cc016d3021ff819d734f517d54b49d78b3d81f572238112a"
+      },
+      "dataset_archive_sha256": "2c2ad2b5d6238d62365aba5127d3e6dee365163ac4de884463fa5b677c06bf1a",
+      "device": "mps",
+      "physics_device": "cpu",
+      "torch_version": "2.14.1",
+      "physicsnemo_commit": "b45a5c810c741e6b41f8515be24c51121f8fc21f",
+      "platform": "macOS-26.6.2-arm64-arm-64bit",
+      "train_seconds": 473.9607948330231,
+      "optimisation_ms_per_step": 237.3120802588566,
+      "optimiser_steps": 1530,
+      "checkpoints_sha256": {
+        "FNO.0.15.mdlus": "c6a572bbcd8ce02a67ff24b210dfae991f75197b81e58bf2f17b989f0b9e3124",
+        "checkpoint.0.15.pt": "ab0dae795ee4e12a492e7753a550dabe9f8dca33601dd791e987372c333b8c8a"
+      }
+    },
+    {
+      "run": "shipped_w0.1_seed1",
+      "seed": 1,
+      "residual": "shipped",
+      "physics_weight": 0.1,
+      "study_directory": "runs/local_seeds",
+      "training_config_sha256": "cc5a315812877a9fddf7ea4d412fdf59d962e59ac34a9b00f404eeff848eb5d7",
+      "run_config_sha256": "32c7a4edafc2ab66078dc1f38c6e5c75d36404a8541e5334839326e4194c27a6",
+      "git_commit": "4c18b9092f61a50146e3eb78a3fa8f02cab05dd7",
+      "git_dirty": false,
+      "trained_at_utc": "2026-10-24T15:52:48+00:00",
+      "dataset_files_sha256": {
+        "train.hdf5": "7617caa38eb4fb541f8a1afc5e99ae32feb43f9da22b68e346dd8fd2b3d1de46",
+        "validation.hdf5": "86546b8d735f390fdd40a06186f4ce92ea4c04b5ffe2e4f1553731da10743cab",
+        "test.hdf5": "f6c5240a0f6bba92cc016d3021ff819d734f517d54b49d78b3d81f572238112a"
+      },
+      "dataset_archive_sha256": "2c2ad2b5d6238d62365aba5127d3e6dee365163ac4de884463fa5b677c06bf1a",
+      "device": "mps",
+      "physics_device": "cpu",
+      "torch_version": "2.14.1",
+      "physicsnemo_commit": "b45a5c810c741e6b41f8515be24c51121f8fc21f",
+      "platform": "macOS-26.6.2-arm64-arm-64bit",
+      "train_seconds": 164.05701837500055,
+      "optimisation_ms_per_step": 73.80035288693001,
+      "optimiser_steps": 1530,
+      "checkpoints_sha256": {
+        "FNO.0.15.mdlus": "1a1da8ce43e6f9fef60c1c5582ba85943f55651e387a20370985d91ba06c1b9a",
+        "checkpoint.0.15.pt": "1f98fd0b4dff9bbe4ab7b711b55005a66274fa260b24e3dcc68d279e498eaa28"
+      }
+    },
+    {
+      "run": "shipped_w0.1_seed2",
+      "seed": 2,
+      "residual": "shipped",
+      "physics_weight": 0.1,
+      "study_directory": "runs/local_seeds",
+      "training_config_sha256": "cc5a315812877a9fddf7ea4d412fdf59d962e59ac34a9b00f404eeff848eb5d7",
+      "run_config_sha256": "2a6166c92f41999e2da88ef342d69146203e9ae801235a026292ba3610e45b3f",
+      "git_commit": "4c18b9092f61a50146e3eb78a3fa8f02cab05dd7",
+      "git_dirty": false,
+      "trained_at_utc": "2026-10-24T15:52:48+00:00",
+      "dataset_files_sha256": {
+        "train.hdf5": "7617caa38eb4fb541f8a1afc5e99ae32feb43f9da22b68e346dd8fd2b3d1de46",
+        "validation.hdf5": "86546b8d735f390fdd40a06186f4ce92ea4c04b5ffe2e4f1553731da10743cab",
+        "test.hdf5": "f6c5240a0f6bba92cc016d3021ff819d734f517d54b49d78b3d81f572238112a"
+      },
+      "dataset_archive_sha256": "2c2ad2b5d6238d62365aba5127d3e6dee365163ac4de884463fa5b677c06bf1a",
+      "device": "mps",
+      "physics_device": "cpu",
+      "torch_version": "2.14.1",
+      "physicsnemo_commit": "b45a5c810c741e6b41f8515be24c51121f8fc21f",
+      "platform": "macOS-26.6.2-arm64-arm-64bit",
+      "train_seconds": 197.87694949999968,
+      "optimisation_ms_per_step": 88.330795450324,
+      "optimiser_steps": 1530,
+      "checkpoints_sha256": {
+        "FNO.0.15.mdlus": "1d45662581866d1db84f03478ee014590c689d3b3e52da6bccb8db8cc366df87",
+        "checkpoint.0.15.pt": "c06729bf413d154d1d67ea0ee6e7d1ee280fa27a7d70e379cc957e344db72d27"
+      }
+    },
+    {
+      "run": "consistent_w0.1_seed0",
+      "seed": 0,
+      "residual": "consistent",
+      "physics_weight": 0.1,
+      "study_directory": "runs/local",
+      "training_config_sha256": "cc5a315812877a9fddf7ea4d412fdf59d962e59ac34a9b00f404eeff848eb5d7",
+      "run_config_sha256": "987bb571edf5467aee137f6f2711aa4e011e22407745417dbfa76527ce518df4",
+      "git_commit": "d1bd2ca0eaf4ff64a1dfa5fef0c5ed4e60377989",
+      "git_dirty": false,
+      "trained_at_utc": "2026-10-05T21:48:49+00:00",
+      "dataset_files_sha256": {
+        "train.hdf5": "7617caa38eb4fb541f8a1afc5e99ae32feb43f9da22b68e346dd8fd2b3d1de46",
+        "validation.hdf5": "86546b8d735f390fdd40a06186f4ce92ea4c04b5ffe2e4f1553731da10743cab",
+        "test.hdf5": "f6c5240a0f6bba92cc016d3021ff819d734f517d54b49d78b3d81f572238112a"
+      },
+      "dataset_archive_sha256": "2c2ad2b5d6238d62365aba5127d3e6dee365163ac4de884463fa5b677c06bf1a",
+      "device": "mps",
+      "physics_device": "cpu",
+      "torch_version": "2.14.1",
+      "physicsnemo_commit": "b45a5c810c741e6b41f8515be24c51121f8fc21f",
+      "platform": "macOS-26.6.2-arm64-arm-64bit",
+      "train_seconds": 437.2416812500451,
+      "optimisation_ms_per_step": 216.83219368310853,
+      "optimiser_steps": 1530,
+      "checkpoints_sha256": {
+        "FNO.0.15.mdlus": "a372366cec3eafc29ba7e2a1cdb4566f0894d0a23727d8fae5ea19ae3f594c1b",
+        "checkpoint.0.15.pt": "77b974730d5ec02491b3322f37de65f84c0f28b47ab13417a9b14feb79ab5d7b"
+      }
+    },
+    {
+      "run": "consistent_w0.1_seed1",
+      "seed": 1,
+      "residual": "consistent",
+      "physics_weight": 0.1,
+      "study_directory": "runs/local_seeds",
+      "training_config_sha256": "cc5a315812877a9fddf7ea4d412fdf59d962e59ac34a9b00f404eeff848eb5d7",
+      "run_config_sha256": "c035aaeb9f966a3e11cb9bbb25cfdd44fa95d942f841ce09a43409cc55d2ca0f",
+      "git_commit": "4c18b9092f61a50146e3eb78a3fa8f02cab05dd7",
+      "git_dirty": false,
+      "trained_at_utc": "2026-10-24T15:52:48+00:00",
+      "dataset_files_sha256": {
+        "train.hdf5": "7617caa38eb4fb541f8a1afc5e99ae32feb43f9da22b68e346dd8fd2b3d1de46",
+        "validation.hdf5": "86546b8d735f390fdd40a06186f4ce92ea4c04b5ffe2e4f1553731da10743cab",
+        "test.hdf5": "f6c5240a0f6bba92cc016d3021ff819d734f517d54b49d78b3d81f572238112a"
+      },
+      "dataset_archive_sha256": "2c2ad2b5d6238d62365aba5127d3e6dee365163ac4de884463fa5b677c06bf1a",
+      "device": "mps",
+      "physics_device": "cpu",
+      "torch_version": "2.14.1",
+      "physicsnemo_commit": "b45a5c810c741e6b41f8515be24c51121f8fc21f",
+      "platform": "macOS-26.6.2-arm64-arm-64bit",
+      "train_seconds": 167.1858097079985,
+      "optimisation_ms_per_step": 74.5034390241843,
+      "optimiser_steps": 1530,
+      "checkpoints_sha256": {
+        "FNO.0.15.mdlus": "e62e10e7c21de9ddf4167ecd1330a43e93e8fe176ae2d6faf31847ca8a39ca55",
+        "checkpoint.0.15.pt": "3f48392f8e4b4ce9fd5f32fb63275891e19d74941d74e0f7924eb4003f718eb6"
+      }
+    },
+    {
+      "run": "consistent_w0.1_seed2",
+      "seed": 2,
+      "residual": "consistent",
+      "physics_weight": 0.1,
+      "study_directory": "runs/local_seeds",
+      "training_config_sha256": "cc5a315812877a9fddf7ea4d412fdf59d962e59ac34a9b00f404eeff848eb5d7",
+      "run_config_sha256": "1831ebde6a871e01c7f281fc34aa281be9188aed78d406f531cee9d56486de71",
+      "git_commit": "4c18b9092f61a50146e3eb78a3fa8f02cab05dd7",
+      "git_dirty": false,
+      "trained_at_utc": "2026-10-24T15:52:48+00:00",
+      "dataset_files_sha256": {
+        "train.hdf5": "7617caa38eb4fb541f8a1afc5e99ae32feb43f9da22b68e346dd8fd2b3d1de46",
+        "validation.hdf5": "86546b8d735f390fdd40a06186f4ce92ea4c04b5ffe2e4f1553731da10743cab",
+        "test.hdf5": "f6c5240a0f6bba92cc016d3021ff819d734f517d54b49d78b3d81f572238112a"
+      },
+      "dataset_archive_sha256": "2c2ad2b5d6238d62365aba5127d3e6dee365163ac4de884463fa5b677c06bf1a",
+      "device": "mps",
+      "physics_device": "cpu",
+      "torch_version": "2.14.1",
+      "physicsnemo_commit": "b45a5c810c741e6b41f8515be24c51121f8fc21f",
+      "platform": "macOS-26.6.2-arm64-arm-64bit",
+      "train_seconds": 203.10240008300025,
+      "optimisation_ms_per_step": 90.01747192091392,
+      "optimiser_steps": 1530,
+      "checkpoints_sha256": {
+        "FNO.0.15.mdlus": "b12d3caed03bdb003f277157509c80bc45ece951f555024df56a10d4448df5b9",
+        "checkpoint.0.15.pt": "4fb18eef8276b12748b6ea418a9809bf0833da3421f20380ba8fe1dff09c07a1"
+      }
+    }
+  ]
+}
