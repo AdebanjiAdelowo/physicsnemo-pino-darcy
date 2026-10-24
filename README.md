@@ -49,6 +49,8 @@ As upstream, fields are cropped to 240 × 240 and scaled without a shift: $k' = 
 
 The last row sets a limit on what a residual can measure here: the reference solutions themselves do not have a small finite-difference residual near permeability changes.
 
+`scripts/verify_reference.py` identifies the cause. A re-implementation of the original FNO solver (`solve_gwf.m`: the coefficient is spline-interpolated from the cell centres to a node grid of spacing 1/240, the conservative five-point scheme is solved there, and the solution is spline-interpolated back) reproduces the stored pressure of all 460 samples to a relative $L^2$ difference of $2.5\times10^{-8}$, the float32 rounding level, when applied to the two-valued field `coeff`. Applied to `Kcoeff`, the model input that both residuals of this study use as the coefficient, it gives a pressure that differs by 1.7 % on average. The reference therefore solves a known discrete problem exactly, including at permeability changes; its large residual there reflects a different operator and coefficient, not an inaccurate reference. Results are in [`results/audit/reference_check.json`](results/audit/reference_check.json) and [`docs/SCIENTIFIC_AUDIT.md`](docs/SCIENTIFIC_AUDIT.md).
+
 ![Dataset sample and the residual of its reference pressure](figures/data_check.png)
 
 *One test sample. Third panel: the residual of the reference pressure with the forcing as shipped is close to 56.7 everywhere. Fourth panel: with the data-consistent forcing it is at rounding level where the permeability is constant and large along the permeability changes.*
@@ -92,7 +94,7 @@ Both are far from zero. For `shipped` the cause is the forcing. For `consistent`
 
 ### Experiment
 
-One factor is varied, the physics weight $w \in \{0, 0.001, 0.01, 0.1, 1\}$, for each residual definition. Weight 0 is the data-only model; it does not depend on the residual definition and is trained once per seed, without evaluating the residual. The range was chosen from the measured magnitudes. At the end of training $L_\text{data}$ is between 0.004 and 0.03 and $L_\text{pde}$ between 7 and 100, so the weighted PDE term is about a tenth of the data term at $w = 0.001$ and two to three times the data term at $w = 1$.
+One factor is varied, the physics weight $w \in \{0, 0.001, 0.01, 0.1, 1\}$, for each residual definition. Weight 0 is the data-only model; it does not depend on the residual definition and is trained once per seed, without evaluating the residual. The range was chosen from the measured magnitudes. At the end of training $L_\text{data}$ is between 0.004 and 0.03 and $L_\text{pde}$ between 7 and 100, so the weighted PDE term is about a tenth of the data term at $w = 0.001$ and 2.3 (`consistent`) to 3.4 (`shipped`) times the data term at $w = 1$. At the upstream default ($w = 0.1$, `shipped`) it is already 2.2 times the data term.
 
 Architecture, data, batch size, optimiser (Adam, learning rate $10^{-3}$, exponential decay after every step) and seed are the same for all runs of a study.
 
@@ -211,10 +213,13 @@ src/pino_darcy/
   study.py      loop over residuals, weights and seeds; summaries
   plotting.py   figures
   provenance.py environment and version records
-scripts/      prepare_data, verify_data, train, evaluate, plot_results, results
-tests/        configuration, data, model, residual, loss terms, pipeline, figures, launcher
+  reference.py  re-implementation of the data-generation solver, exact discrete residual
+scripts/      prepare_data, verify_data, verify_reference, train, evaluate,
+              evaluate_solver_residual, plot_results, results
+tests/        configuration, data, model, residual, loss terms, pipeline, figures, launcher, reference solver
 results/      tracked result files (see results/README.md)
 figures/      figures of the tracked results
+docs/         scientific audit, upstream comparison, experiment gaps, checklist
 kaggle/       run_cuda.ipynb, launcher for a CUDA session
 ```
 
@@ -234,7 +239,8 @@ pip install -r requirements.txt
 ```bash
 python scripts/prepare_data.py        # downloads Darcy_241.zip (0.8 GB), writes the three splits
 python scripts/verify_data.py         # results/data_check.json, figures/data_check.png
-python -m pytest -q                   # 41 tests, no training run needed
+python scripts/verify_reference.py    # results/audit/reference_check.json
+python -m pytest -q                   # 48 tests, no training run needed
 python scripts/train.py --config smoke device=cpu
 python scripts/train.py --config local            # reduced study, trains and evaluates
 python scripts/plot_results.py --study runs/local --out runs/local/figures
@@ -262,7 +268,7 @@ python scripts/plot_results.py --study results/full --out figures
 
 ## Tests
 
-`python -m pytest -q` runs 41 tests in about 15 seconds: the upstream part of `official.yaml` against its checksum, the equality of the training settings of `full` and `official`, split construction and normalisation on a synthetic file, the residual against an analytic solution, the two forcing constants, rejection of batches larger than one, the equality of the loss with the upstream expression, separate data and PDE columns in the history, checkpoint round trips, figure generation, and static checks of the launcher.
+`python -m pytest -q` runs 48 tests in about 25 seconds: the upstream part of `official.yaml` against its checksum, the equality of the training settings of `full` and `official`, split construction and normalisation on a synthetic file, the residual against an analytic solution, the two forcing constants, rejection of batches larger than one, the equality of the loss with the upstream expression, separate data and PDE columns in the history, checkpoint round trips, figure generation, static checks of the launcher, and the re-implemented data-generation solver and its residual on synthetic fields.
 
 ## Limitations
 
@@ -271,7 +277,7 @@ python scripts/plot_results.py --study results/full --out figures
 - The finite-difference residual of the reference solutions is large near permeability changes under every discretisation tested, so the mean residual is not a measure of distance to the reference, and a model can score below the reference by smoothing.
 - The residual is evaluated in single precision. Second differences on this grid carry rounding noise of order 0.01 in normalised units, which is the level of the reference residual in cells with constant permeability.
 - Only 102 training samples are used, as upstream. The effect of the physics term at other data sizes is not measured.
-- The data-consistent definition corrects the forcing and the spacing only. It keeps the upstream expanded form, the central differences of the permeability and the L1 reduction.
+- The data-consistent definition corrects the forcing and the spacing only. It keeps the upstream expanded form, the central differences of the permeability and the L1 reduction, and it uses the smoothed `Kcoeff` as the coefficient, whereas the reference was generated from `coeff`. It is therefore consistent with the data only away from permeability changes.
 - Timings come from a machine that was running other jobs.
 
 ## Possible extensions

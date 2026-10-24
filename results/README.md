@@ -20,7 +20,11 @@ Run names: `dataonly_seed<S>` for weight 0, otherwise `<residual>_w<weight>_seed
 | `data_check.json` | 460 samples of the dataset, CPU | VERIFIED |
 | `local` | `configs/local.yaml`: 15 epochs, 1 seed, Apple MPS | LOCAL/REDUCED |
 | `full` | `configs/full.yaml`: 50 epochs, 3 seeds, CUDA | NOT RUN |
+| `audit/reference_check.json` | `scripts/verify_reference.py`: the reference pressure regenerated with the original solver, and its residual under that solver's operator, 460 samples, CPU | VERIFIED |
+| `audit/local_solver_residual.json` | `scripts/evaluate_solver_residual.py --config local`: the checkpoints of `local` under that operator, and the test error by region; inference only | LOCAL/REDUCED |
 
 Units: all losses and residuals are in the normalised variables $k' = k / 4.49996$ and $u' = u / 3.88433 \times 10^{-3}$. `*_pde_l1_*` is the mean absolute residual over all 240 × 240 cells with the two outer rows and columns set to zero, which is the quantity in the training loss; the other residual statistics are taken over the interior cells. `test_rel_l2_*` are relative $L^2$ errors as fractions. Times are wall-clock with the device synchronised. Memory fields are CUDA peak allocations and are empty on other devices.
 
 Notes on `local`: the machine was running other jobs during the study, so its training and inference times vary between runs for reasons unrelated to the settings. `study_metadata.json` lists `evaluation.plot_samples: 3`, the value at training time; the tracked `fields.npz` was written by a later evaluation of the same checkpoints with one plotted sample.
+
+Medians: `test_rel_l2.median` and `abs_median` are `torch.median`, the lower of the two middle values for an even number of entries, not their average. For the 256 test samples this differs from the conventional median by at most 0.5 %.
