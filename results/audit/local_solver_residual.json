@@ -1,0 +1,157 @@
+{
+  "environment": {
+    "timestamp_utc": "2026-10-24T11:59:44+00:00",
+    "git_commit": "d8c4c032daefed33b533d1b332ad65e94a6fd58b",
+    "git_dirty": false,
+    "upstream": {
+      "repository": "https://github.com/NVIDIA/physicsnemo",
+      "commit": "b45a5c810c741e6b41f8515be24c51121f8fc21f",
+      "example": "examples/cfd/darcy_physics_informed"
+    },
+    "device": "mps",
+    "gpu_name": null,
+    "cuda_version": null,
+    "python_version": "3.12.2",
+    "torch_version": "2.14.1",
+    "torch_threads": 5,
+    "physicsnemo": {
+      "version": "2.3.0a0",
+      "commit": "b45a5c810c741e6b41f8515be24c51121f8fc21f",
+      "url": "https://github.com/nvidia/physicsnemo"
+    },
+    "warp_version": "1.18.0",
+    "sympy_version": "1.14.0",
+    "numpy_version": "2.5.3",
+    "platform": "macOS-26.6.2-arm64-arm-64bit",
+    "processor": "arm"
+  },
+  "study": "runs/local",
+  "margin_nodes": 6,
+  "units": "residual in physical units (forcing f = 1); errors are relative L2 fractions",
+  "reference": {
+    "solver_residual": {
+      "abs_mean": 0.00041085064810277873,
+      "abs_mean_interface_nodes": 0.0004723484638363088,
+      "abs_mean_other_nodes": 0.0004088357303521257
+    }
+  },
+  "runs": {
+    "dataonly_seed0": {
+      "solver_residual": {
+        "abs_mean": 2.84031993958752,
+        "abs_mean_interface_nodes": 12.15836525266384,
+        "abs_mean_other_nodes": 2.535023000521202
+      },
+      "rel_l2_by_region": {
+        "constant_k_cells": 0.04340491504624115,
+        "other_cells": 0.06229488205240509
+      },
+      "rel_l2_mean": 0.04800093173980713,
+      "stored_rel_l2_mean": 0.048000936694734264
+    },
+    "shipped_w0.001_seed0": {
+      "solver_residual": {
+        "abs_mean": 1.8861477435546723,
+        "abs_mean_interface_nodes": 11.230343435631802,
+        "abs_mean_other_nodes": 1.5799940120607483
+      },
+      "rel_l2_by_region": {
+        "constant_k_cells": 0.04335633798228622,
+        "other_cells": 0.0621663966282128
+      },
+      "rel_l2_mean": 0.04792879894375801,
+      "stored_rel_l2_mean": 0.04792879927845206
+    },
+    "shipped_w0.01_seed0": {
+      "solver_residual": {
+        "abs_mean": 1.0664320065427455,
+        "abs_mean_interface_nodes": 9.654582962143298,
+        "abs_mean_other_nodes": 0.7850493655606464
+      },
+      "rel_l2_by_region": {
+        "constant_k_cells": 0.04389715470973318,
+        "other_cells": 0.06372319722386124
+      },
+      "rel_l2_mean": 0.04877018555998802,
+      "stored_rel_l2_mean": 0.048770185821922496
+    },
+    "shipped_w0.1_seed0": {
+      "solver_residual": {
+        "abs_mean": 0.8960307699960415,
+        "abs_mean_interface_nodes": 8.752824473425816,
+        "abs_mean_other_nodes": 0.6386103574588212
+      },
+      "rel_l2_by_region": {
+        "constant_k_cells": 0.045921508831957024,
+        "other_cells": 0.06598847464698943
+      },
+      "rel_l2_mean": 0.05207144096493721,
+      "stored_rel_l2_mean": 0.0520714392332593
+    },
+    "shipped_w1_seed0": {
+      "solver_residual": {
+        "abs_mean": 1.004726178221698,
+        "abs_mean_interface_nodes": 8.136850191978777,
+        "abs_mean_other_nodes": 0.7710488824710809
+      },
+      "rel_l2_by_region": {
+        "constant_k_cells": 0.0912368438209718,
+        "other_cells": 0.08596533956444596
+      },
+      "rel_l2_mean": 0.09784699976444244,
+      "stored_rel_l2_mean": 0.09784699568990618
+    },
+    "consistent_w0.001_seed0": {
+      "solver_residual": {
+        "abs_mean": 1.7773860090936455,
+        "abs_mean_interface_nodes": 11.145138363000331,
+        "abs_mean_other_nodes": 1.470460465861362
+      },
+      "rel_l2_by_region": {
+        "constant_k_cells": 0.04331230442325065,
+        "other_cells": 0.0621004575392126
+      },
+      "rel_l2_mean": 0.047866858541965485,
+      "stored_rel_l2_mean": 0.04786686292209197
+    },
+    "consistent_w0.01_seed0": {
+      "solver_residual": {
+        "abs_mean": 0.9464538680847945,
+        "abs_mean_interface_nodes": 9.71121578944647,
+        "abs_mean_other_nodes": 0.6592847358976399
+      },
+      "rel_l2_by_region": {
+        "constant_k_cells": 0.04312648898756526,
+        "other_cells": 0.06268353614904039
+      },
+      "rel_l2_mean": 0.04779849946498871,
+      "stored_rel_l2_mean": 0.047798496518225875
+    },
+    "consistent_w0.1_seed0": {
+      "solver_residual": {
+        "abs_mean": 0.5652963254860152,
+        "abs_mean_interface_nodes": 8.300569249017004,
+        "abs_mean_other_nodes": 0.31185742633379654
+      },
+      "rel_l2_by_region": {
+        "constant_k_cells": 0.042281381165598625,
+        "other_cells": 0.0644971455667766
+      },
+      "rel_l2_mean": 0.047523029148578644,
+      "stored_rel_l2_mean": 0.04752303160057636
+    },
+    "consistent_w1_seed0": {
+      "solver_residual": {
+        "abs_mean": 0.42517188285144,
+        "abs_mean_interface_nodes": 7.417769639467556,
+        "abs_mean_other_nodes": 0.1960660329130387
+      },
+      "rel_l2_by_region": {
+        "constant_k_cells": 0.04914905395916491,
+        "other_cells": 0.06463924854024998
+      },
+      "rel_l2_mean": 0.05368513986468315,
+      "stored_rel_l2_mean": 0.0536851427750662
+    }
+  }
+}
