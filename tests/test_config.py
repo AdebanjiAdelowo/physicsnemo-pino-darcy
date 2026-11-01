@@ -42,6 +42,21 @@ def test_full_trains_exactly_as_official():
     assert full.device == "cuda"
 
 
+@pytest.mark.parametrize("name", ["full_mps", "full_mps_sweep"])
+def test_full_mps_trains_exactly_as_official(name):
+    official, cfg = load_config("official"), load_config(name)
+    for key in ("start_lr", "gamma", "max_epochs", "batch_size", "model", "data"):
+        assert cfg[key] == official[key], key
+    assert cfg.device == "mps"
+    engine.validate_study(cfg)
+
+
+def test_full_mps_stages_are_the_runs_of_full():
+    stages = engine.study_runs(load_config("full_mps")) + engine.study_runs(load_config("full_mps_sweep"))
+    assert len(stages) == len(set(stages)) == 27
+    assert set(stages) == set(engine.study_runs(load_config("full")))
+
+
 def test_local_schedule_reaches_the_upstream_final_learning_rate():
     official, local = load_config("official"), load_config("local")
     steps = lambda cfg: cfg.max_epochs * 102  # noqa: E731

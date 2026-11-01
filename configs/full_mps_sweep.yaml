@@ -1,0 +1,10 @@
+# The remaining physics weights at the upstream training budget, paired by seed with the
+# data-only models of full_mps. Training settings as in full_mps.yaml.
+defaults:
+  - full_mps
+  - _self_
+
+name: full_mps_sweep
+
+study:
+  physics_weights: [0.001, 0.01, 1]
