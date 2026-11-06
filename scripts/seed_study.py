@@ -213,7 +213,12 @@ def main() -> None:
     assert len(training_hashes) == 1, "the runs differ in a training setting other than residual, weight and seed"
     write_json(
         ROOT / "results" / "local_seeds" / "run_manifest.json",
-        {"hardware": hardware(), "shared_training_config_sha256": training_hashes.pop(), "excluded_from_training_hash": list(TRAINING_KEYS_EXCLUDED), "runs": manifest},
+        {
+            "hardware": hardware(),
+            "shared_training_config_sha256": training_hashes.pop(),
+            "excluded_from_training_hash": list(TRAINING_KEYS_EXCLUDED),
+            "runs": manifest,
+        },
     )
 
     comparisons = {n: compare(per_seed, per_sample, n) for n in list(SETTINGS)[1:]}

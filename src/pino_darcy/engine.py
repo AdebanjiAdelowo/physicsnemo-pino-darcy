@@ -102,8 +102,15 @@ def study_runs(cfg: DictConfig) -> list[tuple[str | None, float, int]]:
 
 def validate_study(cfg: DictConfig) -> None:
     for residual in cfg.study.residuals:
-        if residual not in P.RESIDUALS:
-            raise ValueError(f"unknown residual {residual!r}; choose from {sorted(P.RESIDUALS)}.")
+        if residual not in P.TRAINING_RESIDUALS:
+            raise ValueError(f"unknown residual {residual!r}; choose from {sorted(P.TRAINING_RESIDUALS)}.")
+    if unlabelled_samples(cfg):
+        if cfg.data.train_samples is None:
+            raise ValueError("data.unlabelled_samples needs data.train_samples: the pool follows the labelled samples.")
+        if cfg.data.train_samples + unlabelled_samples(cfg) > int(1024 * cfg.data.train_percent / 100):
+            raise ValueError("labelled plus unlabelled samples exceed the training split.")
+    if int(cfg.evaluation.get("validate_every", 1)) < 1:
+        raise ValueError("evaluation.validate_every must be a positive number of epochs.")
     if any(float(w) < 0 for w in cfg.study.physics_weights):
         raise ValueError("physics weights must be non-negative.")
     if cfg.batch_size != 1:
@@ -113,13 +120,36 @@ def validate_study(cfg: DictConfig) -> None:
         raise ValueError("two runs of the study share a name.")
 
 
+def unlabelled_samples(cfg: DictConfig) -> int:
+    """Number of training-split fields used as unlabelled inputs of the PDE term (G5); 0 by default."""
+    return int(cfg.data.get("unlabelled_samples", 0) or 0)
+
+
 def load_datasets(cfg: DictConfig, root: Path, with_train: bool = True) -> dict:
-    """Normalised CPU tensors of the splits, after preparing the files if necessary."""
+    """Normalised CPU tensors of the splits, after preparing the files if necessary.
+
+    With ``data.unlabelled_samples = U > 0`` the training-split samples ``N .. N + U - 1`` that follow
+    the ``N = data.train_samples`` labelled ones are returned as ``sets["unlabelled"]``: their
+    permeabilities only (the pressure is not loaded). They never come from the validation or test
+    split. Residuals that need the uncropped coefficients (``physics.needs_full_grid``) get them as
+    extra keys of the training and unlabelled splits.
+    """
     manifest = D.prepare(cfg.data, root)
     data_dir = Path(root) / cfg.data.dir
     sets = {split: D.load_split(data_dir / f"{split}.hdf5") for split in ("validation", "test")}
     if with_train:
-        sets["train"] = D.load_split(data_dir / "train.hdf5", cfg.data.train_samples)
+        n_train = cfg.data.train_samples
+        sets["train"] = D.load_split(data_dir / "train.hdf5", n_train)
+        n_train = len(sets["train"]["k"])
+        full_grid = any(P.needs_full_grid(r) for r in cfg.study.residuals)
+        if full_grid:
+            sets["train"].update(D.load_full_grid(data_dir / "train.hdf5", 0, n_train))
+        n_unlabelled = unlabelled_samples(cfg)
+        if n_unlabelled:
+            pool = D.load_split(data_dir / "train.hdf5", n_train + n_unlabelled)
+            sets["unlabelled"] = {"k": pool["k"][n_train:].clone()}
+            if full_grid:
+                sets["unlabelled"].update(D.load_full_grid(data_dir / "train.hdf5", n_train, n_train + n_unlabelled))
     sets["manifest"] = manifest
     return sets
 
@@ -155,7 +185,14 @@ def train_run(
     torch.manual_seed(seed)
     model = build_fno(cfg).to(device)
     informers = make_informers(device)
-    phy_informer = informers[residual] if weight > 0 else None
+    physics = P.PhysicsTerm(residual, device, sets["train"]) if weight > 0 else None
+    # Unlabelled fields (G5): one per optimiser step, in an order of their own, so that the order
+    # of the labelled samples is the same as in the run without them.
+    pool = sets.get("unlabelled") if weight > 0 else None
+    pool_physics = P.PhysicsTerm(residual, device, pool) if pool is not None else None
+    pool_order: list[int] = []
+    pool_shuffle = torch.Generator().manual_seed(seed + 1_000_003)
+    validate_every = int(cfg.evaluation.get("validate_every", 1))
 
     optimizer = torch.optim.Adam(model.parameters(), betas=(0.9, 0.999), lr=cfg.start_lr, weight_decay=0.0)
     scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=cfg.gamma)
@@ -173,7 +210,7 @@ def train_run(
 
     for epoch in range(1, cfg.max_epochs + 1):
         model.train()
-        sums = {"data": 0.0, "pde": 0.0, "total": 0.0}
+        sums = {"data": 0.0, "pde": 0.0, "pde_unlabelled": 0.0, "total": 0.0}
         synchronise(device)
         tick = time.perf_counter()
         for i in torch.randperm(len(train_k), generator=shuffle).tolist():
@@ -188,12 +225,20 @@ def train_run(
             loss_data = F.mse_loss(outvar, out)
 
             # Compute total loss
-            if phy_informer is None:
+            if physics is None:
                 loss_pde = None
                 loss = loss_data
             else:
-                loss_pde = P.pde_loss(P.residual_field(phy_informer, out, invar))
+                loss_pde = P.pde_loss(physics.residual(out, invar, i))
                 loss = loss_data + P.PDE_LOSS_FACTOR * weight * loss_pde
+                if pool_physics is not None:
+                    if not pool_order:
+                        pool_order = torch.randperm(len(pool["k"]), generator=pool_shuffle).tolist()
+                    j = pool_order.pop(0)
+                    pool_k = pool["k"][j : j + 1].to(device)
+                    loss_pde_unlabelled = P.pde_loss(pool_physics.residual(model(pool_k), pool_k, j))
+                    loss = loss + P.PDE_LOSS_FACTOR * weight * loss_pde_unlabelled
+                    sums["pde_unlabelled"] += loss_pde_unlabelled.detach()
 
             # Backward pass and optimizer and learning rate update
             loss.backward()
@@ -207,12 +252,16 @@ def train_run(
         optim_seconds += time.perf_counter() - tick
 
         sums = {key: float(value) / len(train_k) for key, value in sums.items()}
+        if not np.isfinite(sums["total"]):
+            raise RuntimeError(f"non-finite training loss at epoch {epoch}")
+        if epoch % validate_every and epoch != cfg.max_epochs:
+            continue
         pred = predict(model, val_k, device)
         row = {
             "epoch": epoch,
             "learning_rate": optimizer.param_groups[0]["lr"],
             "train_loss_data": sums["data"],
-            "train_loss_pde": sums["pde"] if phy_informer is not None else None,
+            "train_loss_pde": sums["pde"] if physics is not None else None,
             "train_loss_total": sums["total"],
             "validation_mse": F.mse_loss(val_u, pred).item(),
             "validation_rel_l2": relative_l2(pred, val_u).mean().item(),
@@ -222,8 +271,6 @@ def train_run(
         synchronise(device)
         row["elapsed_seconds"] = time.perf_counter() - start
         history.append(row)
-        if not np.isfinite(row["train_loss_total"]):
-            raise RuntimeError(f"non-finite training loss at epoch {epoch}")
 
     synchronise(device)
     train_seconds = time.perf_counter() - start
@@ -251,6 +298,11 @@ def train_run(
         "optimisation_ms_per_step": 1e3 * optim_seconds / steps,
         "peak_train_memory_mb": torch.cuda.max_memory_allocated() / 2**20 if device.type == "cuda" else None,
     }
+    if residual is not None and residual not in P.RESIDUALS:
+        metrics["residual_spec"] = P.TRAINING_RESIDUALS[residual]
+    if pool_physics is not None:
+        metrics["unlabelled_samples"] = len(pool["k"])
+        metrics["final_train_loss_pde_unlabelled"] = sums["pde_unlabelled"]
     write_json(run_dir / "train_metrics.json", metrics)
     return metrics
 
@@ -327,9 +379,11 @@ def prepare_study(cfg: DictConfig, root: Path, write_metadata: bool, with_train:
     if write_metadata:
         metadata["physics_device"] = str(P.physics_device(device))
         metadata["residual_definitions"] = P.RESIDUALS
+        if any(r not in P.RESIDUALS for r in cfg.study.residuals):
+            metadata["training_residuals"] = {r: P.TRAINING_RESIDUALS[r] for r in cfg.study.residuals}
         metadata["pde_loss_factor"] = P.PDE_LOSS_FACTOR
         metadata["config"] = OmegaConf.to_container(cfg, resolve=True)
         metadata["dataset"] = sets["manifest"]
-        metadata["samples"] = {split: len(sets[split]["k"]) for split in ("train", "validation", "test") if split in sets}
+        metadata["samples"] = {split: len(sets[split]["k"]) for split in ("train", "unlabelled", "validation", "test") if split in sets}
         write_json(out_dir / "study_metadata.json", metadata)
     return out_dir, device, sets

@@ -159,3 +159,69 @@ def residual_statistics(residual: torch.Tensor, k: torch.Tensor) -> dict:
         "abs_mean_interface": a[mask].mean().item(),
         "interface_fraction": mask.double().mean().item(),
     }
+
+
+# Residuals a model can be trained with. ``RESIDUALS`` above stays the set of cell-grid
+# definitions evaluated as diagnostics during validation and evaluation, so that histories and
+# summaries keep their format. Each training residual combines an operator and a coefficient:
+#   cell_fd: the PhysicsInformer residual of the upstream script with a definition of RESIDUALS;
+#   solver:  the discrete operator of the data generator (pino_darcy.discrete), in normalised
+#            units with the consistent forcing 1 / (K_SCALE U_SCALE);
+#   Kcoeff:  the smoothed model input (as upstream); coeff: the two-valued coefficient the
+#            reference pressure was generated from (audit F3, F4).
+TRAINING_RESIDUALS = {
+    "shipped": {"operator": "cell_fd", "definition": "shipped", "coefficient": "Kcoeff"},
+    "consistent": {"operator": "cell_fd", "definition": "consistent", "coefficient": "Kcoeff"},
+    "consistent_coeff": {"operator": "cell_fd", "definition": "consistent", "coefficient": "coeff"},  # G3
+    "solver_kcoeff": {"operator": "solver", "coefficient": "Kcoeff"},  # G4 control: right operator, wrong coefficient
+    "solver": {"operator": "solver", "coefficient": "coeff"},  # G4: exact for the reference
+}
+# keys of the full-grid (K x K, uncropped), normalised coefficient fields in a split of load_datasets
+FULL_GRID_FIELD = {"Kcoeff": "kcoeff_full", "coeff": "coeff_full"}
+
+
+def needs_full_grid(residual: str | None) -> bool:
+    """Whether a training residual reads full-grid coefficient fields instead of the model input."""
+    if residual is None:
+        return False
+    spec = TRAINING_RESIDUALS[residual]
+    return spec["operator"] == "solver" or spec["coefficient"] != "Kcoeff"
+
+
+class PhysicsTerm:
+    """The PDE residual of one training residual for the samples of one split.
+
+    ``residual(out, invar, i)`` returns the residual field of the model output ``out``
+    (``[1, 1, H, W]``) for sample ``i``. For ``shipped`` and ``consistent`` it is exactly
+    ``residual_field(informer, out, invar)``, the function used before this class existed.
+    """
+
+    def __init__(self, residual: str, device: torch.device, split: dict | None = None):
+        from . import discrete
+
+        self.name = residual
+        self.spec = TRAINING_RESIDUALS[residual]
+        self.device = torch.device(device)
+        self.informer = None
+        self.fields = None
+        if needs_full_grid(residual):
+            if split is None or FULL_GRID_FIELD[self.spec["coefficient"]] not in split:
+                raise ValueError(f"residual {residual!r} needs the full-grid field {FULL_GRID_FIELD[self.spec['coefficient']]!r}.")
+            full = split[FULL_GRID_FIELD[self.spec["coefficient"]]]
+        if self.spec["operator"] == "cell_fd":
+            self.informer = build_informer(self.spec["definition"], self.device)
+            if self.spec["coefficient"] != "Kcoeff":
+                H, W = split["k"].shape[-2:]
+                self.fields = full[..., :H, :W].contiguous()  # the crop of the model input
+        else:
+            self.forcing = RESIDUALS["consistent"]["forcing"]
+            # node coefficients once per sample, in float64, stored in float32 on the model device
+            self.fields = discrete.node_coefficient(full.double()).float().to(self.device)
+
+    def residual(self, out: torch.Tensor, invar: torch.Tensor, i: int) -> torch.Tensor:
+        if self.spec["operator"] == "cell_fd":
+            k = invar if self.fields is None else self.fields[i : i + 1].to(out.device)
+            return residual_field(self.informer, out, k)
+        from . import discrete
+
+        return discrete.solver_residual(out, self.fields[i : i + 1], self.forcing)
