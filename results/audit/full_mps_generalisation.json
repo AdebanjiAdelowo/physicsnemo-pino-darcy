@@ -1,0 +1,94 @@
+{
+  "environment": {
+    "timestamp_utc": "2026-11-06T21:00:05+00:00",
+    "git_commit": "eaca64c56da2cbb6fbeefa9faf6e3fa4d4fad8e5",
+    "git_dirty": true,
+    "upstream": {
+      "repository": "https://github.com/NVIDIA/physicsnemo",
+      "commit": "b45a5c810c741e6b41f8515be24c51121f8fc21f",
+      "example": "examples/cfd/darcy_physics_informed"
+    },
+    "device": "mps",
+    "gpu_name": null,
+    "cuda_version": null,
+    "python_version": "3.12.2",
+    "torch_version": "2.14.1",
+    "torch_threads": 5,
+    "physicsnemo": {
+      "version": "2.3.0a0",
+      "commit": "b45a5c810c741e6b41f8515be24c51121f8fc21f",
+      "url": "https://github.com/nvidia/physicsnemo"
+    },
+    "warp_version": "1.18.0",
+    "sympy_version": "1.14.0",
+    "numpy_version": "2.5.3",
+    "platform": "macOS-26.6.2-arm64-arm-64bit",
+    "processor": "arm"
+  },
+  "study": "runs/full_mps",
+  "runs": {
+    "dataonly_seed0": {
+      "train": 0.006921065971255302,
+      "validation": 0.042852967977523804,
+      "test": 0.03677869588136673,
+      "test_minus_train": 0.029857629910111427,
+      "test_over_train": 5.314021862255999
+    },
+    "shipped_w0.1_seed0": {
+      "train": 0.025667062029242516,
+      "validation": 0.04056566208600998,
+      "test": 0.036735907196998596,
+      "test_minus_train": 0.01106884516775608,
+      "test_over_train": 1.431247065018401
+    },
+    "consistent_w0.1_seed0": {
+      "train": 0.015932386741042137,
+      "validation": 0.03212843835353851,
+      "test": 0.02825322560966015,
+      "test_minus_train": 0.012320838868618011,
+      "test_over_train": 1.773320348600332
+    },
+    "dataonly_seed1": {
+      "train": 0.008550356142222881,
+      "validation": 0.0452786423265934,
+      "test": 0.039384402334690094,
+      "test_minus_train": 0.030834046192467213,
+      "test_over_train": 4.606170980434872
+    },
+    "shipped_w0.1_seed1": {
+      "train": 0.02556629106402397,
+      "validation": 0.04195094481110573,
+      "test": 0.03756381571292877,
+      "test_minus_train": 0.0119975246489048,
+      "test_over_train": 1.4692712219719393
+    },
+    "consistent_w0.1_seed1": {
+      "train": 0.01751410961151123,
+      "validation": 0.035133689641952515,
+      "test": 0.03059936687350273,
+      "test_minus_train": 0.0130852572619915,
+      "test_over_train": 1.7471266054764871
+    },
+    "dataonly_seed2": {
+      "train": 0.009556731209158897,
+      "validation": 0.042111873626708984,
+      "test": 0.03702624887228012,
+      "test_minus_train": 0.027469517663121223,
+      "test_over_train": 3.8743633217177047
+    },
+    "shipped_w0.1_seed2": {
+      "train": 0.027744587510824203,
+      "validation": 0.04131326079368591,
+      "test": 0.037258878350257874,
+      "test_minus_train": 0.00951429083943367,
+      "test_over_train": 1.3429242130819854
+    },
+    "consistent_w0.1_seed2": {
+      "train": 0.019526759162545204,
+      "validation": 0.033908989280462265,
+      "test": 0.029775097966194153,
+      "test_minus_train": 0.010248338803648949,
+      "test_over_train": 1.5248356226621855
+    }
+  }
+}
