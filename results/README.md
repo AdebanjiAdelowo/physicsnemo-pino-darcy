@@ -13,7 +13,7 @@ Tracked result files. Each study directory is a copy of a run directory without 
 | `<study>/<run>/train_metrics.json` | residual definition, physics weight, seed, parameter count, timings, memory |
 | `<study>/<run>/eval_metrics.json` | validation and test errors, residual statistics under both definitions, per-sample test errors, inference time |
 
-Run names: `dataonly_seed<S>` for weight 0, otherwise `<residual>_w<weight>_seed<S>` with `<residual>` the definition used in the training loss (`shipped` or `consistent`).
+Run names: `dataonly_seed<S>` for weight 0, otherwise `<residual>_w<weight>_seed<S>` with `<residual>` the definition used in the training loss (`shipped`, `consistent`, `consistent_coeff`, `solver_kcoeff` or `solver`).
 
 | Study | Configuration | Status |
 |---|---|---|
@@ -25,6 +25,13 @@ Run names: `dataonly_seed<S>` for weight 0, otherwise `<residual>_w<weight>_seed
 | `local_seeds` | `configs/local.yaml` with seeds 1 and 2, weights 0 and 0.1, both residuals (6 runs), Apple MPS; `run_manifest.json` adds configuration, dataset and checkpoint hashes for these and the matching seed-0 runs | LOCAL/REDUCED |
 | `audit/local_seeds_solver_residual.json` | as `local_solver_residual.json`, for `local_seeds` | LOCAL/REDUCED |
 | `audit/seed_study.json` | `scripts/seed_study.py`: seeds 0 to 2 at weight 0.1, per-seed metrics, paired differences with intervals over seeds, seed spread | LOCAL/REDUCED |
+| `full_mps`, `full_mps_more` | `configs/full_mps.yaml`: 5100 steps (50 epochs), data only, `shipped` 0.1, `consistent` 0.1; seeds 0 to 2 and 3 to 4 (G2 stages 1 and 3), Apple MPS | FULL BUDGET, MPS |
+| `full_mps_sweep` | `configs/full_mps_sweep.yaml`: both residuals at weights 0.001, 0.01, 1, seeds 0 to 2 (G2 stage 2) | FULL BUDGET, MPS |
+| `full_mps_operator`, `full_mps_solver_w1` | `consistent_coeff`, `solver_kcoeff`, `solver` at 0.1 and `solver` at 1, seeds 0 to 2 (G3, G4) | FULL BUDGET, MPS |
+| `labels25`, `labels50`, `labels25_unlabelled`, `labels50_unlabelled` | 25 or 50 labelled samples, 5100 steps, data only and `solver` 0.1, with and without the other training permeabilities as unlabelled inputs (G5, G6) | FULL BUDGET, MPS |
+| `audit/<study>_solver_residual.json`, `audit/<study>_generalisation.json` | per study: test error recomputed from the checkpoints, error by region, exact residual; training, validation and test error of every run | FULL BUDGET, MPS |
+| `audit/full_study.json` | `scripts/full_study.py`: all paired comparisons with intervals over seeds, Holm adjustment, factorial contrasts, the n = 5 result of G2 | FULL BUDGET, MPS |
+| `audit/solver_operator_check.json`, `audit/determinism.json`, `audit/code_regression.json` | checks of the training residuals on real fields, of MPS repeatability, and of the code changes between the studies | VERIFIED |
 
 Units: all losses and residuals are in the normalised variables $k' = k / 4.49996$ and $u' = u / 3.88433 \times 10^{-3}$. `*_pde_l1_*` is the mean absolute residual over all 240 × 240 cells with the two outer rows and columns set to zero, which is the quantity in the training loss; the other residual statistics are taken over the interior cells. `test_rel_l2_*` are relative $L^2$ errors as fractions. Times are wall-clock with the device synchronised. Memory fields are CUDA peak allocations and are empty on other devices.
 

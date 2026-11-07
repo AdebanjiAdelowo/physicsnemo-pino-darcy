@@ -1,7 +1,7 @@
 {
   "environment": {
-    "timestamp_utc": "2026-11-07T20:01:41+00:00",
-    "git_commit": "c64d2dab254995d8d2ef8c483f8e97822e912bec",
+    "timestamp_utc": "2026-11-07T20:55:21+00:00",
+    "git_commit": "a863b91ee4bf508f13dba5abf6d9d1dae6475a67",
     "git_dirty": true,
     "upstream": {
       "repository": "https://github.com/NVIDIA/physicsnemo",
@@ -6355,7 +6355,427 @@
       "sign_test_p_value": 0.25
     }
   },
-  "g2_stage3_n5": "pending",
+  "g2_stage3_n5": {
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "comparisons": {
+      "consistent 0.1 - data only": {
+        "rel_l2": {
+          "n_seeds": 5,
+          "per_seed": [
+            -0.00852546966416412,
+            -0.008785034995526075,
+            -0.007251148894283688,
+            -0.008396586483286228,
+            -0.008283488470624434
+          ],
+          "mean": -0.008248345701576908,
+          "std": 0.0005878870862958304,
+          "ci_low": -0.00897830393163935,
+          "ci_high": -0.007518387471514466,
+          "t_p_value": 6.151537295970641e-06,
+          "seeds_negative": 5,
+          "sign_test_p_value": 0.0625,
+          "control_mean": 0.03827370719445753,
+          "relative_change": -0.21550945299522392,
+          "ci_relative": [
+            -0.23458150750914225,
+            -0.19643739848130556
+          ],
+          "effect_size_dz": -14.030493089324743,
+          "in_control_seed_sd": -6.453184750508335,
+          "reading": "improvement"
+        },
+        "rel_l2_constant_k": {
+          "n_seeds": 5,
+          "per_seed": [
+            -0.008815907644785913,
+            -0.009259213854366635,
+            -0.007458663902739603,
+            -0.008355067202268425,
+            -0.008382517458072912
+          ],
+          "mean": -0.008454274012446698,
+          "std": 0.0006680077690381431,
+          "ci_low": -0.009283715209781775,
+          "ci_high": -0.00762483281511162,
+          "t_p_value": 9.277381831552383e-06,
+          "seeds_negative": 5,
+          "sign_test_p_value": 0.0625,
+          "control_mean": 0.03488969209231126,
+          "relative_change": -0.24231437726874608,
+          "ci_relative": [
+            -0.26608762224724974,
+            -0.2185411322902424
+          ],
+          "effect_size_dz": -12.655951628556524,
+          "in_control_seed_sd": -6.984535284067278,
+          "reading": "improvement"
+        },
+        "rel_l2_near_jumps": {
+          "n_seeds": 5,
+          "per_seed": [
+            -0.007892049407291227,
+            -0.007466398564257799,
+            -0.007128836961663991,
+            -0.009276646101491925,
+            -0.008192060657695885
+          ],
+          "mean": -0.007991198338480165,
+          "std": 0.000824868789644253,
+          "ci_low": -0.009015408217823349,
+          "ci_high": -0.006966988459136982,
+          "t_p_value": 2.686323917489558e-05,
+          "seeds_negative": 5,
+          "sign_test_p_value": 0.0625,
+          "control_mean": 0.049507580005990565,
+          "relative_change": -0.1614136327712485,
+          "ci_relative": [
+            -0.18210157347081918,
+            -0.14072569207167784
+          ],
+          "effect_size_dz": -9.687841798362363,
+          "in_control_seed_sd": -4.921409421640911,
+          "reading": "improvement"
+        },
+        "exact_residual": {
+          "scale": "ratio setting / control, geometric mean over seeds",
+          "per_seed": [
+            0.20075137568458362,
+            0.18367558801215647,
+            0.22158870009244783,
+            0.1814377796904877,
+            0.21155634020385658
+          ],
+          "ratio": 0.19919675960507446,
+          "ci_low": 0.17878173539472705,
+          "ci_high": 0.2219429683326148,
+          "t_p_value": 2.0286977505560448e-06,
+          "seeds_lower": 5
+        },
+        "exact_residual_interface": {
+          "scale": "ratio setting / control, geometric mean over seeds",
+          "per_seed": [
+            0.6753367029420944,
+            0.6610478680571071,
+            0.6653723746322068,
+            0.6308914181631025,
+            0.6740763747964498
+          ],
+          "ratio": 0.6611444411117496,
+          "ci_low": 0.6388213732683894,
+          "ci_high": 0.6842475695147461,
+          "t_p_value": 4.765402045306785e-06,
+          "seeds_lower": 5
+        },
+        "exact_residual_other": {
+          "scale": "ratio setting / control, geometric mean over seeds",
+          "per_seed": [
+            0.11634623536130384,
+            0.10841599032041341,
+            0.1303930102359216,
+            0.108281480093253,
+            0.12379686057305156
+          ],
+          "ratio": 0.11713124529502394,
+          "ci_low": 0.10581908153916354,
+          "ci_high": 0.1296526904676016,
+          "t_p_value": 5.070415545487547e-07,
+          "seeds_lower": 5
+        },
+        "cellgrid_residual": {
+          "scale": "ratio setting / control, geometric mean over seeds",
+          "per_seed": [
+            0.08356924994546686,
+            0.08140859051474644,
+            0.09403669059348879,
+            0.08192886873625355,
+            0.09084150441372381
+          ],
+          "ratio": 0.08620790091384184,
+          "ci_low": 0.07947894732815586,
+          "ci_high": 0.0935065502224891,
+          "t_p_value": 1.2193466572033364e-07,
+          "seeds_lower": 5
+        },
+        "train_rel_l2": {
+          "n_seeds": 5,
+          "per_seed": [
+            0.009011320769786835,
+            0.00896375346928835,
+            0.009970027953386307,
+            0.009849544614553452,
+            0.00983479991555214
+          ],
+          "mean": 0.009525889344513417,
+          "std": 0.0004945237959206064,
+          "ci_low": 0.008911856950863734,
+          "ci_high": 0.0101399217381631,
+          "t_p_value": 1.736916408668256e-06,
+          "seeds_negative": 0,
+          "sign_test_p_value": 0.0625,
+          "control_mean": 0.007883580215275288,
+          "relative_change": 1.208320215484835,
+          "ci_relative": [
+            1.1304327104576228,
+            1.2862077205120468
+          ],
+          "effect_size_dz": 19.262752213531005,
+          "in_control_seed_sd": 8.395401624283856,
+          "reading": "degradation"
+        },
+        "rel_l2_test_sample_bootstrap": {
+          "seed0": {
+            "mean": -0.00852546966416412,
+            "ci_low": -0.009626470853891077,
+            "ci_high": -0.00746305481707168,
+            "fraction_improved": 0.8671875
+          },
+          "seed1": {
+            "mean": -0.008785034995526075,
+            "ci_low": -0.010058111024136451,
+            "ci_high": -0.007560016861407348,
+            "fraction_improved": 0.84375
+          },
+          "seed2": {
+            "mean": -0.007251148894283688,
+            "ci_low": -0.00841516747850619,
+            "ci_high": -0.00612658262525656,
+            "fraction_improved": 0.828125
+          },
+          "seed3": {
+            "mean": -0.008396586483286228,
+            "ci_low": -0.009729411978423742,
+            "ci_high": -0.007087894020060048,
+            "fraction_improved": 0.79296875
+          },
+          "seed4": {
+            "mean": -0.008283488470624434,
+            "ci_low": -0.009417751994169521,
+            "ci_high": -0.0071325453931422094,
+            "fraction_improved": 0.84375
+          }
+        }
+      },
+      "shipped 0.1 - data only": {
+        "rel_l2": {
+          "n_seeds": 5,
+          "per_seed": [
+            -4.2785068217199296e-05,
+            -0.0018205874475825112,
+            0.00023263027469511144,
+            -5.509273614734411e-05,
+            -0.0004671178867283743
+          ],
+          "mean": -0.0004305905727960635,
+          "std": 0.0008161922542875008,
+          "ci_low": -0.0014440271105576252,
+          "ci_high": 0.000582845964965498,
+          "t_p_value": 0.3035032828301273,
+          "seeds_negative": 4,
+          "sign_test_p_value": 0.375,
+          "control_mean": 0.03827370719445753,
+          "relative_change": -0.011250296988696668,
+          "ci_relative": [
+            -0.037728958504618985,
+            0.015228364527225646
+          ],
+          "effect_size_dz": -0.5275602292647947,
+          "in_control_seed_sd": -0.3368773107495945,
+          "reading": "no material effect"
+        },
+        "rel_l2_constant_k": {
+          "n_seeds": 5,
+          "per_seed": [
+            -0.0006127663448728046,
+            -0.0029039035009929687,
+            -4.586057454052106e-05,
+            -0.0006564540848265424,
+            -0.0010484742236812478
+          ],
+          "mean": -0.001053491745782817,
+          "std": 0.0010944458871767024,
+          "ci_low": -0.002412425801872307,
+          "ci_high": 0.0003054423103066731,
+          "t_p_value": 0.09771877618950955,
+          "seeds_negative": 5,
+          "sign_test_p_value": 0.0625,
+          "control_mean": 0.03488969209231126,
+          "relative_change": -0.03019492814655644,
+          "ci_relative": [
+            -0.06914437064934545,
+            0.008754514356232574
+          ],
+          "effect_size_dz": -0.9625800216586923,
+          "in_control_seed_sd": -0.8703467925289359,
+          "reading": "inconclusive"
+        },
+        "rel_l2_near_jumps": {
+          "n_seeds": 5,
+          "per_seed": [
+            -0.008153762750316498,
+            -0.008214927662336717,
+            -0.00810455518975748,
+            -0.007700569443306694,
+            -0.007939563622776112
+          ],
+          "mean": -0.0080226757336987,
+          "std": 0.00020706818961840898,
+          "ci_low": -0.00827978484992111,
+          "ci_high": -0.007765566617476292,
+          "t_p_value": 1.0641483493402971e-07,
+          "seeds_negative": 5,
+          "sign_test_p_value": 0.0625,
+          "control_mean": 0.049507580005990565,
+          "relative_change": -0.16204944238292263,
+          "ci_relative": [
+            -0.16724277068116095,
+            -0.1568561140846843
+          ],
+          "effect_size_dz": -38.744124573084406,
+          "in_control_seed_sd": -4.940794893360622,
+          "reading": "improvement"
+        },
+        "exact_residual": {
+          "scale": "ratio setting / control, geometric mean over seeds",
+          "per_seed": [
+            0.37770068385513217,
+            0.33270980667808564,
+            0.4152400532979182,
+            0.3337168091974098,
+            0.3925444464709966
+          ],
+          "ratio": 0.3689401383182032,
+          "ci_low": 0.32630499697297577,
+          "ci_high": 0.4171460042750372,
+          "t_p_value": 2.292706186198691e-05,
+          "seeds_lower": 5
+        },
+        "exact_residual_interface": {
+          "scale": "ratio setting / control, geometric mean over seeds",
+          "per_seed": [
+            0.7428495736751385,
+            0.727279480297306,
+            0.7339686876249915,
+            0.7058061376016067,
+            0.7399729299986793
+          ],
+          "ratio": 0.7298543515126761,
+          "ci_low": 0.7115829003038391,
+          "ci_high": 0.7485949622939738,
+          "t_p_value": 4.218316939144637e-06,
+          "seeds_lower": 5
+        },
+        "exact_residual_other": {
+          "scale": "ratio setting / control, geometric mean over seeds",
+          "per_seed": [
+            0.31275884618339145,
+            0.27050436212410145,
+            0.3497426514058127,
+            0.27315287989387577,
+            0.3266226687253769
+          ],
+          "ratio": 0.305011992964837,
+          "ci_low": 0.26524671759185947,
+          "ci_high": 0.3507388015844648,
+          "t_p_value": 1.911129436184047e-05,
+          "seeds_lower": 5
+        },
+        "cellgrid_residual": {
+          "scale": "ratio setting / control, geometric mean over seeds",
+          "per_seed": [
+            0.28040316981704494,
+            0.24276047903681808,
+            0.31644886363106933,
+            0.24735118453940055,
+            0.29453023651181365
+          ],
+          "ratio": 0.2748790651511383,
+          "ci_low": 0.2387326312126323,
+          "ci_high": 0.3164984194852942,
+          "t_p_value": 1.4196214879142694e-05,
+          "seeds_lower": 5
+        },
+        "train_rel_l2": {
+          "n_seeds": 5,
+          "per_seed": [
+            0.018745996057987213,
+            0.01701593492180109,
+            0.018187856301665306,
+            0.018435407429933548,
+            0.018816959112882614
+          ],
+          "mean": 0.018240430764853953,
+          "std": 0.000729409220784268,
+          "ci_low": 0.017334749595448267,
+          "ci_high": 0.01914611193425964,
+          "t_p_value": 6.123933655945044e-07,
+          "seeds_negative": 0,
+          "sign_test_p_value": 0.0625,
+          "control_mean": 0.007883580215275288,
+          "relative_change": 2.313724255575043,
+          "ci_relative": [
+            2.198842292726383,
+            2.428606218423703
+          ],
+          "effect_size_dz": 25.007129393348855,
+          "in_control_seed_sd": 16.07574227797355,
+          "reading": "degradation"
+        },
+        "rel_l2_test_sample_bootstrap": {
+          "seed0": {
+            "mean": -4.2785068217199296e-05,
+            "ci_low": -0.0012408138782120655,
+            "ci_high": 0.001097555773321801,
+            "fraction_improved": 0.42578125
+          },
+          "seed1": {
+            "mean": -0.0018205874475825112,
+            "ci_low": -0.0030841206496916127,
+            "ci_high": -0.000617558424983145,
+            "fraction_improved": 0.5078125
+          },
+          "seed2": {
+            "mean": 0.00023263027469511144,
+            "ci_low": -0.0009248132510037972,
+            "ci_high": 0.0013318459446054472,
+            "fraction_improved": 0.42578125
+          },
+          "seed3": {
+            "mean": -5.509273614734411e-05,
+            "ci_low": -0.0013189657610382702,
+            "ci_high": 0.0011706467854310173,
+            "fraction_improved": 0.4375
+          },
+          "seed4": {
+            "mean": -0.0004671178867283743,
+            "ci_low": -0.0016193866769754093,
+            "ci_high": 0.0006754083543455634,
+            "fraction_improved": 0.4765625
+          }
+        }
+      }
+    },
+    "per_setting_mean": {
+      "data only": {
+        "rel_l2": 0.03827370719445753,
+        "rel_l2_near_jumps": 0.049507580005990565
+      },
+      "shipped 0.1": {
+        "rel_l2": 0.03784311662166147,
+        "rel_l2_near_jumps": 0.041484904272291866
+      },
+      "consistent 0.1": {
+        "rel_l2": 0.03002536149288062,
+        "rel_l2_near_jumps": 0.0415163816675104
+      }
+    }
+  },
   "notes": [
     "Seeds are the independent units. With three seeds (df = 2) the 95 % t interval is 4.30 standard errors (2.48 standard deviations of the paired differences) on each side; with five seeds (stage 3, df = 4) 2.78 standard errors.",
     "std_over_seeds is variability across independently trained models; mean_test_sample_std is the spread of the per-sample error over the 256 test samples for one model. They are different quantities.",

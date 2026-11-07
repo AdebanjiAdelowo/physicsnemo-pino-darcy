@@ -56,7 +56,7 @@ python scripts/full_study.py                              # all statistics and f
 
 Outcome (95 % t intervals over seeds, paired by seed; details and caveats in the audit):
 
-- G2 (F15): `consistent` 0.1 minus data only -21.7 % [-27.1, -16.3], every seed (primary). Weight 1 inconclusive; `shipped` 1 +142 %. The near-jump degradation seen at 15 epochs does not occur. Stage 3 (seeds 3 and 4) was triggered by the pre-registered stopping rule; its n = 5 result: PENDING at the time of writing.
+- G2 (F15): `consistent` 0.1 minus data only -21.7 % [-27.1, -16.3], every seed (primary). Weight 1 inconclusive; `shipped` 1 +142 %. The near-jump degradation seen at 15 epochs does not occur. Stage 3 (seeds 3 and 4) was triggered by the pre-registered stopping rule; with n = 5, -21.6 % [-23.5, -19.6], lower in all five seeds; `shipped` 0.1 (the upstream default) has no material effect (-1.1 % [-3.8, +1.5]).
 - G3, G4 (F16): `solver` 0.1 minus data only -19.4 % [-26.8, -12.0] (primary). All four residual variants improve by 18 to 22 %; the exact operator is not better than the cell-grid one; `coeff` is slightly worse than `Kcoeff`; `solver` 1 inconclusive.
 - G5, G6 (F17): with 25 and 50 labels, `solver` 0.1 improves by 27 % and 30 %, and with the unlabelled fields by 42 % and 39 % (four primary comparisons, Holm, every seed). The unlabelled runs use about twice the compute per step.
 
