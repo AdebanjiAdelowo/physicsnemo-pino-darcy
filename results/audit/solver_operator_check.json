@@ -1,0 +1,150 @@
+{
+  "environment": {
+    "timestamp_utc": "2026-11-07T00:28:22+00:00",
+    "git_commit": "998c6494a8f7f6f7ec8dc5cb29fc42615b8eee1d",
+    "git_dirty": true,
+    "upstream": {
+      "repository": "https://github.com/NVIDIA/physicsnemo",
+      "commit": "b45a5c810c741e6b41f8515be24c51121f8fc21f",
+      "example": "examples/cfd/darcy_physics_informed"
+    },
+    "device": "cpu",
+    "gpu_name": null,
+    "cuda_version": null,
+    "python_version": "3.12.2",
+    "torch_version": "2.14.1",
+    "torch_threads": 2,
+    "physicsnemo": {
+      "version": "2.3.0a0",
+      "commit": "b45a5c810c741e6b41f8515be24c51121f8fc21f",
+      "url": "https://github.com/nvidia/physicsnemo"
+    },
+    "warp_version": "1.18.0",
+    "sympy_version": "1.14.0",
+    "numpy_version": "2.5.3",
+    "platform": "macOS-26.6.2-arm64-arm-64bit",
+    "processor": "arm"
+  },
+  "forcing_normalised": 57.210432056087576,
+  "margin_nodes": 6,
+  "notes": [
+    "Residuals of the stored reference pressure (float32 in the dataset), evaluated in float32 as in training.",
+    "near_jumps: interior nodes (cells) where coeff is not constant on the surrounding 5 x 5 cells (reference.interface_nodes).",
+    "pde_loss_of_reference is the mean |r| over the whole residual field including zeroed borders and margin, as the training loss.",
+    "Evaluated on CPU; training ran on MPS, whose float32 kernels can differ in the last bits."
+  ],
+  "splits": {
+    "train": {
+      "samples": 16,
+      "grid": 241,
+      "torch_vs_numpy_float64": {
+        "max_abs_difference": 0.0,
+        "max_abs_residual": 0.004542665450205652,
+        "units": "physical, forcing 1"
+      },
+      "reference_under_training_residuals": {
+        "consistent": {
+          "operator": "cell_fd",
+          "coefficient": "Kcoeff",
+          "abs_mean_over_forcing": 0.447223637211532,
+          "near_jumps_over_forcing": 10.382013307501369,
+          "away_from_jumps_over_forcing": 0.16135823106005603,
+          "pde_loss_of_reference": 25.161203384399414
+        },
+        "consistent_coeff": {
+          "operator": "cell_fd",
+          "coefficient": "coeff",
+          "abs_mean_over_forcing": 0.11694151600288516,
+          "near_jumps_over_forcing": 3.931562790614226,
+          "away_from_jumps_over_forcing": 0.006038031574775089,
+          "pde_loss_of_reference": 6.579234227538109
+        },
+        "solver_kcoeff": {
+          "operator": "solver",
+          "coefficient": "Kcoeff",
+          "abs_mean_over_forcing": 0.495091168945769,
+          "near_jumps_over_forcing": 10.895031038610625,
+          "away_from_jumps_over_forcing": 0.17645230989905453,
+          "pde_loss_of_reference": 25.551496624946594
+        },
+        "solver": {
+          "operator": "solver",
+          "coefficient": "coeff",
+          "abs_mean_over_forcing": 0.0012673282385564696,
+          "near_jumps_over_forcing": 0.0014966104737245535,
+          "away_from_jumps_over_forcing": 0.0012603409301631782,
+          "pde_loss_of_reference": 0.06540640257298946
+        }
+      }
+    },
+    "test": {
+      "samples": 16,
+      "grid": 241,
+      "torch_vs_numpy_float64": {
+        "max_abs_difference": 0.0,
+        "max_abs_residual": 0.003208512270150843,
+        "units": "physical, forcing 1"
+      },
+      "reference_under_training_residuals": {
+        "consistent": {
+          "operator": "cell_fd",
+          "coefficient": "Kcoeff",
+          "abs_mean_over_forcing": 0.4141302975323188,
+          "near_jumps_over_forcing": 9.7610881674237,
+          "away_from_jumps_over_forcing": 0.14325508118169183,
+          "pde_loss_of_reference": 23.299341201782227
+        },
+        "consistent_coeff": {
+          "operator": "cell_fd",
+          "coefficient": "coeff",
+          "abs_mean_over_forcing": 0.10646180278552551,
+          "near_jumps_over_forcing": 3.5933754372708817,
+          "away_from_jumps_over_forcing": 0.004389751147777227,
+          "pde_loss_of_reference": 5.989636451005936
+        },
+        "solver_kcoeff": {
+          "operator": "solver",
+          "coefficient": "Kcoeff",
+          "abs_mean_over_forcing": 0.4519760470751985,
+          "near_jumps_over_forcing": 10.200919373818722,
+          "away_from_jumps_over_forcing": 0.15592140178416947,
+          "pde_loss_of_reference": 23.32633638381958
+        },
+        "solver": {
+          "operator": "solver",
+          "coefficient": "coeff",
+          "abs_mean_over_forcing": 0.0012650327801634396,
+          "near_jumps_over_forcing": 0.0014825749413156103,
+          "away_from_jumps_over_forcing": 0.0012590588736357277,
+          "pde_loss_of_reference": 0.06528793321922421
+        }
+      }
+    }
+  },
+  "directional_derivative_solver_loss": {
+    "l1 (training loss)": {
+      "eps=0.0001": {
+        "autograd": 15700.675144579736,
+        "finite_difference": 15613.627914913195,
+        "relative_difference": 0.005575080317073453
+      },
+      "eps=1e-06": {
+        "autograd": 15700.675144579736,
+        "finite_difference": 15686.624993122678,
+        "relative_difference": 0.0008956771429940224
+      }
+    },
+    "quadratic": {
+      "eps=0.0001": {
+        "autograd": 594124012.8406174,
+        "finite_difference": 594124012.8403902,
+        "relative_difference": 3.824334667059303e-13
+      },
+      "eps=1e-06": {
+        "autograd": 594124012.8406174,
+        "finite_difference": 594124012.8353238,
+        "relative_difference": 8.909937315156536e-12
+      }
+    }
+  }
+}
