@@ -14,8 +14,8 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install
+        # setup-uv with python-version already creates and activates .venv; a second `uv venv` fails
         run: |
-          uv venv
           uv pip install --index-strategy unsafe-best-match --extra-index-url https://download.pytorch.org/whl/cpu -r requirements.txt ruff
       - name: Lint
         run: uv run --no-project ruff check src scripts tests
