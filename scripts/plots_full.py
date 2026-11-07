@@ -148,7 +148,7 @@ def plot_weight_sweep(records, out):
         ax.set_xlabel("physics weight")
         ax.set_ylabel(ylabel)
     axes[0].legend(fontsize=8)
-    axes[0].set_title("50 epochs, seeds 0 to 2; error bars: 95 % t interval over seeds")
+    axes[0].set_title("50 epochs, seeds 0 to 2; bars: unpaired 95 % t interval of each mean\n(paired seed differences: full_seed_intervals.png)", fontsize=9)
     _save(fig, out / "full_weight_sweep.png")
 
 
