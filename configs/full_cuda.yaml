@@ -1,0 +1,15 @@
+# CUDA replication of the G2 primary comparison (docs/CUDA_REPLICATION_PLAN.md), stage 1: seeds 0 to 2
+# of data only, shipped 0.1 and consistent 0.1. Training settings are those of full.yaml (and of
+# full_mps.yaml, which differs only in the device). Outputs go to runs/full_cuda and, once published,
+# results/full_cuda: never to the MPS studies.
+defaults:
+  - full
+  - _self_
+
+name: full_cuda
+device: cuda
+
+study:
+  residuals: [shipped, consistent]
+  physics_weights: [0, 0.1]
+  seeds: [0, 1, 2]

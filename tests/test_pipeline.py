@@ -99,3 +99,34 @@ def test_resume_skips_finished_runs(trained, tmp_path, capsys):
     study.train_study(cfg, tmp_path, resume=True)
     assert (out_dir / "dataonly_seed0" / "train_metrics.json").stat().st_mtime_ns == stamp
     assert capsys.readouterr().out.count("[skip]") == 3
+
+
+def test_resume_of_a_new_study_writes_its_metadata(tiny_cfg, sets, tmp_path, monkeypatch):
+    """A first launch with --resume (as the CUDA notebook always uses) must still record its provenance."""
+    monkeypatch.setattr(engine, "load_datasets", lambda cfg, root, with_train=True: sets)
+    out_dir = study.train_study(tiny_cfg, tmp_path, resume=True)
+    meta = json.loads((out_dir / "study_metadata.json").read_text())
+    assert meta["config"]["name"] == tiny_cfg.name and "git_commit" in meta
+
+
+def test_resume_keeps_metadata_and_retrains_only_unfinished_runs(trained, tmp_path, capsys):
+    cfg, out_dir, _ = trained
+    meta = (out_dir / "study_metadata.json").read_text()
+    finished = (out_dir / "dataonly_seed0" / "train_metrics.json").read_text()
+    (out_dir / "consistent_w0.1_seed0" / "train_metrics.json").unlink()  # a run interrupted before its record
+    capsys.readouterr()
+    study.train_study(cfg, tmp_path, resume=True)
+    out = capsys.readouterr().out
+    assert out.count("[skip]") == 2 and "[train] consistent_w0.1_seed0" in out
+    assert (out_dir / "study_metadata.json").read_text() == meta
+    assert (out_dir / "dataonly_seed0" / "train_metrics.json").read_text() == finished
+
+
+def test_resume_with_a_different_configuration_is_refused(trained, tmp_path):
+    cfg, out_dir, _ = trained
+    other = cfg.copy()
+    other.max_epochs = cfg.max_epochs + 1
+    stamp = (out_dir / "dataonly_seed0" / "train_metrics.json").stat().st_mtime_ns
+    with pytest.raises(SystemExit, match="cannot resume"):
+        study.train_study(other, tmp_path, resume=True)
+    assert (out_dir / "dataonly_seed0" / "train_metrics.json").stat().st_mtime_ns == stamp

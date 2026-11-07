@@ -318,7 +318,7 @@ At the commit above:
 ## Repository structure
 
 ```text
-configs/      official (upstream), smoke, local, full, full_mps*, labels*
+configs/      official (upstream), smoke, local, full, full_mps*, labels*, full_cuda*
 src/pino_darcy/
   data.py       download, splits, normalisation
   physics.py    Diffusion PDE, residual definitions, residual statistics
@@ -333,7 +333,8 @@ src/pino_darcy/
   gpulock.py    machine-wide accelerator lock
 scripts/      prepare_data, verify_data, verify_reference, train, evaluate,
               evaluate_solver_residual, evaluate_generalisation, plot_results, results,
-              seed_study, full_study, plots_full, check_solver_operator, check_determinism
+              seed_study, full_study, plots_full, check_solver_operator, check_determinism,
+              cuda_replication, study_status
 tests/        configuration, data, model, residual, loss terms, pipeline, figures, launcher, reference solver
 results/      tracked result files (see results/README.md)
 figures/      figures of the tracked results
@@ -391,23 +392,26 @@ Arguments after the options are Hydra overrides, for example `python scripts/tra
 
 Every study stores the timestamp, the commit and dirty flag of this repository, the upstream commit, device, Python, PyTorch, PhysicsNeMo, Warp and SymPy versions, the resolved configuration, the dataset checksums and the residual definitions. Every run stores its residual definition, weight, seed, timings and metrics, and a per-epoch history with the data and PDE loss terms in separate columns.
 
-### Study at the upstream budget on CUDA
+### Replication on CUDA
 
-`kaggle/run_cuda.ipynb` checks out one commit by its full SHA, verifies the checkout and a clean tree, prints hardware and versions, prepares and checks the data, runs the tests and a CUDA smoke study, and projects the runtime from a one-epoch probe. The 27 runs of `configs/full.yaml` start only with `RUN_FULL = True` and only if the projection fits the stated session budget; the configuration is never reduced. Each run keeps its own directory, and the session produces `physicsnemo-pino-darcy-full.zip` (records) and `physicsnemo-pino-darcy-full-eval-bundle.zip` (final checkpoints).
+The 50-epoch results above were trained on Apple MPS. [`docs/CUDA_REPLICATION_PLAN.md`](docs/CUDA_REPLICATION_PLAN.md) fixes, before any CUDA run, how they are replicated on an NVIDIA GPU and the criterion for the main result: the upper end of the five-seed 95 % interval of the relative change of `consistent` 0.1 against data only must lie below -5 %. The CUDA configurations `full_cuda` (seeds 0 to 2 of data only, `shipped` 0.1, `consistent` 0.1), `full_cuda_more` (seeds 3 and 4) and `full_cuda_sweep` (weights 0.001, 0.01, 1) train exactly as their MPS counterparts and write only to `runs/full_cuda*` and `results/full_cuda*`.
 
-To integrate the results:
+`kaggle/run_cuda.ipynb` checks out one commit by its full SHA, verifies the checkout, a clean tree and the installed PhysicsNeMo commit, prints hardware and versions, prepares and checks the data, runs the tests and a CUDA smoke study, and projects the runtime from a one-epoch probe. Nothing is trained unless `PLAN` is set: `"minimal"` (15 runs, the five-seed primary comparison), `"g2"` (27 runs, those of `configs/full.yaml`) or `"all"` (33 runs), and only if the projection fits the stated session budget; no configuration is ever reduced. Every study is trained with `--resume`, which skips finished runs and refuses to continue a study with a changed configuration, and is archived as soon as it is finished; a later session continues from those archives through `RESTORE_DIR`. The session then runs the audit evaluations and `scripts/cuda_replication.py`, and leaves per study `physicsnemo-pino-darcy-<study>.zip` (records), `-audit.zip` and `-eval-bundle.zip` (final checkpoints), and `cuda_replication.json`.
+
+To integrate the results of a session (for each study `S` of the plan, e.g. `full_cuda` and `full_cuda_more`):
 
 ```bash
-mkdir -p runs && cp physicsnemo-pino-darcy-full.zip runs/full.zip
-python scripts/results.py publish runs/full.zip                        # results/full/
-unzip physicsnemo-pino-darcy-full-eval-bundle.zip -d .                 # checkpoints into runs/full/
-python scripts/evaluate.py --config full --verify device=mps           # recompute the test errors locally
-python scripts/plot_results.py --study results/full --out figures
+mkdir -p runs
+cp physicsnemo-pino-darcy-$S.zip runs/$S.zip
+python scripts/results.py publish runs/$S.zip                       # results/$S/; refuses to replace an existing directory
+unzip -n physicsnemo-pino-darcy-$S-audit.zip -d .                   # results/audit/${S}_*.json; -n never overwrites
+unzip -n physicsnemo-pino-darcy-$S-eval-bundle.zip -d .             # final checkpoints into runs/$S/ (not tracked)
+python scripts/cuda_replication.py                                   # results/audit/cuda_replication.json, figures/cuda_replication.png
 ```
 
 ## Tests
 
-`python -m pytest -q` runs 88 tests in about 15 seconds: the upstream part of `official.yaml` against its checksum, the equality of the training settings of `full` and `official`, split construction and normalisation on a synthetic file, the residual against an analytic solution, the two forcing constants, rejection of batches larger than one, the equality of the loss with the upstream expression, separate data and PDE columns in the history, checkpoint round trips, figure generation, static checks of the launcher, the re-implemented data-generation solver and its residual on synthetic fields, the accelerator lock across processes, the paired statistics, the agreement of the tracked seed study with its per-run records, the torch residuals on the solver grid against the NumPy solver, training with every residual formulation, and the construction of the unlabelled pool from the training split only.
+`python -m pytest -q` runs 88 tests in about 15 seconds: the upstream part of `official.yaml` against its checksum, the equality of the training settings of `full` and `official`, split construction and normalisation on a synthetic file, the residual against an analytic solution, the two forcing constants, rejection of batches larger than one, the equality of the loss with the upstream expression, separate data and PDE columns in the history, checkpoint round trips, figure generation, static checks of the launcher, the re-implemented data-generation solver and its residual on synthetic fields, the accelerator lock across processes, the paired statistics, the agreement of the tracked seed study with its per-run records, the torch residuals on the solver grid against the NumPy solver, training with every residual formulation, and the construction of the unlabelled pool from the training split only, resuming a study (metadata written once, finished runs kept, a changed configuration refused), the CUDA configurations against their MPS counterparts, and the replication criterion and analysis, with the MPS studies standing in for CUDA.
 
 ## Limitations
 
@@ -424,7 +428,7 @@ python scripts/plot_results.py --study results/full --out figures
 
 ## Possible extensions
 
-- A replication of the 50-epoch studies on CUDA (`configs/full.yaml`, `kaggle/run_cuda.ipynb`).
+- The CUDA replication prepared in [`docs/CUDA_REPLICATION_PLAN.md`](docs/CUDA_REPLICATION_PLAN.md) (`kaggle/run_cuda.ipynb`).
 - Controls with other regularisers and a learning-rate search per setting, to separate the effect of the residual from regularisation in general.
 - A residual in conservative (flux) form, or one restricted to cells with constant permeability, to separate the forcing mismatch from the interface behaviour.
 - The DeepONet variant of the example with automatic differentiation.

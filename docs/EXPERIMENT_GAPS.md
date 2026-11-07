@@ -64,19 +64,18 @@ Remaining gaps after G2 to G6: the CUDA replication below; tuning parity (all se
 
 ## G2 replication on CUDA (not run)
 
-The plan for G2 targeted CUDA; G2 was run on MPS instead. The CUDA notebook remains available for a replication:
-
+The plan for G2 targeted CUDA; G2 was run on MPS instead. The replication is prepared (2026-11-08) and pre-registered in [`CUDA_REPLICATION_PLAN.md`](CUDA_REPLICATION_PLAN.md): configurations `full_cuda` (9 runs), `full_cuda_more` (6) and `full_cuda_sweep` (18), mirroring `full_mps`, `full_mps_more` and `full_mps_sweep`; criterion: the upper end of the five-seed relative 95 % interval of `consistent` 0.1 minus data only below -5 %. Status: NOT RUN.
 
 Use `kaggle/run_cuda.ipynb`:
 
 1. Push the commit to run and set `REF` to its full 40-character SHA.
 2. Accelerator: one NVIDIA GPU. Internet on (0.8 GB dataset download).
-3. Run once with `RUN_FULL = False` to obtain the timing projection; set `RUN_FULL = True` only if it fits `SESSION_BUDGET_HOURS`. The notebook never reduces the configuration.
-4. Integrate as described in the README section "Study at the upstream budget on CUDA", then `python scripts/evaluate.py --config full --verify device=mps` and `python scripts/evaluate_solver_residual.py --config full device=mps` locally.
+3. Run once with `PLAN = None` to check the session and obtain the timing projection; then set `PLAN = "minimal"` (15 runs), `"g2"` (27) or `"all"` (33). Training starts only if the projection fits `SESSION_BUDGET_HOURS`; the notebook never reduces a configuration. A session that cannot finish the plan continues in the next one from its archives (`RESTORE_DIR`).
+4. Integrate as described in the README section "Replication on CUDA"; `scripts/cuda_replication.py` evaluates the criterion and compares with the MPS results.
 
 Colab: the same cells run after replacing `/kaggle/working` by `/content` and removing the Kaggle secret lookup; the dataset download needs Google Drive access from the session.
 
-Peak memory is unmeasured on CUDA; the FNO at 240 x 240 with batch size 1 is small (2.4 M parameters), so any current data-centre or Kaggle GPU should be sufficient. This is an expectation, not a measurement.
+Peak memory is unmeasured on CUDA; the FNO at 240 x 240 with batch size 1 is small (2.4 M parameters), so any current data-centre or Kaggle GPU should be sufficient. This is an expectation, not a measurement. Storage, from the MPS runs: about 28 MB of checkpoints per run (0.4 GB for the minimal plan, 0.9 GB for all 33 runs), the same again for the eval bundles in the session, plus the 0.8 GB dataset archive and its 0.5 GB of split files; the tracked records add about 1.5 to 3 MB per study.
 
 ## Missing controls inside the existing design
 

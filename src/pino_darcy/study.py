@@ -6,7 +6,7 @@ import statistics
 from pathlib import Path
 
 import numpy as np
-from omegaconf import DictConfig
+from omegaconf import DictConfig, OmegaConf
 
 from . import engine
 from .provenance import collect_metadata, write_json
@@ -54,9 +54,34 @@ AGGREGATED = [
 ]
 
 
+def check_resumable(cfg: DictConfig, out_dir: Path) -> bool:
+    """Whether a resumed study still needs its ``study_metadata.json``.
+
+    A resumed study whose metadata exists keeps it, and must have been started with the same
+    resolved configuration: resuming with different settings would mix runs of two studies in
+    one directory, so it is refused. A resumed study without metadata (nothing was started, or
+    the first launch stopped before writing it) gets its metadata now.
+    """
+    path = Path(out_dir) / "study_metadata.json"
+    if not path.exists():
+        return True
+    stored = json.loads(path.read_text()).get("config")
+    current = OmegaConf.to_container(cfg, resolve=True)
+    if stored != current:
+        changed = sorted(k for k in set(stored or {}) | set(current) if (stored or {}).get(k) != current.get(k))
+        raise SystemExit(f"{out_dir}: cannot resume, the configuration differs from the one the study was started with (keys: {changed}).")
+    return False
+
+
 def train_study(cfg: DictConfig, root: Path, resume: bool = False) -> Path:
-    """Train every run of the study. ``resume`` skips runs that already finished."""
-    out_dir, device, sets = engine.prepare_study(cfg, root, write_metadata=not resume)
+    """Train every run of the study.
+
+    ``resume`` skips runs that already finished (they have ``train_metrics.json``), keeps the
+    metadata of a study that was started with the same configuration, and writes it for a study
+    that has none. Without ``resume`` every run is trained from scratch.
+    """
+    write_metadata = check_resumable(cfg, Path(root) / cfg.output_dir) if resume else True
+    out_dir, device, sets = engine.prepare_study(cfg, root, write_metadata=write_metadata)
     for residual, weight, seed in engine.study_runs(cfg):
         run_dir = out_dir / engine.run_name(residual, weight, seed)
         if resume and (run_dir / "train_metrics.json").exists():

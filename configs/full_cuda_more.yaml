@@ -1,0 +1,10 @@
+# CUDA replication, stage 3: seeds 3 and 4 of the stage-1 settings (as full_mps_more on MPS).
+# With full_cuda this gives the five-seed primary comparison: 15 runs.
+defaults:
+  - full_cuda
+  - _self_
+
+name: full_cuda_more
+
+study:
+  seeds: [3, 4]
