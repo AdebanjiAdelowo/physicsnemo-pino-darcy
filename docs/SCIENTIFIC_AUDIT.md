@@ -322,6 +322,31 @@ Factorial contrasts on the overall error (paired, df = 2, unadjusted): coefficie
 
 **Verdict.** `solver` 0.1 improves the test error over data only at the upstream budget, on MPS, with three seeds: **VERIFIED** (G4 primary). That the solver-consistent residual is *better* than the corrected cell-grid residual: **not supported** (inconclusive, point estimate slightly worse). That the coefficient mismatch explains the jump-region degradation: **not testable at this budget**, because the degradation does not occur at 50 epochs. `solver` 1 has no detectable effect over data only (inconclusive) and is worse than `solver` 0.1 by the unadjusted interval: the benefit depends on the weight for the exact operator as for the cell-grid one.
 
+## F17. Fewer labels and unlabelled fields (G5, G6, addendum 2026-11-07)
+
+**Design.** Pre-registered in [`OPERATOR_AND_LABELS_PLAN.md`](OPERATOR_AND_LABELS_PLAN.md) (`beaac7f`). Every run has 5100 optimiser steps and the upstream per-step learning-rate schedule: $N = 25$ labelled samples for 204 epochs (`configs/labels25.yaml`), $N = 50$ for 102 epochs (`labels50.yaml`), $N = 102$ for 50 epochs (`full_mps`, `full_mps_operator`). The labelled samples are the first $N$ of the training split for every seed. Residual: `solver` (F16) at weight 0.1 against data only. G5 (`labels<N>_unlabelled.yaml`) adds the remaining $102 - N$ training-split permeabilities, without their pressure, as inputs of the PDE term, one per optimiser step; the labelled data term sees the same samples in the same order as the corresponding `labels<N>` run. Primary: the four comparisons with data only at the same $N$, Holm over the four. Seeds 0 to 2.
+
+**Leakage and fairness checks.** The unlabelled pool is built in `src/pino_darcy/engine.py` (lines 147 to 153) from `train.hdf5`, samples $N$ to $101$, and carries only the permeability (`k`, `coeff`, `Kcoeff`), never a pressure; validation and test come from their own files. `tests/test_config.py` asserts that the pool is exactly the rest of the training split, and `tests/test_operator_training.py` that adding the pool does not change the labelled order. Provenance: all 18 runs trained on MPS from `beaac7f`; `git_dirty: true` in the metadata is caused only by the queue's untracked audit outputs (`git diff HEAD` empty in the worktree); 5100 steps each; stored and recomputed test errors agree. *Fairness caveat:* the G5 runs do an extra forward pass and residual per step and took 124 to 145 ms per step against about 65 ms for the other runs on an uncontended machine, so they also differ in compute; no compute-matched control was run. Data only cannot use fields without pressure, so the primary comparison is the one a practitioner faces, but the G5 minus G6 contrast mixes the value of the extra fields with the extra compute. Timings of the label studies vary from 61 to 105 ms per step for the same setting because another project's job shared the GPU for part of the time.
+
+**Results** (`results/audit/full_study.json`). Test relative L2, means over seeds 0 to 2 (SD over seeds), paired relative differences with 95 % t intervals (df = 2).
+
+| $N$ labelled | Data only | `solver` 0.1 | `solver` 0.1 + unlabelled | `solver` 0.1 - data only | + unlabelled - data only | + unlabelled - `solver` 0.1 |
+|---|---|---|---|---|---|---|
+| 25 | 0.0909 (0.0097) | 0.0666 (0.0072) | 0.0528 (0.0047) | **-26.7 % [-36.3, -17.0]**, Holm 0.021 | **-42.0 % [-63.2, -20.7]**, Holm 0.026 | -20.8 % [-37.0, -4.7], Holm 0.062 |
+| 50 | 0.0652 (0.0051) | 0.0454 (0.0029) | 0.0401 (0.0020) | **-30.3 % [-39.9, -20.8]**, Holm 0.021 | **-38.5 % [-57.6, -19.5]**, Holm 0.026 | -11.8 % [-25.4, +1.9], inconclusive |
+| 102 | 0.0377 (0.0014) | 0.0304 (0.0017) | (all fields labelled) | -19.4 % [-26.8, -12.0] (F16) | | |
+
+All four primary comparisons are improvements, lower in every seed; near jumps they are also improvements (-20 % to -38 %). The exact residual falls to 0.14 to 0.23 of data only. Training-split errors: data only fits its few labels almost exactly (0.0022 at $N = 25$, 0.0039 at 50) and generalises worst; the `solver` runs fit them less closely (0.0106 to 0.0146). Label count itself: 25 to 50 labels lowers the data-only error by 28.3 % [15.9, 40.7], 50 to 102 by 42.1 % [25.8, 58.4] (both Holm 0.032).
+
+**Interpretation.**
+
+1. *The relative benefit of the residual is at least as large with fewer labels; the absolute benefit grows.* `solver` 0.1 lowers the error by 0.024, 0.020 and 0.007 at $N$ = 25, 50, 102. The relative changes (-27 %, -30 %, -19 %) have overlapping intervals; the plan did not pre-register a test of a trend over $N$, and none is claimed.
+2. *The residual does not replace labels.* `solver` 0.1 with 50 labels (0.0454) is still worse than data only with 102 (0.0377); with 25 labels (0.0666) it is about as accurate as data only with 50 (0.0652). With the unlabelled fields, 50 labels (0.0401) come within 7 % of data only with 102 labels. These are descriptive comparisons across studies, not pre-registered tests.
+3. *Unlabelled fields add to the benefit at $N = 25$.* Adding the 77 unlabelled permeabilities lowers the error by a further 20.8 % [4.7, 37.0] over `solver` 0.1 alone (all seeds; Holm 0.062, so not significant after adjustment); at $N = 50$ the further change (-11.8 %) is inconclusive. Part of this may be the extra compute per step (fairness caveat above).
+4. *Only on this dataset and budget.* Fixed 5100 steps means that the $N = 25$ runs repeat each sample 204 times; a data-only model with early stopping or other regularisation was not compared, and the plan did not include one.
+
+**Verdict.** With 25 or 50 labelled samples, `solver` 0.1 improves the test error over data only, with and without unlabelled fields: **VERIFIED** for these four settings (Holm over the four primary comparisons, three seeds, MPS). That unlabelled fields improve over the labelled-only `solver` run: **supported at $N = 25$ by the unadjusted interval only, inconclusive at $N = 50$**, and confounded with compute.
+
 ## Software checks
 
 - `python -m pytest -q`: 48 passed (41 existing, 7 new), offline and on CPU. After the addendum: 59 passed (accelerator lock, paired statistics, and the agreement of `results/audit/seed_study.json` with the per-run records).
