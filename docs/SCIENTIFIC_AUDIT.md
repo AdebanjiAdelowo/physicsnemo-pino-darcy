@@ -9,7 +9,7 @@ Classification:
 - **UNVERIFIED**: not checked, or not checkable with what exists.
 - **INCORRECT**: contradicted by the evidence.
 
-Everything measured in the original audit is CPU or Apple MPS inference and NumPy/SciPy computation; no model was trained for it. The addendum F14 (same date) adds six training runs, G1 of `EXPERIMENT_GAPS.md`, and updates F6 to F9 where they bear on seeds; the seed-0 findings are kept as they were.
+Everything measured in the original audit is CPU or Apple MPS inference and NumPy/SciPy computation; no model was trained for it. The addendum F14 (same date) adds six training runs, G1 of `EXPERIMENT_GAPS.md`, and updates F6 to F9 where they bear on seeds; the seed-0 findings are kept as they were. The addenda F15 to F17 (2026-11-07) add the pre-registered studies at the upstream training budget (G2 to G6 of `EXPERIMENT_GAPS.md`, 63 training runs on Apple MPS); the earlier findings are kept as they were and are qualified there where the longer training changes them.
 
 ## Summary
 
@@ -31,6 +31,9 @@ The implementation reproduces the upstream example faithfully, the tracked numbe
 | F12 | Implementation matches upstream | VERIFIED |
 | F13 | Smaller README statements | one INCORRECT figure (corrected), others VERIFIED |
 | F14 | Seed study at weight 0.1 (G1, addendum) | residual reduction REPRODUCED; no accuracy improvement; see section |
+| F15 | At the upstream budget, `consistent` 0.1 improves the test error over data only (G2) | VERIFIED on MPS, three seeds (-21.7 %); depends on the weight; `shipped` 1 degrades; the near-jump degradation of F9 and F14 is not reproduced at 50 epochs |
+| F16 | A residual exact for the reference (`solver`) improves accuracy, and more than the cell-grid residual (G3, G4) | first part VERIFIED (-19.4 %); "more than" not supported; the coefficient-mismatch explanation of the jump degradation not testable at 50 epochs |
+| F17 | The residual helps with fewer labels and with unlabelled fields (G5, G6) | VERIFIED at 25 and 50 labels (four primary comparisons); the added value of unlabelled fields over labelled-only training supported only unadjusted at 25 labels and confounded with compute |
 
 ## F1. Forcing term
 
@@ -253,7 +256,7 @@ Seed spread (mean ± standard deviation over seeds): overall error 0.0489 ± 0.0
 
 **Design.** Pre-registered in [`FULL_BUDGET_PLAN.md`](FULL_BUDGET_PLAN.md) (committed in `eaca64c` before any run): 50 epochs of 102 steps (5100 optimiser steps, the upstream budget and per-step learning-rate schedule), batch size 1, seeds 0, 1, 2. Stage 1 (`configs/full_mps.yaml`): data only, `shipped` 0.1, `consistent` 0.1. Stage 2 (`configs/full_mps_sweep.yaml`): both residuals at 0.001, 0.01, 1. Primary comparison: overall test relative L2, `consistent` 0.1 minus data only, paired by seed, Student-t 95 % interval over seeds; everything else secondary, with Holm adjustment over the seven secondary settings.
 
-**Hardware, not CUDA.** All 27 runs trained on Apple MPS (M3 Pro, 18 GB; FNO on MPS, cell-grid residual on CPU as in every earlier study), not on the CUDA GPU the plan of `kaggle/run_cuda.ipynb` targets. A CUDA replication has not been run. MPS training is bitwise repeatable for the same seed (`results/audit/determinism.json`: two one-epoch runs per setting give identical parameters) and differs from CPU at about 1e-2 in the parameters after one epoch.
+**Hardware, not CUDA.** All 27 runs trained on Apple MPS (M3 Pro, 18 GB; FNO on MPS, cell-grid residual on CPU as in every earlier study), not on the CUDA GPU the plan of `kaggle/run_cuda.ipynb` targets. A CUDA replication has not been run. MPS training is bitwise repeatable for the same seed (`results/audit/determinism.json`: two one-epoch runs of data only and of `consistent` 0.1 give identical parameters) and differs from CPU by up to 0.008 and 0.03 in the parameters after one epoch (maximum absolute difference).
 
 **Provenance.** Trained from a clean git worktree at `eaca64c`. `study_metadata.json` of both studies records `git_dirty: true`; the only changes in that worktree were untracked audit outputs written by the same queue (`results/audit/determinism.json` and the stage-1 audit files), and `git diff HEAD` there is empty. The first execution session ended while stage 2 was running: 15 of 18 runs had finished with records; the run in progress (`consistent_w0.001_seed2`) left an empty directory and was retrained from scratch with `scripts/train.py --resume`, which skips runs that have `train_metrics.json`. Every run has its configuration, seed, 5100 steps, a 50-epoch history, the final checkpoint (not tracked) and test metrics; `scripts/full_study.py` asserts that the stored test error equals the error recomputed from the checkpoint by `scripts/evaluate_solver_residual.py` to 1e-5 relative, for every run.
 
@@ -352,6 +355,7 @@ All four primary comparisons are improvements, lower in every seed; near jumps t
 - `python -m pytest -q`: 48 passed (41 existing, 7 new), offline and on CPU. After the addendum: 59 passed (accelerator lock, paired statistics, and the agreement of `results/audit/seed_study.json` with the per-run records).
 - `ruff check --select E,F,W`: clean. `--select B` adds nine `B905` (`zip` without `strict=`), stylistic only.
 - No implementation error that changes a tracked number was found.
+- Addenda F15 to F17 (2026-11-07): `python -m pytest -q` 88 passed (offline, CPU, about 15 s); `ruff check src scripts tests` clean. For every one of the 63 runs at the upstream budget, the test error stored at training equals the error recomputed from the checkpoint to 1e-5 relative (asserted by `scripts/full_study.py`). The torch `solver` residual equals its NumPy reference in float64 on real fields and passes a directional-derivative check (`results/audit/solver_operator_check.json`).
 
 ## Changes made in the audit
 
@@ -362,6 +366,7 @@ All four primary comparisons are improvements, lower in every seed; near jumps t
 - README: the corrected ratio (F13), the coefficient finding (F3, F4), test count, links to these documents.
 - Not changed: `results/local/`, `results/data_check.json`, `figures/`, training and evaluation code.
 - Addendum (F14): `src/pino_darcy/gpulock.py` and its use in `scripts/train.py`, `scripts/evaluate.py`, `scripts/evaluate_solver_residual.py` (a machine-wide accelerator lock; no change to training or evaluation); `metrics.paired_seed_interval`, `metrics.paired_bootstrap`; `scripts/seed_study.py`; new results `results/local_seeds/`, `results/audit/local_seeds_solver_residual.json`, `results/audit/seed_study.json`, `figures/seed_study.png`; tests `tests/test_gpulock.py`, `tests/test_seed_study.py`. Existing results and figures unchanged.
+- Addenda F15 to F17: analysis plans `docs/FULL_BUDGET_PLAN.md` and `docs/OPERATOR_AND_LABELS_PLAN.md`, committed before their runs; configurations `configs/full_mps*.yaml`, `configs/labels*.yaml`; the residual formulations of G3 and G4 (`src/pino_darcy/discrete.py`, `physics.py`) and the unlabelled pool of G5 (`engine.py`), with tests; `scripts/evaluate_generalisation.py`, `scripts/full_study.py`, `scripts/plots_full.py`, `scripts/check_solver_operator.py`, `scripts/check_determinism.py`; new results `results/full_mps*/`, `results/labels*/`, `results/audit/full_*.json`, `results/audit/*_generalisation.json`, `results/audit/solver_operator_check.json`, `results/audit/determinism.json`, `figures/full_*.png`. Existing results and figures unchanged.
 
 ## Claims the evidence supports
 
@@ -373,8 +378,19 @@ Safe to state, with the qualifiers given:
 4. At weight 0.1 and 15 epochs, over three training seeds: both residual definitions lower the PDE residual in every seed, under the training residual and under the exact operator of the data generator; the corrected residual has no detectable effect on the test error (-0.0004, 95 % interval over seeds -0.0070 to +0.0061); the shipped residual raised the error in every seed (+8 % on average, interval just including zero).
 5. A lower finite-difference residual did not imply closer agreement with the reference; near permeability jumps the weighted models had a higher error in every seed.
 
-Not supported: that physics weighting improves accuracy; that any result holds at the upstream budget, or across seeds at weights other than 0.1; that the corrected residual is exact at jumps; any statement about the DeepONet variant or about data-scarce regimes.
+Not supported on 2026-10-24: that physics weighting improves accuracy; that any result holds at the upstream budget, or across seeds at weights other than 0.1; that the corrected residual is exact at jumps; any statement about the DeepONet variant or about data-scarce regimes.
+
+Added on 2026-11-07 (F15 to F17; upstream budget of 5100 optimiser steps, Apple MPS, three seeds, 95 % t intervals over seeds):
+
+6. Training with the corrected residual at weight 0.1 lowers the test error over data-only training by about a fifth (-21.7 % [-27.1, -16.3]), in every seed; at weight 0.01 by -11.5 %; at weight 1 no change is detectable. The shipped residual at weight 1 more than doubles the error.
+7. A residual that the reference solution satisfies exactly (the generator's own discrete operator and coefficient) gives a similar improvement (-19.4 %), not a larger one than the cell-grid residual; all four residual formulations tested improve the error by 18 % to 22 %.
+8. With 25 and 50 labelled samples the residual lowers the error by 27 % and 30 %, and with the remaining training permeabilities as unlabelled inputs by 42 % and 39 %; the residual does not make up for the missing labels (50 labels with the residual remain less accurate than 102 without).
+9. The 15-epoch accuracy findings (3 to 5 above) do not hold at the upstream budget: the improvement appears only with longer training, and the near-jump degradation disappears.
+
+Still not supported: any result on CUDA or on other datasets, architectures or optimiser settings; that the improvement is specific to the PDE residual rather than to regularisation in general (no other regulariser was compared); that unlabelled fields help beyond their extra compute.
 
 ## Recommendation
 
 The project is scientifically defensible as a careful reproduction-and-diagnosis study of one upstream example, and its tracked results are reproducible from its records. It is not evidence for a performance claim. G1 has been run (F14): the residual finding is reproducible over seeds, an accuracy gain is not supported, and three seeds leave intervals of about ±14 % on the error. Next, in order: more seeds at weight 0.1 if a sharper accuracy statement is wanted (about 3 minutes per run locally under light load), G2 for the upstream budget, and G3 and G4, which test the coefficient and operator mismatch identified here and the jump-region degradation that F14 reproduces.
+
+Update 2026-11-07. G2 to G6 have been run at the upstream budget (F15 to F17). They change the answer to the accuracy question: with enough training, the corrected residual, and the exact one, improve the test error over data-only training by about a fifth with 102 labels and by more with fewer labels, provided the weight is moderate (0.01 to 0.1). The project now supports this conditional performance claim for this example on MPS. Next, in order: a CUDA replication of the primary comparisons, controls with other regularisers and per-setting learning rates, and other datasets.

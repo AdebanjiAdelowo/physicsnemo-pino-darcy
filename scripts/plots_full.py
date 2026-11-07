@@ -253,11 +253,12 @@ def plot_labels(records, out):
                 ax.scatter([x] * 3, [records[lab][s]["metrics"][key] for s in SEEDS], color=col, s=10, alpha=0.5)
     for ax, t in zip(axes, ("test relative L2 error", "relative L2 near jumps"), strict=True):
         ax.set_xscale("log")
+        ax.minorticks_off()
         ax.set_xticks(ns, [str(n) for n in ns])
         ax.set_xlabel("labelled training samples (5100 optimiser steps in every run)")
         ax.set_ylabel(t)
     axes[0].legend(fontsize=8)
-    axes[0].set_title("mean and 95 % t interval over seeds 0 to 2; dots: seeds")
+    axes[0].set_title("mean and unpaired 95 % t interval over seeds 0 to 2; dots: seeds", fontsize=9)
     _save(fig, out / "full_labels.png")
 
 
