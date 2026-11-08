@@ -134,12 +134,21 @@ def test_projection_of_every_plan_is_shown_even_without_a_plan():
 
 
 def test_study_runs_in_an_isolated_environment():
-    """The image's packages must not be replaced: session 1 (8684701) failed when NumPy 2.5 broke Kaggle's numba."""
+    """The image's packages must not be replaced: session 1 (8684701) failed when NumPy 2.5 broke Kaggle's numba.
+
+    The study's packages must also land in the environment, not in the system Python.
+    """
     text = "\n".join(_code())
     assert 'VENV = "/tmp/pino-venv"' in text and "/kaggle/working" not in 'VENV = "/tmp/pino-venv"'
     assert 'sh(f"uv venv --python 3.12 {VENV}")' in text
     assert 'os.environ["PATH"] = f"{VENV}/bin:" + os.environ["PATH"]' in text
-    assert 'sh("uv pip install -q -r requirements.txt", cwd=REPO)' in text
-    assert "pip install -q -r requirements.txt" not in text.replace("uv pip install -q -r requirements.txt", "")
+    # Kaggle sets UV_SYSTEM_PYTHON, which sends `uv pip install` to the system Python even with an
+    # active environment (rerun of session 1 at 02b57f4: "No module named 'torch'"), so the target is named
+    install = 'sh(f"uv pip install -q --python {VENV}/bin/python -r requirements.txt", cwd=REPO)'
+    assert install in text and 'os.environ.pop("UV_SYSTEM_PYTHON", None)' in text
+    assert "-r requirements.txt" not in text.replace(install, "")
+    assert "assert sys.prefix == \\'{VENV}\\' and torch.__file__.startswith(\\'{VENV}/\\')" in text
     # the environment is active before the first study command
-    assert text.index('os.environ["PATH"] = f"{VENV}/bin:"') < text.index("import torch, physicsnemo, warp, sympy") < text.index("scripts/prepare_data.py")
+    order = ['os.environ.pop("UV_SYSTEM_PYTHON"', install, "assert sys.prefix ==", "import torch, physicsnemo, warp, sympy", "scripts/prepare_data.py"]
+    positions = [text.index(s) for s in order]
+    assert positions == sorted(positions) and text.index('os.environ["PATH"] = f"{VENV}/bin:"') < positions[1]
