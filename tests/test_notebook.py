@@ -131,3 +131,15 @@ def test_projection_of_every_plan_is_shown_even_without_a_plan():
     assert "projection_h = sum(hours[s] for s in STUDIES)" in cell
     # the per-run projection: data-only runs at the data-only epoch time, the others at the PDE epoch time
     assert '(t_data if r["physics_weight"] == 0 else t_pde) * st["max_epochs"]' in cell
+
+
+def test_study_runs_in_an_isolated_environment():
+    """The image's packages must not be replaced: session 1 (8684701) failed when NumPy 2.5 broke Kaggle's numba."""
+    text = "\n".join(_code())
+    assert 'VENV = "/tmp/pino-venv"' in text and "/kaggle/working" not in 'VENV = "/tmp/pino-venv"'
+    assert 'sh(f"uv venv --python 3.12 {VENV}")' in text
+    assert 'os.environ["PATH"] = f"{VENV}/bin:" + os.environ["PATH"]' in text
+    assert 'sh("uv pip install -q -r requirements.txt", cwd=REPO)' in text
+    assert "pip install -q -r requirements.txt" not in text.replace("uv pip install -q -r requirements.txt", "")
+    # the environment is active before the first study command
+    assert text.index('os.environ["PATH"] = f"{VENV}/bin:"') < text.index("import torch, physicsnemo, warp, sympy") < text.index("scripts/prepare_data.py")
