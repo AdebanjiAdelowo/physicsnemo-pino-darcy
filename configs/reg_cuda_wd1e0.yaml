@@ -1,0 +1,8 @@
+# Regularisation controls, data only with AdamW weight decay 1.0 (docs/REGULARISATION_PLAN.md).
+defaults:
+  - reg_cuda
+  - _self_
+
+name: reg_cuda_wd1e0
+optimizer:
+  weight_decay: 1.0

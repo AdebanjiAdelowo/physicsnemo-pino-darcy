@@ -1,0 +1,31 @@
+# CPU-sized check of the regularisation machinery: smoke model and samples, AdamW with weight
+# decay, a fixed snapshot and early stopping with two caps. Not a result.
+defaults:
+  - smoke
+  - _self_
+
+name: reg_smoke
+device: cpu
+max_epochs: 4
+
+optimizer:
+  name: adamw
+  weight_decay: 0.01
+
+snapshots:
+  epochs: [3]
+
+early_stopping:
+  caps: [3, "${max_epochs}"]
+  rules:
+    es:
+      patience: 1
+      min_delta: 0.0
+    vb:
+      patience: null
+      min_delta: 0.0
+
+study:
+  residuals: [consistent]
+  physics_weights: [0]
+  seeds: [0, 1]

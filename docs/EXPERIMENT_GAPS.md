@@ -11,6 +11,7 @@ Experiments and controls that the current evidence does not cover, in order of s
 | G5 | Residual on unlabelled inputs | Here the residual is evaluated only on the 102 labelled training samples, where the data term already constrains the output. The regime in which PINO-type losses are expected to help (extra permeability fields without pressure, or fewer labels) is not tested. | designed in `OPERATOR_AND_LABELS_PLAN.md`; 6 runs | DONE on MPS: F17 |
 | G6 | Training-set size | Physics weighting at 102 samples only. A sweep over 25, 50, 102 samples would show whether the effect depends on data scarcity. | 2 new sizes x 2 settings x 3 seeds (102 from G2/G4) | DONE on MPS: F17 |
 | G7 | DeepONet variant with automatic differentiation | Out of scope; listed for completeness. | not estimated | OUT OF SCOPE |
+| G8 | Conventional regularisation against the corrected residual | The 21.5 % improvement may be ordinary regularisation (F15 found a smaller generalisation gap); no data-only model with weight decay or validation-based selection was compared, at equal steps or at matched compute. | 30 data-only runs (35 with the grid extension) plus a 2-run timing pilot; about 2 to 2.5 h on a T4 (estimate) | DESIGNED: [`REGULARISATION_PLAN.md`](REGULARISATION_PLAN.md); not run |
 
 ## G1: training seeds (done)
 
@@ -60,7 +61,7 @@ Outcome (95 % t intervals over seeds, paired by seed; details and caveats in the
 - G3, G4 (F16): `solver` 0.1 minus data only -19.4 % [-26.8, -12.0] (primary). All four residual variants improve by 18 to 22 %; the exact operator is not better than the cell-grid one; `coeff` is slightly worse than `Kcoeff`; `solver` 1 inconclusive.
 - G5, G6 (F17): with 25 and 50 labels, `solver` 0.1 improves by 27 % and 30 %, and with the unlabelled fields by 42 % and 39 % (four primary comparisons, Holm, every seed). The unlabelled runs use about twice the compute per step.
 
-Remaining gaps after G2 to G6: the CUDA weight sweep below (the primary comparison is replicated); tuning parity (all settings use the upstream learning rate and schedule); controls with other regularisers (early stopping, weight decay), which would test the regularisation reading of F15; and other datasets and architectures.
+Remaining gaps after G2 to G6: the CUDA weight sweep below (the primary comparison is replicated); tuning parity (all settings use the upstream learning rate and schedule); controls with other regularisers (early stopping, weight decay), which would test the regularisation reading of F15 (designed as G8); and other datasets and architectures.
 
 ## G2 replication on CUDA (primary comparison done; weight sweep not run)
 

@@ -1,0 +1,9 @@
+# Regularisation controls, data only with AdamW weight decay 100.0: trained only if the boundary rule of
+# docs/REGULARISATION_PLAN.md extends the grid.
+defaults:
+  - reg_cuda
+  - _self_
+
+name: reg_cuda_wd1e2
+optimizer:
+  weight_decay: 100.0

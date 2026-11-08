@@ -1,0 +1,38 @@
+# Regularisation controls for the G2 primary comparison (docs/REGULARISATION_PLAN.md).
+# Shared base of the reg_cuda_wd* studies; it is not a study of its own and is in no plan.
+# Every training setting is that of full_cuda (data, splits, FNO, batch size 1, start_lr,
+# gamma, seeds 0 to 4) except the optimiser node, the snapshots and early stopping. The
+# physics-informed comparison model is not retrained: it is consistent_w0.1 of full_cuda and
+# full_cuda_more.
+defaults:
+  - full_cuda
+  - _self_
+
+name: reg_cuda
+device: cuda
+
+# Budget B (matched compute) in epochs of 102 optimiser steps. PROVISIONAL: fixed by the timing
+# pilot with the rule of the plan before any study run; budget A (equal steps) is epoch 50.
+max_epochs: 51
+
+optimizer:
+  name: adamw               # decoupled weight decay; with weight_decay 0 identical to the upstream Adam
+  weight_decay: 0.0
+
+snapshots:
+  epochs: [50]              # budget A: 5100 optimiser steps
+
+early_stopping:
+  caps: [50, "${max_epochs}"]   # applied with both budgets
+  rules:
+    es:                         # early stopping: stop after 5 epochs without a new validation minimum
+      patience: 5
+      min_delta: 0.0            # relative; any decrease is an improvement
+    vb:                         # best validation epoch within the cap (never stops early)
+      patience: null
+      min_delta: 0.0
+
+study:
+  residuals: [consistent]
+  physics_weights: [0]
+  seeds: [0, 1, 2, 3, 4]
