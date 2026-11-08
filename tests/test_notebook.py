@@ -148,7 +148,18 @@ def test_study_runs_in_an_isolated_environment():
     assert install in text and 'os.environ.pop("UV_SYSTEM_PYTHON", None)' in text
     assert "-r requirements.txt" not in text.replace(install, "")
     assert "assert sys.prefix == \\'{VENV}\\' and torch.__file__.startswith(\\'{VENV}/\\')" in text
+    # the kernel exports MPLBACKEND=module://matplotlib_inline.backend_inline, which matplotlib in the
+    # environment rejects on import (run at b49272b: "ValueError: Key backend" in the data check)
+    assert 'os.environ["MPLBACKEND"] = "Agg"' in text
     # the environment is active before the first study command
-    order = ['os.environ.pop("UV_SYSTEM_PYTHON"', install, "assert sys.prefix ==", "import torch, physicsnemo, warp, sympy", "scripts/prepare_data.py"]
+    order = [
+        'os.environ.pop("UV_SYSTEM_PYTHON"',
+        'os.environ["MPLBACKEND"] = "Agg"',
+        'os.environ["PATH"] = f"{VENV}/bin:"',
+        install,
+        "assert sys.prefix ==",
+        "import torch, physicsnemo, warp, sympy",
+        "scripts/prepare_data.py",
+    ]
     positions = [text.index(s) for s in order]
-    assert positions == sorted(positions) and text.index('os.environ["PATH"] = f"{VENV}/bin:"') < positions[1]
+    assert positions == sorted(positions)
