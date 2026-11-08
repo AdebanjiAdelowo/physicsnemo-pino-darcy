@@ -121,3 +121,13 @@ def test_probe_trains_the_full_model_for_one_epoch():
     assert '"study.physics_weights=[0,0.1]"' in probe and '"study.residuals=[consistent]"' in probe
     cfg = load_config("full", ["name=full_probe", "max_epochs=1", "study.seeds=[0]", "study.residuals=[consistent]", "study.physics_weights=[0,0.1]"])
     assert {k: cfg[k] for k in ("model", "batch_size", "data")} == {k: load_config("full_cuda")[k] for k in ("model", "batch_size", "data")}
+
+
+def test_projection_of_every_plan_is_shown_even_without_a_plan():
+    """The first session runs with PLAN = None and must still report what each plan would cost."""
+    cell = next(c for c in _code() if "scripts/study_status.py" in c)
+    assert '"scripts/study_status.py", *ALL_STUDIES' in cell and "if STUDIES:" not in cell
+    assert "for plan, studies in PLANS.items():" in cell
+    assert "projection_h = sum(hours[s] for s in STUDIES)" in cell
+    # the per-run projection: data-only runs at the data-only epoch time, the others at the PDE epoch time
+    assert '(t_data if r["physics_weight"] == 0 else t_pde) * st["max_epochs"]' in cell
