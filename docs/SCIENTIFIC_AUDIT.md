@@ -34,6 +34,7 @@ The implementation reproduces the upstream example faithfully, the tracked numbe
 | F15 | At the upstream budget, `consistent` 0.1 improves the test error over data only (G2) | VERIFIED on MPS, three seeds (-21.7 %); depends on the weight; `shipped` 1 degrades; the near-jump degradation of F9 and F14 is not reproduced at 50 epochs |
 | F16 | A residual exact for the reference (`solver`) improves accuracy, and more than the cell-grid residual (G3, G4) | first part VERIFIED (-19.4 %); "more than" not supported; the coefficient-mismatch explanation of the jump degradation not testable at 50 epochs |
 | F17 | The residual helps with fewer labels and with unlabelled fields (G5, G6) | VERIFIED at 25 and 50 labels (four primary comparisons); the added value of unlabelled fields over labelled-only training supported only unadjusted at 25 labels and confounded with compute |
+| F18 | The F15 primary result holds on CUDA (pre-registered replication, five seeds) | REPLICATED: -21.5 % [-23.5, -19.6] on a Tesla T4 against -21.6 % on MPS; `shipped` 0.1 again no material effect; weight sweep not run on CUDA |
 
 ## F1. Forcing term
 
@@ -256,7 +257,7 @@ Seed spread (mean ± standard deviation over seeds): overall error 0.0489 ± 0.0
 
 **Design.** Pre-registered in [`FULL_BUDGET_PLAN.md`](FULL_BUDGET_PLAN.md) (committed in `eaca64c` before any run): 50 epochs of 102 steps (5100 optimiser steps, the upstream budget and per-step learning-rate schedule), batch size 1, seeds 0, 1, 2. Stage 1 (`configs/full_mps.yaml`): data only, `shipped` 0.1, `consistent` 0.1. Stage 2 (`configs/full_mps_sweep.yaml`): both residuals at 0.001, 0.01, 1. Primary comparison: overall test relative L2, `consistent` 0.1 minus data only, paired by seed, Student-t 95 % interval over seeds; everything else secondary, with Holm adjustment over the seven secondary settings.
 
-**Hardware, not CUDA.** All 27 runs trained on Apple MPS (M3 Pro, 18 GB; FNO on MPS, cell-grid residual on CPU as in every earlier study), not on the CUDA GPU the plan of `kaggle/run_cuda.ipynb` targets. A CUDA replication has not been run. MPS training is bitwise repeatable for the same seed (`results/audit/determinism.json`: two one-epoch runs of data only and of `consistent` 0.1 give identical parameters) and differs from CPU by up to 0.008 and 0.03 in the parameters after one epoch (maximum absolute difference).
+**Hardware, not CUDA.** All 27 runs trained on Apple MPS (M3 Pro, 18 GB; FNO on MPS, cell-grid residual on CPU as in every earlier study), not on the CUDA GPU the plan of `kaggle/run_cuda.ipynb` targets. The five-seed primary comparison was later replicated on CUDA (F18); the sweep was not. MPS training is bitwise repeatable for the same seed (`results/audit/determinism.json`: two one-epoch runs of data only and of `consistent` 0.1 give identical parameters) and differs from CPU by up to 0.008 and 0.03 in the parameters after one epoch (maximum absolute difference).
 
 **Provenance.** Trained from a clean git worktree at `eaca64c`. `study_metadata.json` of both studies records `git_dirty: true`; the only changes in that worktree were untracked audit outputs written by the same queue (`results/audit/determinism.json` and the stage-1 audit files), and `git diff HEAD` there is empty. The first execution session ended while stage 2 was running: 15 of 18 runs had finished with records; the run in progress (`consistent_w0.001_seed2`) left an empty directory and was retrained from scratch with `scripts/train.py --resume`, which skips runs that have `train_metrics.json`. Every run has its configuration, seed, 5100 steps, a 50-epoch history, the final checkpoint (not tracked) and test metrics; `scripts/full_study.py` asserts that the stored test error equals the error recomputed from the checkpoint by `scripts/evaluate_solver_residual.py` to 1e-5 relative, for every run.
 
@@ -357,12 +358,41 @@ All four primary comparisons are improvements, lower in every seed; near jumps t
 
 **Verdict.** With 25 or 50 labelled samples, `solver` 0.1 improves the test error over data only, with and without unlabelled fields: **VERIFIED** for these four settings (Holm over the four primary comparisons, three seeds, MPS). That unlabelled fields improve over the labelled-only `solver` run: **supported at $N = 25$ by the unadjusted interval only, inconclusive at $N = 50$**, and confounded with compute.
 
+## F18. Replication of the primary comparison on CUDA (addendum 2026-11-08)
+
+**Design.** Pre-registered in [`CUDA_REPLICATION_PLAN.md`](CUDA_REPLICATION_PLAN.md), committed before any CUDA run: the 15 runs of the five-seed G2 comparison (data only, `shipped` 0.1, `consistent` 0.1; seeds 0 to 4) with the settings of `full_mps` (5100 optimiser steps, upstream schedule), configurations `full_cuda` and `full_cuda_more`. Criterion: the upper end of the five-seed 95 % t interval of (`consistent` 0.1 minus data only) relative to the mean data-only error must lie below -5 %. The 18-run weight sweep (`full_cuda_sweep`) was not run.
+
+**Execution and provenance.** One Kaggle session (`kaggle/run_cuda.ipynb`, `PLAN = "minimal"`) at commit `416bfe6`, clean checkout (`git_dirty: false`), NVIDIA Tesla T4, CUDA 13.2, PyTorch 2.15.0+cu132, Python 3.12.3 in an isolated environment, PhysicsNeMo at the pinned `b45a5c8`, Warp 1.19.0. Before training the session checked the dataset against the tracked checksums and passed the tests and a CUDA smoke study. All 15 runs have 5100 steps, a 50-epoch history, test metrics and a final checkpoint (190 to 194 s per run, peak 1.0 GB). Three earlier check sessions failed in environment set-up before any training (package conflicts of the Kaggle image); they changed only the launcher (`02b57f4`, `b49272b`, `416bfe6`), not the study code or settings. Stored and recomputed test errors agree to 9.8e-8 relative on CUDA and to 9.1e-6 when the downloaded checkpoints are evaluated on MPS (plan: 1e-5). The archives are kept untracked with a checksum manifest (`runs/kaggle/pino-darcy-cuda-minimal-416bfe6/SHA256SUMS`).
+
+**Results** (`results/audit/cuda_replication.json`, `figures/cuda_replication.png`; 95 % t intervals over seeds, paired by seed).
+
+| Comparison | CUDA | MPS (F15) |
+|---|---|---|
+| `consistent` 0.1 - data only, seeds 0 to 4 (primary) | **-21.5 % [-23.5, -19.6]**, 5 of 5 seeds lower | -21.6 % [-23.5, -19.6], 5 of 5 |
+| the same, seeds 0 to 2 | -21.7 % [-27.1, -16.2] | -21.7 % [-27.1, -16.3] |
+| `shipped` 0.1 - data only | -1.1 % [-3.8, +1.6], no material effect | -1.1 % [-3.8, +1.5], no material effect |
+| `consistent` 0.1, near jumps / constant-`Kcoeff` cells | -16.1 % [-18.2, -14.1] / -24.2 % [-26.6, -21.8] | |
+| `consistent` 0.1, exact residual, ratio to data only | 0.20 [0.18, 0.22] | |
+| `consistent` 0.1, training-split error | +121 % [+113, +129] | |
+
+Mean test errors on CUDA: data only 0.03827, `shipped` 0.1 0.03785, `consistent` 0.1 0.03003.
+
+**Interpretation.**
+
+1. *The main result does not depend on the device.* The criterion is met with a wide margin (upper end -19.6 % against -5 %), and the secondary readings are those of MPS: no material effect of the shipped residual at the upstream default, improvement near jumps and away from them, a residual five times lower than data only, and a higher training error with a lower test error.
+2. *The devices agree more closely than expected.* Per seed, data-only test errors differ by at most 3e-6 relative between CUDA and MPS and physics-informed ones by at most 1.1e-3; the paired effect of `consistent` 0.1 differs by +7e-7 [-1.1e-5, +1.3e-5] in absolute error. The runs are independent (their loss histories differ in every epoch, by up to 1e-5 relative for data only and 5e-3 with the residual, and their timings and memory records are those of the GPU), so this is close numerical agreement, not bitwise equality. The plan expected the devices to differ and made no equivalence claim; none is made here. The larger difference with the residual is consistent with the residual being evaluated on the GPU on CUDA and on the CPU on MPS (F15).
+3. *Limits.* One GPU model, one session, five seeds (the sign test cannot go below p = 0.0625 with five seeds; the conclusion rests on the t interval); package versions slightly newer than on MPS (PyTorch 2.15.0 against 2.14.1); only the primary comparison. The regularisation reading of F15 is not tested by this replication.
+
+**Verdict.** Training with the corrected residual at weight 0.1 improves the test error over data-only training on CUDA as on MPS: **REPLICATED** by the pre-registered criterion. The absence of a material effect of the shipped residual at 0.1: **REPRODUCED**. The weight dependence (sweep), F16 and F17: MPS only.
+
 ## Software checks
 
 - `python -m pytest -q`: 48 passed (41 existing, 7 new), offline and on CPU. After the addendum: 59 passed (accelerator lock, paired statistics, and the agreement of `results/audit/seed_study.json` with the per-run records).
 - `ruff check --select E,F,W`: clean. `--select B` adds nine `B905` (`zip` without `strict=`), stylistic only.
 - No implementation error that changes a tracked number was found.
 - Addenda F15 to F17 (2026-11-07): `python -m pytest -q` 88 passed (offline, CPU, about 15 s); `ruff check src scripts tests` clean. For every one of the 63 runs at the upstream budget, the test error stored at training equals the error recomputed from the checkpoint to 1e-5 relative (asserted by `scripts/full_study.py`). The torch `solver` residual equals its NumPy reference in float64 on real fields and passes a directional-derivative check (`results/audit/solver_operator_check.json`).
+
+- Addendum F18 (2026-11-08): `python -m pytest -q` 119 passed, `ruff check src scripts tests` clean. The new tests check that the tracked CUDA studies are complete and come from `416bfe6` with a clean tree, recompute the primary interval from the per-run records with the formula of the plan (independently of `scripts/cuda_replication.py`), and compare `results/audit/cuda_replication.json` with a fresh analysis.
 
 ## Changes made in the audit
 
@@ -374,6 +404,8 @@ All four primary comparisons are improvements, lower in every seed; near jumps t
 - Not changed: `results/local/`, `results/data_check.json`, `figures/`, training and evaluation code.
 - Addendum (F14): `src/pino_darcy/gpulock.py` and its use in `scripts/train.py`, `scripts/evaluate.py`, `scripts/evaluate_solver_residual.py` (a machine-wide accelerator lock; no change to training or evaluation); `metrics.paired_seed_interval`, `metrics.paired_bootstrap`; `scripts/seed_study.py`; new results `results/local_seeds/`, `results/audit/local_seeds_solver_residual.json`, `results/audit/seed_study.json`, `figures/seed_study.png`; tests `tests/test_gpulock.py`, `tests/test_seed_study.py`. Existing results and figures unchanged.
 - Addenda F15 to F17: analysis plans `docs/FULL_BUDGET_PLAN.md` and `docs/OPERATOR_AND_LABELS_PLAN.md`, committed before their runs; configurations `configs/full_mps*.yaml`, `configs/labels*.yaml`; the residual formulations of G3 and G4 (`src/pino_darcy/discrete.py`, `physics.py`) and the unlabelled pool of G5 (`engine.py`), with tests; `scripts/evaluate_generalisation.py`, `scripts/full_study.py`, `scripts/plots_full.py`, `scripts/check_solver_operator.py`, `scripts/check_determinism.py`; new results `results/full_mps*/`, `results/labels*/`, `results/audit/full_*.json`, `results/audit/*_generalisation.json`, `results/audit/solver_operator_check.json`, `results/audit/determinism.json`, `figures/full_*.png`. Existing results and figures unchanged.
+
+- Addendum F18: plan `docs/CUDA_REPLICATION_PLAN.md` (committed before the runs, outcome section appended after them), configurations `configs/full_cuda*.yaml`, `scripts/cuda_replication.py`, `scripts/study_status.py`, resumable studies (`pino_darcy.study.check_resumable`), the Kaggle launcher; new results `results/full_cuda/`, `results/full_cuda_more/`, `results/audit/full_cuda*_{solver_residual,generalisation}.json`, `results/audit/cuda_replication.json`, `figures/cuda_replication.png`. Existing results and figures unchanged.
 
 ## Claims the evidence supports
 
@@ -394,10 +426,16 @@ Added on 2026-11-07 (F15 to F17; upstream budget of 5100 optimiser steps, Apple 
 8. With 25 and 50 labelled samples the residual lowers the error by 27 % and 30 %, and with the remaining training permeabilities as unlabelled inputs by 42 % and 39 %; the residual does not make up for the missing labels (50 labels with the residual remain less accurate than 102 without).
 9. The 15-epoch accuracy findings (3 to 5 above) do not hold at the upstream budget: the improvement appears only with longer training, and the near-jump degradation disappears.
 
-Still not supported: any result on CUDA or on other datasets, architectures or optimiser settings; that the improvement is specific to the PDE residual rather than to regularisation in general (no other regulariser was compared); that unlabelled fields help beyond their extra compute.
+Added on 2026-11-08 (F18; NVIDIA Tesla T4, five seeds):
+
+10. The improvement of item 6 replicates on CUDA under a criterion fixed before the runs: -21.5 % [-23.5, -19.6] against -21.6 % [-23.5, -19.6] on MPS, lower in every seed; the shipped residual at the upstream default again has no material effect. CUDA and MPS agree closely per seed but not bitwise.
+
+Still not supported: the weight sweep, the residual formulations and the label results on CUDA; any result on other GPUs, datasets, architectures or optimiser settings; that the improvement is specific to the PDE residual rather than to regularisation in general (no other regulariser was compared); that unlabelled fields help beyond their extra compute.
 
 ## Recommendation
 
 The project is scientifically defensible as a careful reproduction-and-diagnosis study of one upstream example, and its tracked results are reproducible from its records. It is not evidence for a performance claim. G1 has been run (F14): the residual finding is reproducible over seeds, an accuracy gain is not supported, and three seeds leave intervals of about ±14 % on the error. Next, in order: more seeds at weight 0.1 if a sharper accuracy statement is wanted (about 3 minutes per run locally under light load), G2 for the upstream budget, and G3 and G4, which test the coefficient and operator mismatch identified here and the jump-region degradation that F14 reproduces.
 
 Update 2026-11-07. G2 to G6 have been run at the upstream budget (F15 to F17). They change the answer to the accuracy question: with enough training, the corrected residual, and the exact one, improve the test error over data-only training by about a fifth with 102 labels and by more with fewer labels, provided the weight is moderate (0.01 to 0.1). The project now supports this conditional performance claim for this example on MPS. Next, in order: a CUDA replication of the primary comparisons, controls with other regularisers and per-setting learning rates, and other datasets.
+
+Update 2026-11-08. The five-seed primary comparison has been replicated on CUDA (F18) by its pre-registered criterion, with results that agree closely with MPS. The conditional performance claim now holds on both devices for that comparison. That the improvement comes from regularisation remains a hypothesis. Next, in order: controls with other regularisers and per-setting learning rates, the CUDA weight sweep (18 runs) if device independence of the weight dependence matters, and other datasets.

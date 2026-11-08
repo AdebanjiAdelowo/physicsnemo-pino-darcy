@@ -19,7 +19,7 @@ Run names: `dataonly_seed<S>` for weight 0, otherwise `<residual>_w<weight>_seed
 |---|---|---|
 | `data_check.json` | 460 samples of the dataset, CPU | VERIFIED |
 | `local` | `configs/local.yaml`: 15 epochs, 1 seed, Apple MPS | LOCAL/REDUCED |
-| `full` | `configs/full.yaml`: 50 epochs, 3 seeds, CUDA | NOT RUN |
+| `full` | `configs/full.yaml`: 50 epochs, 3 seeds, CUDA (27 runs; its primary comparison is covered by `full_cuda`, below) | NOT RUN |
 | `audit/reference_check.json` | `scripts/verify_reference.py`: the reference pressure regenerated with the original solver, and its residual under that solver's operator, 460 samples, CPU | VERIFIED |
 | `audit/local_solver_residual.json` | `scripts/evaluate_solver_residual.py --config local`: the checkpoints of `local` under that operator, and the test error by region; inference only | LOCAL/REDUCED |
 | `local_seeds` | `configs/local.yaml` with seeds 1 and 2, weights 0 and 0.1, both residuals (6 runs), Apple MPS; `run_manifest.json` adds configuration, dataset and checkpoint hashes for these and the matching seed-0 runs | LOCAL/REDUCED |
@@ -30,10 +30,16 @@ Run names: `dataonly_seed<S>` for weight 0, otherwise `<residual>_w<weight>_seed
 | `full_mps_operator`, `full_mps_solver_w1` | `consistent_coeff`, `solver_kcoeff`, `solver` at 0.1 and `solver` at 1, seeds 0 to 2 (G3, G4) | FULL BUDGET, MPS |
 | `labels25`, `labels50`, `labels25_unlabelled`, `labels50_unlabelled` | 25 or 50 labelled samples, 5100 steps, data only and `solver` 0.1, with and without the other training permeabilities as unlabelled inputs (G5, G6) | FULL BUDGET, MPS |
 | `audit/<study>_solver_residual.json`, `audit/<study>_generalisation.json` | per study: test error recomputed from the checkpoints, error by region, exact residual; training, validation and test error of every run | FULL BUDGET, MPS |
+| `full_cuda`, `full_cuda_more` | `configs/full_cuda.yaml`, `full_cuda_more.yaml`: the 15 runs of `full_mps` and `full_mps_more` (data only, `shipped` 0.1, `consistent` 0.1; seeds 0 to 2 and 3 to 4) on an NVIDIA Tesla T4, one Kaggle session at `416bfe6` | FULL BUDGET, CUDA |
+| `audit/full_cuda_solver_residual.json`, `audit/full_cuda_more_solver_residual.json`, `audit/full_cuda_generalisation.json`, `audit/full_cuda_more_generalisation.json` | as the MPS audit files, computed in the CUDA session from its checkpoints | FULL BUDGET, CUDA |
+| `audit/cuda_replication.json` | `scripts/cuda_replication.py`: the pre-registered criterion of `docs/CUDA_REPLICATION_PLAN.md` (verdict: replicated on CUDA), secondary comparisons, the MPS reference and CUDA minus MPS per seed | FULL BUDGET, CUDA |
+| `full_cuda_sweep` | `configs/full_cuda_sweep.yaml`: the weight sweep on CUDA | NOT RUN |
 | `audit/full_study.json` | `scripts/full_study.py`: all paired comparisons with intervals over seeds, Holm adjustment, factorial contrasts, the n = 5 result of G2 | FULL BUDGET, MPS |
 | `audit/solver_operator_check.json`, `audit/determinism.json`, `audit/code_regression.json` | checks of the training residuals on real fields, of MPS repeatability, and of the code changes between the studies | VERIFIED |
 
 Units: all losses and residuals are in the normalised variables $k' = k / 4.49996$ and $u' = u / 3.88433 \times 10^{-3}$. `*_pde_l1_*` is the mean absolute residual over all 240 × 240 cells with the two outer rows and columns set to zero, which is the quantity in the training loss; the other residual statistics are taken over the interior cells. `test_rel_l2_*` are relative $L^2$ errors as fractions. Times are wall-clock with the device synchronised. Memory fields are CUDA peak allocations and are empty on other devices.
+
+Notes on `full_cuda*`: the records were produced on Kaggle and published here with `scripts/results.py publish`; the test errors were recomputed from the checkpoints in the session (agreement 1e-7 relative) and again on Apple MPS (1e-5). Timings and memory are those of the T4. `audit/cuda_replication.json` was written locally from the tracked records; its `environment` block describes that machine and records `git_dirty: true` only because the CUDA results were not yet committed. The checkpoints and the session archives are not tracked; they are kept in `runs/full_cuda*/` and `runs/kaggle/pino-darcy-cuda-minimal-416bfe6/` (checksums in its `SHA256SUMS`).
 
 Notes on `local`: the machine was running other jobs during the study, so its training and inference times vary between runs for reasons unrelated to the settings. `study_metadata.json` lists `evaluation.plot_samples: 3`, the value at training time; the tracked `fields.npz` was written by a later evaluation of the same checkpoints with one plotted sample.
 
