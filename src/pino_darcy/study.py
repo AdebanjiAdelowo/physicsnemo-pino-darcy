@@ -9,6 +9,7 @@ import numpy as np
 from omegaconf import DictConfig, OmegaConf
 
 from . import engine
+from . import selection as S
 from .provenance import collect_metadata, write_json
 
 SUMMARY_FIELDS = [
@@ -113,6 +114,7 @@ def summary_row(train: dict, evaluation: dict) -> dict:
 
 def evaluate_study(cfg: DictConfig, root: Path) -> dict:
     """Evaluate every run from its checkpoint and write the summary files and plotting fields."""
+    S.guard_test_evaluation(cfg, root)
     out_dir, device, sets = engine.prepare_study(cfg, root, write_metadata=False, with_train=False)
     n_plot = cfg.evaluation.plot_samples
     plot_seed = cfg.study.seeds[0]
@@ -157,6 +159,7 @@ def verify_study(cfg: DictConfig, root: Path) -> list[dict]:
     Nothing is written. Used after results were produced on another machine: the stored
     timings and memory figures belong to that machine and must not be replaced.
     """
+    S.guard_test_evaluation(cfg, root)
     out_dir, device, sets = engine.prepare_study(cfg, root, write_metadata=False, with_train=False)
     rows = []
     for run in engine.study_runs(cfg):

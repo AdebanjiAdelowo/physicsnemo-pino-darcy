@@ -135,3 +135,28 @@ class EarlyStoppingTracker:
                 selected, state = self.at_stop if self.stop_epoch is not None else (self.best_epoch, self.best_state)
                 reached.append((cap, selected, self.stop_epoch, state))
         return reached
+
+
+SELECTION_FILE = "results/audit/regularisation_selection.json"
+
+
+def require_final_selection(path) -> dict:
+    """The frozen selection, or SystemExit: the test split of the regularisation study stays closed until then."""
+    import json
+    from pathlib import Path
+
+    path = Path(path)
+    if not path.exists():
+        raise SystemExit(f"{path} does not exist: run `scripts/regularisation_study.py select` before any test evaluation")
+    selection = json.loads(path.read_text())
+    if selection.get("status") != "final" or selection.get("test_set_read") is not False:
+        raise SystemExit(f"{path} is not a final validation-only selection (status {selection.get('status')!r}); no test evaluation yet")
+    return selection
+
+
+def guard_test_evaluation(cfg: DictConfig, root) -> None:
+    """For studies with ``evaluation.test_after_selection``, refuse any test evaluation before the final selection."""
+    from pathlib import Path
+
+    if (cfg.get("evaluation") or {}).get("test_after_selection"):
+        require_final_selection(Path(root) / SELECTION_FILE)

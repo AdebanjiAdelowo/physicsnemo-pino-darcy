@@ -15,6 +15,9 @@ optimizer:
 snapshots:
   epochs: [3]
 
+evaluation:
+  test_after_selection: true
+
 early_stopping:
   caps: [3, "${max_epochs}"]
   rules:

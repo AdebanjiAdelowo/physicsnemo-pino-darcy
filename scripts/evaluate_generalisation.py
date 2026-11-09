@@ -14,6 +14,7 @@ from physicsnemo.utils.checkpoint import load_checkpoint
 
 from _bootstrap import ROOT
 from pino_darcy import engine
+from pino_darcy import selection as S
 from pino_darcy.config import load_config
 from pino_darcy.gpulock import gpu_lock
 from pino_darcy.metrics import relative_l2
@@ -27,6 +28,7 @@ def main() -> None:
     parser.add_argument("overrides", nargs="*")
     args = parser.parse_args()
     cfg = load_config(args.config, args.overrides)
+    S.guard_test_evaluation(cfg, ROOT)
     with gpu_lock(cfg.device):
         out_dir, device, sets = engine.prepare_study(cfg, ROOT, write_metadata=False, with_train=True)
         result = {"environment": collect_metadata(device), "study": str(out_dir.relative_to(ROOT)), "runs": {}}

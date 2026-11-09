@@ -33,13 +33,14 @@ from evaluate_solver_residual import MARGIN, residual_stats, split_error
 from pino_darcy import data as D
 from pino_darcy import engine
 from pino_darcy import reference as R
+from pino_darcy import selection as S
 from pino_darcy.config import load_config
 from pino_darcy.gpulock import gpu_lock
 from pino_darcy.metrics import relative_l2
 from pino_darcy.model import build_fno
 from pino_darcy.provenance import collect_metadata, write_json
 
-SELECTION = ROOT / "results" / "audit" / "regularisation_selection.json"
+SELECTION = ROOT / S.SELECTION_FILE
 
 
 def variants(run_dir: Path) -> dict:
@@ -64,8 +65,8 @@ def load_variant(cfg, run_dir: Path, label: str, device: torch.device) -> torch.
 
 
 def evaluate(cfg, stage: str, root: Path = ROOT, selection: Path = SELECTION, out: Path | None = None) -> dict:
-    if stage == "test" and not Path(selection).exists():
-        raise SystemExit(f"{selection} does not exist: run `scripts/regularisation_study.py select` before any test evaluation")
+    if stage == "test":
+        S.require_final_selection(selection)  # status final, validation only; for every study, not only the controls
     out_dir, device, sets = engine.prepare_study(cfg, root, write_metadata=False, with_train=(stage == "validation"))
     result = {"environment": collect_metadata(device), "study": cfg.name, "stage": stage, "runs": {}}
     if stage == "test":

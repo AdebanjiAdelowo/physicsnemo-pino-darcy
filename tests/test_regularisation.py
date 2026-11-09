@@ -209,8 +209,10 @@ def test_grid_configurations_train_as_full_cuda_apart_from_the_controls():
         cfg = load_config(name)
         engine.validate_study(cfg)
         c = OmegaConf.to_container(cfg, resolve=True)
-        for key in ("model", "data", "batch_size", "start_lr", "gamma", "device", "evaluation"):
+        for key in ("model", "data", "batch_size", "start_lr", "gamma", "device"):
             assert c[key] == reference[key], (name, key)
+        # the same evaluation settings, plus the gate that keeps the test split closed until the selection is final
+        assert c["evaluation"] == {**reference["evaluation"], "test_after_selection": True}, name
         assert c["optimizer"]["name"] == "adamw" and c["study"]["physics_weights"] == [0] and c["study"]["seeds"] == [0, 1, 2, 3, 4]
         assert c["snapshots"]["epochs"] == [50] and c["max_epochs"] >= 50 and sorted(c["early_stopping"]["caps"]) == sorted({50, c["max_epochs"]})
         assert c["early_stopping"]["rules"] == {"es": {"patience": 5, "min_delta": 0.0}, "vb": {"patience": None, "min_delta": 0.0}}
@@ -313,6 +315,11 @@ def test_analysis_computes_the_primary_and_the_holm_family(tmp_path):
     assert result["arms"]["A"]["ES"]["test_rel_l2"]["mean"] == pytest.approx(0.038 + 0.001 + 0.0001)
     assert result["arms"]["B"]["WD+VB"]["test_rel_l2"]["mean"] == pytest.approx(0.038 + 0.001 + 0.0002)
     assert "A: PINO - WD+VB" not in result["secondary_holm"] and "B: PINO - WD+VB" in result["secondary_holm"]
+    assert set(result["grid"]) == {str(wd) for wd in GRID_VAL} and result["grid"]["0.01"]["selected"]
+    assert result["grid"]["0.01"]["mean_validation_rel_l2"] == pytest.approx(0.0440 + 0.002)
+    # the synthetic grid has the same test errors for every weight decay, so WD and base coincide; ES does not
+    assert result["secondary_holm"]["A: WD - base"]["identical_models"] is True
+    assert result["secondary_holm"]["A: ES - base"]["identical_models"] is False
 
 
 def test_test_evaluation_refuses_to_run_before_the_selection(tmp_path):

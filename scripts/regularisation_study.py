@@ -159,6 +159,8 @@ def paired(setting: dict, control: dict, seeds=SEEDS, key=lambda r: r["test_rel_
     b = np.array([key(control[s]) for s in seeds])
     d = paired_seed_interval(a - b)
     d["control_mean"] = float(b.mean())
+    # both arms are the same models in every seed (e.g. a rule that selects the final epoch): the interval is the point 0
+    d["identical_models"] = bool(np.all(a == b))
     d["relative_change"] = float(d["mean"] / b.mean())
     d["ci_relative"] = [d["ci_low"] / b.mean(), d["ci_high"] / b.mean()]
     if d["ci_high"] < 0:
@@ -170,6 +172,22 @@ def paired(setting: dict, control: dict, seeds=SEEDS, key=lambda r: r["test_rel_
     else:
         d["reading"] = "inconclusive"
     return d
+
+
+def grid_table(selection: dict, audit: Path = AUDIT, seeds=SEEDS) -> dict:
+    """Validation and test error of every weight decay at budget A, side by side (after the selection), to show the selection's optimism."""
+    label = selection["budgets"]["A"]
+    out = {}
+    for wd, study in selection["studies"].items():
+        val = read(audit / f"{study}_variants_validation.json")["runs"]
+        test = read(audit / f"{study}_variants_test.json")["runs"]
+        out[wd] = {
+            "study": study,
+            "mean_validation_rel_l2": float(np.mean([val[f"dataonly_seed{s}"][label]["validation_rel_l2"] for s in seeds])),
+            "mean_test_rel_l2": float(np.mean([test[f"dataonly_seed{s}"][label]["test_rel_l2"] for s in seeds])),
+            "selected": study == selection["selected_study"],
+        }
+    return out
 
 
 def analyse(selection: dict, audit: Path = AUDIT, **kwargs) -> dict:
@@ -197,6 +215,7 @@ def analyse(selection: dict, audit: Path = AUDIT, **kwargs) -> dict:
         "secondary_holm": secondary,
         "descriptive_regions_and_residual": regional,
         "arms": {b: {arm: describe(rec, seeds) for arm, rec in arms[b].items()} for b in arms},
+        "grid": grid_table(selection, audit, seeds),
         "notes": [
             "Seeds are the independent units; intervals are Student-t over seeds, relative to the comparison mean.",
             "A non-significant difference is not evidence of equivalence; "

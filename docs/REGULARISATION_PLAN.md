@@ -68,7 +68,9 @@ The same seeds are used for selection (validation split) and for testing (test s
 
 **Primary:** budget A, PINO minus WD+VB, test relative L2 (mean over the 256 test samples per model), paired by seed over seeds 0 to 4; mean difference with a 95 % Student-t interval (4 degrees of freedom), relative to the mean error of WD+VB. WD+VB is fixed in advance as the strongest conventional control: weight decay chosen on validation and the best validation checkpoint within the same step budget. It is fixed rather than chosen among the controls by validation error, because the validation-selected checkpoints are selected on that same split and would be favoured by such a choice. It is preferred to WD+ES because patience-based stopping can only select a model that `vb` could also select, at a validation error no lower; the physics-informed model gets no validation-based selection at all, so the primary comparison gives the control every advantage the validation split offers.
 
-**Reading** of an interval of a difference (setting minus comparison): *setting better* if it lies below zero, *comparison better* if above, *no material difference* if it lies entirely within ±5 % of the comparison mean, otherwise *inconclusive*. A non-significant difference is not read as equivalence; only the ±5 % rule says "no material difference".
+**Reading** of the 95 % interval of a difference (setting minus comparison), in this order: *setting better* if the whole interval lies below zero; *comparison better* if it lies above zero; *no material difference* if it lies entirely within ±5 % of the comparison mean; otherwise *inconclusive*.
+
+**The ±5 % band.** It is a practical-relevance margin, kept from [`FULL_BUDGET_PLAN.md`](FULL_BUDGET_PLAN.md) so that this study reads its intervals as the earlier ones did; it is not derived from these data. "No material difference" is an interval-inclusion statement: the whole 95 % interval inside the band, which is the same as two one-sided tests at 2.5 % each, stricter than the common 90 % interval. It says that a difference larger than 5 % of the comparison mean is excluded at that confidence; it does not say that the methods are identical. A difference whose interval includes zero but extends beyond the band is *inconclusive*: failure to detect a difference is never reported as equivalence, and a p value above 0.05 is never read as "no difference". For scale (F18, CUDA, already reported): 5 % of the data-only mean error is 0.0019; the seed-to-seed SD of the data-only error is 0.0013 (3.3 %); the paired PINO minus data-only differences had an SD of 0.0006, which with five seeds gives a 95 % half-width of 0.0007 (1.9 % of the mean). The band can therefore be met with five seeds if two arms differ by little and their per-seed differences are as consistent as in F18; if they are less consistent, "inconclusive" is the expected reading.
 
 **Secondary**, Holm-adjusted together (21 comparisons, test relative L2): at budget A, each of WD, ES, VB, WD+ES, WD+VB minus base, and PINO minus base, WD, ES, VB and WD+ES; at budget B, the same five controls minus base, and PINO minus base and each of the five controls.
 
@@ -76,39 +78,70 @@ The same seeds are used for selection (validation split) and for testing (test s
 
 **Interpretation limits** stated in advance: the comparison is at the upstream learning rate and schedule for every arm (no learning-rate tuning for any arm); the PINO weight is not tuned on validation while λ is, which favours the controls; five seeds; one dataset, one architecture, one GPU model. A smaller generalisation gap or residual is a correlation with the training method, not a demonstration of a mechanism.
 
+## Selection bias and leakage audit
+
+**Paths from the test split to a choice, and how each is closed.**
+
+| Path | Closed by |
+|---|---|
+| Training evaluates the final model on the test split (`train.py` without `--no-evaluate`) | The launcher trains with `--no-evaluate`. `configs/reg_cuda.yaml` sets `evaluation.test_after_selection`, and every function that computes test errors for such a study (`study.evaluate_study`, `study.verify_study`, `evaluate_solver_residual.py`, `evaluate_generalisation.py`) refuses to run until `results/audit/regularisation_selection.json` exists with `status: final` and `test_set_read: false`. `evaluate_variants.py --stage test` requires the same for every study. Tested in `tests/test_regularisation_session.py`. |
+| Weight decay chosen by test error | `select` reads only the `*_variants_validation.json` files. The validation stage computes and writes no test-split quantity (the test tensors are loaded by the shared data loader but not used); `tests/test_regularisation.py` runs the selection with every test file removed. |
+| Checkpoint chosen by test error | The `es` and `vb` rules see only the per-epoch validation error during training. |
+| Selection repeated after test results are seen | `select` refuses to overwrite a final selection; the launcher evaluates the test split only in a separate session (`MODE = "test"`) whose `check-selection` requires the selection file to be committed and unchanged at the commit being run. The commit history therefore dates the selection before any test result of the study. |
+| Changed plan after test results | This file, the grid, the rules, the primary comparison and the analysis code are committed before any study run; budget B is set by a stated formula from the pilot, which reads no test data. |
+
+**Remaining sources of bias, stated in advance.**
+
+1. *Same seeds for selection and testing.* The weight decay and the validation-best checkpoints are chosen on the validation split using the five trained models whose test errors are then reported. Validation and test errors of one model are correlated (same model, same input distribution), so the selected arms' test errors are somewhat optimistic compared with a new set of seeds trained with the selected setting. This favours the conventional controls. A PINO advantage that survives is therefore conservative; a finding that a control matches PINO must be read with this optimism in mind. To show its size, the analysis reports the validation and test errors of every grid value side by side (after the selection).
+2. *Asymmetric tuning.* The controls get a tuned weight decay and validation-based checkpoint selection; the physics-informed model gets neither (weight 0.1 fixed in advance, final checkpoint). This also favours the controls.
+3. *Knowledge of earlier results.* The design was made knowing the published test results of F15 and F18 and the validation curves of the existing runs (section "Status of this study"). The grid follows from the learning-rate schedule, not from any error; the patience was set knowing the validation curves.
+4. *Arms that share runs.* ES, VB and the fixed-step model of one weight decay come from the same run, and base and the physics-informed run share the seed. All comparisons are paired by seed, with seeds as the independent units. Where a rule selects the final model in every seed, a difference is exactly zero with zero spread; its interval is then the point zero, and it is reported as such rather than as evidence about variability.
+5. *Multiplicity.* One primary comparison; the 21 secondary comparisons are Holm-adjusted together; the regional, residual and compute comparisons are descriptive and unadjusted.
+
+## Comparability with the historical baseline
+
+The base arm (AdamW, weight decay 0) is trained anew rather than reusing the data-only runs of F18, so that every data-only arm comes from the same code path and session. It is comparable with the physics-informed runs it is tested against because:
+
+1. *Same update.* `torch.optim.AdamW` with weight decay 0 performs the same arithmetic as the upstream `torch.optim.Adam`; `tests/test_regularisation.py` checks bitwise equality on CPU.
+2. *Same software.* `kaggle/regularisation_constraints.txt` pins PyTorch 2.15.0, NumPy 2.5.4, Warp 1.19.0 and SymPy 1.14.0, the versions recorded for `full_cuda`, and `regularisation_session.py env-check` stops the session unless the installed PyTorch (including its CUDA build, 13.2), NumPy, Warp, SymPy, Python minor version and PhysicsNeMo commit equal those of `results/full_cuda/study_metadata.json`. The complete package list and the GPU and driver are saved with every session.
+3. *Same trajectory, checked.* The pilot trains seed 0 for three epochs with AdamW without decay and with the physics-informed configuration, and compares the per-epoch data loss and validation error with those of `full_cuda` (validation only). They must agree to 1e-3 relative (the level at which CUDA and MPS agreed, F18); otherwise `check-pilot` stops the study before any training.
+4. *After the study*, the 50-epoch base runs are compared per seed with the F18 data-only runs (test error and history), and the difference is reported.
+
+Not controlled: the physical GPU and driver of a Kaggle session (recorded), and non-deterministic CUDA kernels; both were present in F18 as well.
+
 ## Runs, compute and storage (estimates)
 
-| Item | Runs | Estimate on a Tesla T4 |
+| Session | Work | Estimate on a Tesla T4 |
 |---|---|---|
-| Timing pilot (separate session) | 2 runs of 3 epochs | about 15 min including set-up |
-| Grid, 6 values × 5 seeds, B ≈ 51 epochs | 30 | 30 × about 195 s ≈ 1.6 h |
-| Variant evaluation (4 models per run, validation and test), PINO evaluation | 30 + 10 | about 0.3 h |
-| Grid extension, if the boundary rule applies | 5 | about 0.3 h |
-| Total main session | 30 (35) | about 2 to 2.5 h, within one Kaggle session |
+| `pilot` | set-up and checks (about 10 min), restore of the inputs, 3 runs of 3 epochs | about 15 min |
+| `train_select` | set-up, 30 runs of B ≈ 51 epochs (30 × about 195 s ≈ 1.6 h), validation evaluation of 6 models per run and of the 10 physics-informed runs (about 0.2 h); with the grid extension 5 more runs (about 0.3 h) | about 2 to 2.3 h |
+| `test` | set-up, restore, test evaluation of every model and the summaries, analysis | about 0.4 h |
 
 Estimates from the F18 timings; the pilot replaces them. Storage, outside Git: per run the final checkpoint (28 MB) and five snapshots (`epoch050` and the two rules at the two caps, 9 MB each; identical selections are still stored separately), about 75 MB; 2.3 GB for 30 runs (2.6 GB with the extension), about the same again for archives in the session. Tracked records: about 2 MB per grid study plus the variant files (per-sample test errors), about 15 MB in all.
 
 ## Execution
 
-On a machine with one NVIDIA GPU, from the repository root at the commit that fixes B (on Kaggle, through the launcher once it has a plan for this study, with the `full_cuda` and `full_cuda_more` eval bundles restored for the physics-informed checkpoints):
+Three Kaggle sessions with `kaggle/run_regularisation.ipynb` (the replication launcher `run_cuda.ipynb` is not used). Each checks out one commit by its full SHA, installs the pinned environment, checks it against `full_cuda`, checks the dataset and runs the test suite. Attach the output of `pino-darcy-cuda-minimal-416bfe6` as an input in every session.
+
+1. `MODE = "pilot"`: restores and verifies the physics-informed inputs (`kaggle/regularisation_inputs.sha256`: 4 archives, 30 checkpoint files, metadata) and runs the pilot (3 runs of 3 epochs). Output `regularisation_pilot.json`. Then, locally: commit it as `results/audit/regularisation_pilot.json` and set `max_epochs` in `configs/reg_cuda.yaml` to its `budget_B_epochs` (a test checks that they agree).
+2. `MODE = "train_select"` at that commit: trains the six grid studies with `--resume --no-evaluate`, archives each when finished (records without test results, checkpoints and snapshots, SHA-256 manifest), evaluates every model on the training and validation splits, and runs `select` (and the extension, if the boundary rule asks for it). A session that runs short stops before a study it cannot finish; the next one continues from this output. Then, locally: commit `regularisation_selection.json`, the `*_variants_validation.json` files and `regularisation_archives.sha256` to `results/audit/`.
+3. `MODE = "test"` at that commit, with the `train_select` output attached: `check-selection`, restore of the controls against the committed manifest, the test evaluation of every model, the summaries, and `analyse`.
+
+The same steps without the launcher, on any machine with one NVIDIA GPU and the pinned environment:
 
 ```bash
+python scripts/regularisation_session.py pilot --out regularisation_pilot.json
+# commit the pilot, set budget B, then:
 for s in reg_cuda_wd0 reg_cuda_wd1e-3 reg_cuda_wd1e-2 reg_cuda_wd1e-1 reg_cuda_wd1e0 reg_cuda_wd1e1; do
-  python scripts/train.py --config $s --resume                                 # trains, then evaluates the final model
+  python scripts/train.py --config $s --resume --no-evaluate
   python scripts/evaluate_variants.py --config $s --stage validation
 done
+python scripts/evaluate_variants.py --config full_cuda --stage validation
+python scripts/evaluate_variants.py --config full_cuda_more --stage validation
 python scripts/regularisation_study.py select                                  # validation only; freezes wd*
+# commit the selection, then:
 for s in reg_cuda_wd0 reg_cuda_wd1e-3 reg_cuda_wd1e-2 reg_cuda_wd1e-1 reg_cuda_wd1e0 reg_cuda_wd1e1 full_cuda full_cuda_more; do
   python scripts/evaluate_variants.py --config $s --stage test
 done
 python scripts/regularisation_study.py analyse                                 # results/audit/regularisation_study.json
-```
-
-`full_cuda` and `full_cuda_more` also need `--stage validation` (training and validation errors of the physics-informed runs) before `analyse`; that step does not read the test split and may run at any time.
-
-Pilot (fixes B):
-
-```bash
-python scripts/train.py --config reg_cuda_wd1e-2 --no-evaluate name=pilot_reg_wd max_epochs=3 "snapshots.epochs=[2]" "early_stopping.caps=[2,3]" "study.seeds=[0]"
-python scripts/train.py --config full_cuda --no-evaluate name=pilot_reg_pino max_epochs=3 "study.seeds=[0]" "study.residuals=[consistent]" "study.physics_weights=[0.1]"
 ```

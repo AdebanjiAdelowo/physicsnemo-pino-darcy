@@ -1,0 +1,7 @@
+# Versions of the environment that trained the physics-informed checkpoints (results/full_cuda/study_metadata.json,
+# Kaggle session pino-darcy-cuda-minimal-416bfe6). The regularisation controls are trained with the same versions;
+# scripts/regularisation_session.py env-check stops the session if the installed versions differ.
+torch==2.15.0
+numpy==2.5.4
+warp-lang==1.19.0
+sympy==1.14.0

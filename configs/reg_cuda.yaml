@@ -22,6 +22,9 @@ optimizer:
 snapshots:
   epochs: [50]              # budget A: 5100 optimiser steps
 
+evaluation:
+  test_after_selection: true  # no test evaluation before results/audit/regularisation_selection.json is final
+
 early_stopping:
   caps: [50, "${max_epochs}"]   # applied with both budgets
   rules:
