@@ -62,13 +62,15 @@ def discrete_operators(k, u, h):
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--out-root", type=Path, default=ROOT, help="directory that receives results/ and figures/")
+    parser.add_argument("--exclude-test", action="store_true", help="check training and validation content only")
     args = parser.parse_args()
     cfg = load_config("official")
     manifest = D.prepare(cfg.data, ROOT)
     data_dir = ROOT / cfg.data.dir
 
     raw = {key: [] for key in ("Kcoeff", "coeff", "sol")}
-    for split in ("train", "validation", "test"):
+    splits = ("train", "validation") if args.exclude_test else ("train", "validation", "test")
+    for split in splits:
         with h5py.File(data_dir / f"{split}.hdf5") as f:
             for key in raw:
                 raw[key].append(np.asarray(f[key][:, 0], dtype=np.float64))
@@ -105,7 +107,7 @@ def main() -> None:
     out["forcing"]["normalised_forcing_of_the_data"] = 1 / (D.K_SCALE * D.U_SCALE)
     out["forcing"]["normalised_forcing_in_upstream_script"] = P.RESIDUALS["shipped"]["forcing"]
 
-    sets = {split: D.load_split(data_dir / f"{split}.hdf5") for split in ("train", "validation", "test")}
+    sets = {split: D.load_split(data_dir / f"{split}.hdf5") for split in splits}
     informers = engine.make_informers(torch.device("cpu"))
     out["reference_residual_normalised"] = {
         split: {name: P.residual_statistics(engine.residual_fields(inf, s["u"], s["k"]), s["k"]) for name, inf in informers.items()}
@@ -121,7 +123,8 @@ def main() -> None:
     from pino_darcy.plotting import plot_data_check
 
     i = 0
-    k, u = sets["test"]["k"][i : i + 1], sets["test"]["u"][i : i + 1]
+    report_split = splits[-1]
+    k, u = sets[report_split]["k"][i : i + 1], sets[report_split]["u"][i : i + 1]
     fields = {name: engine.residual_fields(inf, u, k)[0, 0].numpy() for name, inf in informers.items()}
     print(plot_data_check(k[0, 0].numpy(), u[0, 0].numpy(), fields, args.out_root / "figures" / "data_check.png"))
 
@@ -130,7 +133,7 @@ def main() -> None:
     print(f"second/first row ratio {g['second_to_first_row_ratio']:.3f} (cell-centred grid: 3)")
     print(f"-k laplace(u), constant-k cells: {f['spacing_1_240']['mean']:.5f} with h = 1/240, {f['spacing_1_241']['mean']:.5f} with h = 1/241")
     for name in informers:
-        s = out["reference_residual_normalised"]["test"][name]
+        s = out["reference_residual_normalised"][report_split][name]
         print(f"reference residual, {name:>10}: L1 {s['l1']:.3f}, constant-k cells {s['abs_mean_smooth']:.4f}, other cells {s['abs_mean_interface']:.2f}")
 
 

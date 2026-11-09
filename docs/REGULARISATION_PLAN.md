@@ -70,11 +70,17 @@ Made after the timing pilot and before any study run and any test evaluation of 
 ## Selection (validation only)
 
 1. Train all grid studies (`reg_cuda_wd0` to `reg_cuda_wd1e1`, seeds 0 to 4).
-2. `scripts/evaluate_variants.py --stage validation` for every grid study: training and validation errors of every saved model. The test split is not read.
-3. `scripts/regularisation_study.py select`: `wd*` is the non-zero λ with the lowest mean validation relative L2 over seeds 0 to 4 of the budget-A model; the same `wd*` is used for budget B and for WD+ES. The file records `"test_set_read": false` and is committed (or archived) before step 4. If the boundary rule applies, the file has status `extend`; the extension is trained, evaluated on validation, and `select` run once more.
-4. Only then `scripts/evaluate_variants.py --stage test` (it refuses to run without the selection file and stores its hash), for the grid studies and for `full_cuda`, `full_cuda_more` (the physics-informed runs, final model only).
+2. `scripts/evaluate_variants.py --stage validation` for every grid study computes training and validation errors of every saved model. The completed run loaded the test split as described below. The remediated validation path loads only training and validation tensors.
+3. `scripts/regularisation_study.py select` chooses `wd*`, the non-zero λ with the lowest mean validation relative L2 over seeds 0 to 4 of the budget-A model. The same `wd*` is used for budget B and for WD+ES. If the boundary rule applies, the file has status `extend` and selection is repeated once after validation of the extension.
+4. After authorization, `scripts/evaluate_variants.py --stage test` requires the committed freeze and a verified restore, and records the selection digest. It covers the grid studies and the final models of `full_cuda` and `full_cuda_more`.
 
-The same seeds are used for selection (validation split) and for testing (test split); the test split is never used for any choice. Selecting from six values by validation error can make the selected arm look better on validation than it is; its test error is not affected by that choice.
+The same five seeds are used for selection and testing. The registered selection inputs are validation errors. Choosing from six values can make the selected arm look better on validation through selection on that split.
+
+### Holdout-access deviation recorded after training (2026-11-09)
+
+The completed Kaggle workflow at `1286cbcaafbe21eda2dac8c0549c4a0e69243a3e` opened test tensors before selection through the shared dataset loader. Preflight also computed descriptive statistics and reference-solution residuals on the test split. The inspected training and checkpoint-selection paths use training and validation data, and the archived validation histories independently reproduce the frozen decisions. The reviewed logs and artifacts contain no new test-set model evaluation. They cannot establish who saw the diagnostics or exclude activity outside the recorded workflow.
+
+The original export's `test_set_read: false` field is inaccurate as a record of literal access. The byte-identical export is preserved with SHA-256 `1e9bbc8ffe07822035e7aa551da8653c961f7b1fa488741138013cf698963c7c`. The [scientific audit](SCIENTIFIC_AUDIT.md#f19-g8-holdout-access-and-selection-freeze) records the deviation separately. This is a follow-up on a previously examined test set. The selected decay of 0.001, the paired seeds, the 50- and 52-epoch budgets, B51 as a sensitivity analysis, and the primary Budget A PINO versus WD+VB comparison remain as registered.
 
 ## Primary comparison and statistics
 
@@ -96,10 +102,10 @@ The same seeds are used for selection (validation split) and for testing (test s
 
 | Path | Closed by |
 |---|---|
-| Training evaluates the final model on the test split (`train.py` without `--no-evaluate`) | The launcher trains with `--no-evaluate`. `configs/reg_cuda.yaml` sets `evaluation.test_after_selection`, and every function that computes test errors for such a study (`study.evaluate_study`, `study.verify_study`, `evaluate_solver_residual.py`, `evaluate_generalisation.py`) refuses to run until `results/audit/regularisation_selection.json` exists with `status: final` and `test_set_read: false`. `evaluate_variants.py --stage test` requires the same for every study. Tested in `tests/test_regularisation_session.py`. |
-| Weight decay chosen by test error | `select` reads only the `*_variants_validation.json` files. The validation stage computes and writes no test-split quantity (the test tensors are loaded by the shared data loader but not used); `tests/test_regularisation.py` runs the selection with every test file removed. |
+| Training evaluates the final model on the test split (`train.py` without `--no-evaluate`) | The launcher trains with `--no-evaluate`. The gated evaluation entry points check the committed receipt and frozen evidence, the effective study configuration, the restored checkpoint inventory and its hashes, and the dataset identifiers and file hashes before loading test tensors. |
+| Weight decay chosen by test error | `select` reads only the `*_variants_validation.json` files. The remediated training and validation loaders omit test tensors. Dataset preparation can still write and hash all splits for identity verification. |
 | Checkpoint chosen by test error | The `es` and `vb` rules see only the per-epoch validation error during training. |
-| Selection repeated after test results are seen | `select` refuses to overwrite a final selection; the launcher evaluates the test split only in a separate session (`MODE = "test"`) whose `check-selection` requires the selection file to be committed and unchanged at the commit being run. The commit history therefore dates the selection before any test result of the study. |
+| Selection repeated after test results are seen | `select` refuses to overwrite a final selection. The gate authenticates the original selection, reports and manifests against the pinned receipt and their exact bytes at HEAD. An alternate or edited JSON cannot pass by claiming final status. |
 | Changed plan after test results | This file, the grid, the rules, the primary comparison and the analysis code are committed before any study run; budget B is set by a stated formula from the pilot, which reads no test data. |
 
 **Remaining sources of bias, stated in advance.**
@@ -137,7 +143,7 @@ Three Kaggle sessions with `kaggle/run_regularisation.ipynb` (the replication la
 
 1. `MODE = "pilot"`: restores and verifies the physics-informed inputs (`kaggle/regularisation_inputs.sha256`: 4 archives, 30 checkpoint files, metadata) and runs the pilot (3 runs of 3 epochs). Output `regularisation_pilot.json`. Then, locally: commit it as `results/audit/regularisation_pilot.json` and set `max_epochs` in `configs/reg_cuda.yaml` to its `budget_B_epochs` (a test checks that they agree).
 2. `MODE = "train_select"` at that commit: trains the six grid studies with `--resume --no-evaluate`, archives each when finished (records without test results, checkpoints and snapshots, SHA-256 manifest), evaluates every model on the training and validation splits, and runs `select` (and the extension, if the boundary rule asks for it). A session that runs short stops before a study it cannot finish; the next one continues from this output. Then, locally: commit `regularisation_selection.json`, the `*_variants_validation.json` files and `regularisation_archives.sha256` to `results/audit/`.
-3. `MODE = "test"` at that commit, with the `train_select` output attached: `check-selection`, restore of the controls against the committed manifest, the test evaluation of every model, the summaries, and `analyse`.
+3. After separate authorization, `MODE = "test"` at the remediation commit, with the `train_select` output attached. Verify the committed freeze, restore against the committed manifests in a clean checkout, verify the restored inputs, then run evaluation and analysis. The gate verifies the files used by each evaluation again.
 
 The same steps without the launcher, on any machine with one NVIDIA GPU and the pinned environment:
 
@@ -151,7 +157,13 @@ done
 python scripts/evaluate_variants.py --config full_cuda --stage validation
 python scripts/evaluate_variants.py --config full_cuda_more --stage validation
 python scripts/regularisation_study.py select                                  # validation only; freezes wd*
-# commit the selection, then:
+# for the completed study, use the committed remediation checkout and prepare the dataset
+python scripts/prepare_data.py
+python scripts/regularisation_session.py check-selection
+python scripts/regularisation_session.py restore-inputs --input-root /path/to/preserved/outputs
+python scripts/regularisation_session.py restore-runs --input-root /path/to/preserved/outputs --manifest results/audit/regularisation_archives.sha256
+python scripts/regularisation_session.py check-restore
+# after separate authorization:
 for s in reg_cuda_wd0 reg_cuda_wd1e-3 reg_cuda_wd1e-2 reg_cuda_wd1e-1 reg_cuda_wd1e0 reg_cuda_wd1e1 full_cuda full_cuda_more; do
   python scripts/evaluate_variants.py --config $s --stage test
 done

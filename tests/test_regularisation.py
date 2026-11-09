@@ -194,7 +194,7 @@ def test_runs_without_the_new_settings_write_the_old_records(tiny_cfg, sets, tmp
 
 
 def test_resume_refuses_a_changed_weight_decay(tiny_cfg, sets, tmp_path, monkeypatch):
-    monkeypatch.setattr(engine, "load_datasets", lambda cfg, root, with_train=True: sets)
+    monkeypatch.setattr(engine, "load_datasets", lambda cfg, root, with_train=True, with_test=True: sets)
     cfg = reg_cfg(tiny_cfg)
     study.train_study(cfg, tmp_path)
     assert study.check_resumable(cfg, tmp_path / cfg.output_dir) is False
@@ -391,17 +391,20 @@ def test_sensitivity_budget_is_reported_apart_from_the_official_family(tmp_path)
     assert all("holm_p_value" not in e for e in sens.values())
 
 
-def test_validation_stage_never_touches_the_test_split(tiny_cfg, sets, tmp_path, monkeypatch):
-    """The validation files that the selection reads are computed with a test split that fails on any access."""
+def test_training_and_validation_never_load_the_test_split(tiny_cfg, sets, tmp_path, monkeypatch):
+    """Exercise both entry points through the real dataset loader."""
+    loaded = []
 
-    class Closed(dict):
-        def __getitem__(self, key):
-            raise AssertionError(f"test split accessed: {key}")
+    def load_split(path, n_samples=None):
+        assert path.stem in ("train", "validation"), f"unexpected split: {path}"
+        loaded.append(path.stem)
+        return sets[path.stem]
 
-    monkeypatch.setattr(engine, "load_datasets", lambda cfg, root, with_train=True: {**sets, "test": Closed()})
+    monkeypatch.setattr(engine.D, "prepare", lambda cfg, root: {})
+    monkeypatch.setattr(engine.D, "load_split", load_split)
     cfg = OmegaConf.merge(reg_cfg(tiny_cfg), {"evaluation": {"test_after_selection": True}})
-    for residual, weight, seed in engine.study_runs(cfg):
-        engine.train_run(cfg, residual, weight, seed, tmp_path / cfg.output_dir / engine.run_name(residual, weight, seed), torch.device("cpu"), sets)
+    study.train_study(cfg, tmp_path)
     result = V.evaluate(cfg, "validation", root=tmp_path, out=tmp_path / "val.json")
+    assert loaded == ["validation", "train", "validation", "train"]
     entries = [e for run in result["runs"].values() for e in run.values()]
     assert len(entries) == 9 and all("validation_rel_l2" in e and not any(k.startswith("test") for k in e) for e in entries)

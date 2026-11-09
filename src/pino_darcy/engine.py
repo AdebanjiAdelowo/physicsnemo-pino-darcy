@@ -129,7 +129,7 @@ def unlabelled_samples(cfg: DictConfig) -> int:
     return int(cfg.data.get("unlabelled_samples", 0) or 0)
 
 
-def load_datasets(cfg: DictConfig, root: Path, with_train: bool = True) -> dict:
+def load_datasets(cfg: DictConfig, root: Path, with_train: bool = True, *, with_test: bool = True) -> dict:
     """Normalised CPU tensors of the splits, after preparing the files if necessary.
 
     With ``data.unlabelled_samples = U > 0`` the training-split samples ``N .. N + U - 1`` that follow
@@ -140,7 +140,9 @@ def load_datasets(cfg: DictConfig, root: Path, with_train: bool = True) -> dict:
     """
     manifest = D.prepare(cfg.data, root)
     data_dir = Path(root) / cfg.data.dir
-    sets = {split: D.load_split(data_dir / f"{split}.hdf5") for split in ("validation", "test")}
+    sets = {"validation": D.load_split(data_dir / "validation.hdf5")}
+    if with_test:
+        sets["test"] = D.load_split(data_dir / "test.hdf5")
     if with_train:
         n_train = cfg.data.train_samples
         sets["train"] = D.load_split(data_dir / "train.hdf5", n_train)
@@ -413,14 +415,14 @@ def reference_residuals(sets: dict, device: torch.device) -> dict:
     }
 
 
-def prepare_study(cfg: DictConfig, root: Path, write_metadata: bool, with_train: bool = True) -> tuple[Path, torch.device, dict]:
+def prepare_study(cfg: DictConfig, root: Path, write_metadata: bool, with_train: bool = True, *, with_test: bool = True) -> tuple[Path, torch.device, dict]:
     """Validate the config, resolve the device, load the data, optionally write ``study_metadata.json``."""
     validate_study(cfg)
     device = resolve_device(cfg.device)
     out_dir = Path(root) / cfg.output_dir
     out_dir.mkdir(parents=True, exist_ok=True)
     metadata = collect_metadata(device)  # before the data is prepared: the code state at start
-    sets = load_datasets(cfg, root, with_train=with_train)
+    sets = load_datasets(cfg, root, with_train=with_train, with_test=with_test)
     if write_metadata:
         metadata["physics_device"] = str(P.physics_device(device))
         metadata["residual_definitions"] = P.RESIDUALS

@@ -33,7 +33,7 @@ Launcher for the study pre-registered in [`docs/REGULARISATION_PLAN.md`](https:/
 | `"train_select"` | trains the weight-decay grid (resumable), evaluates it on the **validation** split only and freezes the selection | per study `-records.zip`, `-bundle.zip`; `regularisation_archives.sha256`; validation files; `regularisation_selection.json` |
 | `"test"` | only with the selection committed: the test evaluation and the analysis | test files, summaries, `regularisation_study.json` |
 
-Between sessions, the pilot result (and budget B in `configs/reg_cuda.yaml`), then the selection, the validation files and the archive manifest are committed, and `REF` is set to the new commit. The test split is not read before the session of `MODE = "test"`.
+Between sessions, the pilot result (and budget B in `configs/reg_cuda.yaml`), then the selection, the validation files and the archive manifest are committed, and `REF` is set to the new commit. Dataset preparation writes and hashes all splits. The descriptive data check, training and validation use only the training and validation samples.
 
 **Inputs** (Kaggle: *Add input*, notebook outputs): always the output of `pino-darcy-cuda-minimal-416bfe6` (the verified CUDA checkpoints of the physics-informed runs); for `"test"`, and to resume an interrupted `"train_select"`, also the output of the `"train_select"` session. Every archive is checked against a tracked SHA-256 manifest before and after extraction, and no file is overwritten.
 
@@ -131,7 +131,7 @@ md(r"""
 code(r'''
 sh("python scripts/prepare_data.py", cwd=REPO)
 CHECK = f"{WORK}/data-check"
-sh(f"python scripts/verify_data.py --out-root {CHECK}", cwd=REPO)
+sh(f"python scripts/verify_data.py --exclude-test --out-root {CHECK}", cwd=REPO)
 check = json.load(open(f"{CHECK}/results/data_check.json"))
 local = json.load(open(f"{REPO}/results/data_check.json"))
 assert check["dataset"]["files"] == local["dataset"]["files"], "the dataset differs from the tracked check"
@@ -229,7 +229,7 @@ if MODE == "train_select":
 md(r"""
 ## Test evaluation and analysis (`MODE = "test"`)
 
-Only with the selection committed (`check-selection`: tracked, unchanged, `status: final`, `test_set_read: false`). The trained controls are restored from the `"train_select"` output after their hashes are checked against the committed manifest. Then the test evaluation of every model, the summaries of the grid studies, and the analysis.
+After authorization, pin the remediation commit. The launcher authenticates the committed freeze, restores the trained controls from the verified `"train_select"` archives, and checks the restored inputs for all eight studies before test evaluation. The evaluator checks the files for each study again before loading test tensors.
 """)
 
 code(r'''
@@ -239,6 +239,7 @@ if MODE == "test":
     assert json.load(open(f"{REPO}/results/audit/regularisation_pilot.json"))["budget_B_epochs"] == EXPECTED_BUDGET_B
     sh(f"python scripts/regularisation_session.py restore-runs --input-root {INPUT_ROOT} --manifest results/audit/regularisation_archives.sha256", cwd=REPO)
     assert tree_is_clean(), "restoring modified tracked files"
+    sh("python scripts/regularisation_session.py check-restore", cwd=REPO)
     selection = json.load(open(f"{REPO}/results/audit/regularisation_selection.json"))
     studies = list(selection["studies"].values())
     for study in studies + PINO_STUDIES:

@@ -110,7 +110,7 @@ def test_load_datasets_takes_the_pool_from_the_training_split_only(tmp_path):
 def test_full_study_with_a_new_residual(tiny_cfg, sets, tmp_path, monkeypatch):
     sets = with_full_grid(sets)
     tiny_cfg.study.residuals = ["solver"]
-    monkeypatch.setattr(engine, "load_datasets", lambda cfg, root, with_train=True: sets)
+    monkeypatch.setattr(engine, "load_datasets", lambda cfg, root, with_train=True, with_test=True: sets)
     out_dir = study.train_study(tiny_cfg, tmp_path)
     summary = study.evaluate_study(tiny_cfg, tmp_path)
     assert [r["run"] for r in summary["runs"]] == ["dataonly_seed0", "solver_w0.1_seed0"]

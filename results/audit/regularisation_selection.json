@@ -1,0 +1,994 @@
+{
+  "plan": "docs/REGULARISATION_PLAN.md",
+  "rule": "weight decay of the WD arms: the non-zero grid value with the lowest mean validation relative L2 over the seeds, of the fixed-step model (budget A); the same value is used for budget B and for WD+ES. If it is the largest value tested and the grid can be extended, the extension is trained and the selection repeated once.",
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "budgets": {
+    "A_epochs": 50,
+    "B_epochs": 52,
+    "sensitivity": [
+      "B51"
+    ],
+    "A": "epoch050",
+    "ES_A": "es_cap050",
+    "VB_A": "vb_cap050",
+    "B": "final",
+    "ES_B": "es_cap052",
+    "VB_B": "vb_cap052",
+    "B51": "epoch051",
+    "ES_B51": "es_cap051",
+    "VB_B51": "vb_cap051"
+  },
+  "mean_validation_rel_l2_budget_A": {
+    "0.0": 0.044254981726408,
+    "0.001": 0.044303163141012195,
+    "0.01": 0.04473424032330513,
+    "0.1": 0.048853020370006564,
+    "1.0": 0.0799071803689003,
+    "10.0": 0.3249033212661743
+  },
+  "studies": {
+    "0.0": "reg_cuda_wd0",
+    "0.001": "reg_cuda_wd1e-3",
+    "0.01": "reg_cuda_wd1e-2",
+    "0.1": "reg_cuda_wd1e-1",
+    "1.0": "reg_cuda_wd1e0",
+    "10.0": "reg_cuda_wd1e1"
+  },
+  "selected_weight_decay": 0.001,
+  "selected_study": "reg_cuda_wd1e-3",
+  "status": "final",
+  "extension_to_train": [],
+  "checkpoint_selections": {
+    "0.0": {
+      "es_cap050": {
+        "budget": "A",
+        "selected_epoch": {
+          "0": 41,
+          "1": 49,
+          "2": 47,
+          "3": 49,
+          "4": 49
+        },
+        "stop_epoch": {
+          "0": 46,
+          "1": null,
+          "2": null,
+          "3": null,
+          "4": null
+        },
+        "consumed_epochs": {
+          "0": 46,
+          "1": 50,
+          "2": 50,
+          "3": 50,
+          "4": 50
+        },
+        "mean_validation_rel_l2": 0.04415365010499954
+      },
+      "vb_cap050": {
+        "budget": "A",
+        "selected_epoch": {
+          "0": 50,
+          "1": 49,
+          "2": 47,
+          "3": 49,
+          "4": 49
+        },
+        "stop_epoch": {
+          "0": null,
+          "1": null,
+          "2": null,
+          "3": null,
+          "4": null
+        },
+        "consumed_epochs": {
+          "0": 50,
+          "1": 50,
+          "2": 50,
+          "3": 50,
+          "4": 50
+        },
+        "mean_validation_rel_l2": 0.044116192311048505
+      },
+      "es_cap052": {
+        "budget": "B",
+        "selected_epoch": {
+          "0": 41,
+          "1": 52,
+          "2": 51,
+          "3": 52,
+          "4": 52
+        },
+        "stop_epoch": {
+          "0": 46,
+          "1": null,
+          "2": null,
+          "3": null,
+          "4": null
+        },
+        "consumed_epochs": {
+          "0": 46,
+          "1": 52,
+          "2": 52,
+          "3": 52,
+          "4": 52
+        },
+        "mean_validation_rel_l2": 0.04403315335512161
+      },
+      "vb_cap052": {
+        "budget": "B",
+        "selected_epoch": {
+          "0": 50,
+          "1": 52,
+          "2": 51,
+          "3": 52,
+          "4": 52
+        },
+        "stop_epoch": {
+          "0": null,
+          "1": null,
+          "2": null,
+          "3": null,
+          "4": null
+        },
+        "consumed_epochs": {
+          "0": 52,
+          "1": 52,
+          "2": 52,
+          "3": 52,
+          "4": 52
+        },
+        "mean_validation_rel_l2": 0.04399569556117058
+      },
+      "es_cap051": {
+        "budget": "B51",
+        "selected_epoch": {
+          "0": 41,
+          "1": 49,
+          "2": 51,
+          "3": 51,
+          "4": 51
+        },
+        "stop_epoch": {
+          "0": 46,
+          "1": null,
+          "2": null,
+          "3": null,
+          "4": null
+        },
+        "consumed_epochs": {
+          "0": 46,
+          "1": 51,
+          "2": 51,
+          "3": 51,
+          "4": 51
+        },
+        "mean_validation_rel_l2": 0.04412553980946541
+      },
+      "vb_cap051": {
+        "budget": "B51",
+        "selected_epoch": {
+          "0": 50,
+          "1": 49,
+          "2": 51,
+          "3": 51,
+          "4": 51
+        },
+        "stop_epoch": {
+          "0": null,
+          "1": null,
+          "2": null,
+          "3": null,
+          "4": null
+        },
+        "consumed_epochs": {
+          "0": 51,
+          "1": 51,
+          "2": 51,
+          "3": 51,
+          "4": 51
+        },
+        "mean_validation_rel_l2": 0.044088082015514375
+      }
+    },
+    "0.001": {
+      "es_cap050": {
+        "budget": "A",
+        "selected_epoch": {
+          "0": 41,
+          "1": 49,
+          "2": 47,
+          "3": 49,
+          "4": 49
+        },
+        "stop_epoch": {
+          "0": 46,
+          "1": null,
+          "2": null,
+          "3": null,
+          "4": null
+        },
+        "consumed_epochs": {
+          "0": 46,
+          "1": 50,
+          "2": 50,
+          "3": 50,
+          "4": 50
+        },
+        "mean_validation_rel_l2": 0.04420020058751106
+      },
+      "vb_cap050": {
+        "budget": "A",
+        "selected_epoch": {
+          "0": 50,
+          "1": 49,
+          "2": 47,
+          "3": 49,
+          "4": 49
+        },
+        "stop_epoch": {
+          "0": null,
+          "1": null,
+          "2": null,
+          "3": null,
+          "4": null
+        },
+        "consumed_epochs": {
+          "0": 50,
+          "1": 50,
+          "2": 50,
+          "3": 50,
+          "4": 50
+        },
+        "mean_validation_rel_l2": 0.04416320100426674
+      },
+      "es_cap052": {
+        "budget": "B",
+        "selected_epoch": {
+          "0": 41,
+          "1": 52,
+          "2": 51,
+          "3": 52,
+          "4": 52
+        },
+        "stop_epoch": {
+          "0": 46,
+          "1": null,
+          "2": null,
+          "3": null,
+          "4": null
+        },
+        "consumed_epochs": {
+          "0": 46,
+          "1": 52,
+          "2": 52,
+          "3": 52,
+          "4": 52
+        },
+        "mean_validation_rel_l2": 0.04407986253499985
+      },
+      "vb_cap052": {
+        "budget": "B",
+        "selected_epoch": {
+          "0": 50,
+          "1": 52,
+          "2": 51,
+          "3": 52,
+          "4": 52
+        },
+        "stop_epoch": {
+          "0": null,
+          "1": null,
+          "2": null,
+          "3": null,
+          "4": null
+        },
+        "consumed_epochs": {
+          "0": 52,
+          "1": 52,
+          "2": 52,
+          "3": 52,
+          "4": 52
+        },
+        "mean_validation_rel_l2": 0.044042862951755524
+      },
+      "es_cap051": {
+        "budget": "B51",
+        "selected_epoch": {
+          "0": 41,
+          "1": 49,
+          "2": 51,
+          "3": 51,
+          "4": 51
+        },
+        "stop_epoch": {
+          "0": 46,
+          "1": null,
+          "2": null,
+          "3": null,
+          "4": null
+        },
+        "consumed_epochs": {
+          "0": 46,
+          "1": 51,
+          "2": 51,
+          "3": 51,
+          "4": 51
+        },
+        "mean_validation_rel_l2": 0.04417220130562782
+      },
+      "vb_cap051": {
+        "budget": "B51",
+        "selected_epoch": {
+          "0": 50,
+          "1": 49,
+          "2": 51,
+          "3": 51,
+          "4": 51
+        },
+        "stop_epoch": {
+          "0": null,
+          "1": null,
+          "2": null,
+          "3": null,
+          "4": null
+        },
+        "consumed_epochs": {
+          "0": 51,
+          "1": 51,
+          "2": 51,
+          "3": 51,
+          "4": 51
+        },
+        "mean_validation_rel_l2": 0.0441352017223835
+      }
+    },
+    "0.01": {
+      "es_cap050": {
+        "budget": "A",
+        "selected_epoch": {
+          "0": 41,
+          "1": 49,
+          "2": 47,
+          "3": 49,
+          "4": 49
+        },
+        "stop_epoch": {
+          "0": 46,
+          "1": null,
+          "2": null,
+          "3": null,
+          "4": null
+        },
+        "consumed_epochs": {
+          "0": 46,
+          "1": 50,
+          "2": 50,
+          "3": 50,
+          "4": 50
+        },
+        "mean_validation_rel_l2": 0.04461848065257072
+      },
+      "vb_cap050": {
+        "budget": "A",
+        "selected_epoch": {
+          "0": 50,
+          "1": 49,
+          "2": 47,
+          "3": 49,
+          "4": 49
+        },
+        "stop_epoch": {
+          "0": null,
+          "1": null,
+          "2": null,
+          "3": null,
+          "4": null
+        },
+        "consumed_epochs": {
+          "0": 50,
+          "1": 50,
+          "2": 50,
+          "3": 50,
+          "4": 50
+        },
+        "mean_validation_rel_l2": 0.04458460286259651
+      },
+      "es_cap052": {
+        "budget": "B",
+        "selected_epoch": {
+          "0": 41,
+          "1": 52,
+          "2": 51,
+          "3": 52,
+          "4": 52
+        },
+        "stop_epoch": {
+          "0": 46,
+          "1": null,
+          "2": null,
+          "3": null,
+          "4": null
+        },
+        "consumed_epochs": {
+          "0": 46,
+          "1": 52,
+          "2": 52,
+          "3": 52,
+          "4": 52
+        },
+        "mean_validation_rel_l2": 0.04449853226542473
+      },
+      "vb_cap052": {
+        "budget": "B",
+        "selected_epoch": {
+          "0": 50,
+          "1": 52,
+          "2": 51,
+          "3": 52,
+          "4": 52
+        },
+        "stop_epoch": {
+          "0": null,
+          "1": null,
+          "2": null,
+          "3": null,
+          "4": null
+        },
+        "consumed_epochs": {
+          "0": 52,
+          "1": 52,
+          "2": 52,
+          "3": 52,
+          "4": 52
+        },
+        "mean_validation_rel_l2": 0.04446465447545052
+      },
+      "es_cap051": {
+        "budget": "B51",
+        "selected_epoch": {
+          "0": 41,
+          "1": 49,
+          "2": 51,
+          "3": 51,
+          "4": 51
+        },
+        "stop_epoch": {
+          "0": 46,
+          "1": null,
+          "2": null,
+          "3": null,
+          "4": null
+        },
+        "consumed_epochs": {
+          "0": 46,
+          "1": 51,
+          "2": 51,
+          "3": 51,
+          "4": 51
+        },
+        "mean_validation_rel_l2": 0.044591508060693744
+      },
+      "vb_cap051": {
+        "budget": "B51",
+        "selected_epoch": {
+          "0": 50,
+          "1": 49,
+          "2": 51,
+          "3": 51,
+          "4": 51
+        },
+        "stop_epoch": {
+          "0": null,
+          "1": null,
+          "2": null,
+          "3": null,
+          "4": null
+        },
+        "consumed_epochs": {
+          "0": 51,
+          "1": 51,
+          "2": 51,
+          "3": 51,
+          "4": 51
+        },
+        "mean_validation_rel_l2": 0.04455763027071953
+      }
+    },
+    "0.1": {
+      "es_cap050": {
+        "budget": "A",
+        "selected_epoch": {
+          "0": 41,
+          "1": 48,
+          "2": 24,
+          "3": 16,
+          "4": 24
+        },
+        "stop_epoch": {
+          "0": 46,
+          "1": null,
+          "2": 29,
+          "3": 21,
+          "4": 29
+        },
+        "consumed_epochs": {
+          "0": 46,
+          "1": 50,
+          "2": 29,
+          "3": 21,
+          "4": 29
+        },
+        "mean_validation_rel_l2": 0.04985920563340187
+      },
+      "vb_cap050": {
+        "budget": "A",
+        "selected_epoch": {
+          "0": 50,
+          "1": 48,
+          "2": 47,
+          "3": 49,
+          "4": 49
+        },
+        "stop_epoch": {
+          "0": null,
+          "1": null,
+          "2": null,
+          "3": null,
+          "4": null
+        },
+        "consumed_epochs": {
+          "0": 50,
+          "1": 50,
+          "2": 50,
+          "3": 50,
+          "4": 50
+        },
+        "mean_validation_rel_l2": 0.04861461892724037
+      },
+      "es_cap052": {
+        "budget": "B",
+        "selected_epoch": {
+          "0": 41,
+          "1": 52,
+          "2": 24,
+          "3": 16,
+          "4": 24
+        },
+        "stop_epoch": {
+          "0": 46,
+          "1": null,
+          "2": 29,
+          "3": 21,
+          "4": 29
+        },
+        "consumed_epochs": {
+          "0": 46,
+          "1": 52,
+          "2": 29,
+          "3": 21,
+          "4": 29
+        },
+        "mean_validation_rel_l2": 0.04979488402605057
+      },
+      "vb_cap052": {
+        "budget": "B",
+        "selected_epoch": {
+          "0": 50,
+          "1": 52,
+          "2": 47,
+          "3": 52,
+          "4": 49
+        },
+        "stop_epoch": {
+          "0": null,
+          "1": null,
+          "2": null,
+          "3": null,
+          "4": null
+        },
+        "consumed_epochs": {
+          "0": 52,
+          "1": 52,
+          "2": 52,
+          "3": 52,
+          "4": 52
+        },
+        "mean_validation_rel_l2": 0.04851346090435982
+      },
+      "es_cap051": {
+        "budget": "B51",
+        "selected_epoch": {
+          "0": 41,
+          "1": 48,
+          "2": 24,
+          "3": 16,
+          "4": 24
+        },
+        "stop_epoch": {
+          "0": 46,
+          "1": null,
+          "2": 29,
+          "3": 21,
+          "4": 29
+        },
+        "consumed_epochs": {
+          "0": 46,
+          "1": 51,
+          "2": 29,
+          "3": 21,
+          "4": 29
+        },
+        "mean_validation_rel_l2": 0.04985920563340187
+      },
+      "vb_cap051": {
+        "budget": "B51",
+        "selected_epoch": {
+          "0": 50,
+          "1": 48,
+          "2": 47,
+          "3": 49,
+          "4": 49
+        },
+        "stop_epoch": {
+          "0": null,
+          "1": null,
+          "2": null,
+          "3": null,
+          "4": null
+        },
+        "consumed_epochs": {
+          "0": 51,
+          "1": 51,
+          "2": 51,
+          "3": 51,
+          "4": 51
+        },
+        "mean_validation_rel_l2": 0.04861461892724037
+      }
+    },
+    "1.0": {
+      "es_cap050": {
+        "budget": "A",
+        "selected_epoch": {
+          "0": 28,
+          "1": 25,
+          "2": 48,
+          "3": 9,
+          "4": 27
+        },
+        "stop_epoch": {
+          "0": 33,
+          "1": 30,
+          "2": null,
+          "3": 14,
+          "4": 32
+        },
+        "consumed_epochs": {
+          "0": 33,
+          "1": 30,
+          "2": 50,
+          "3": 14,
+          "4": 32
+        },
+        "mean_validation_rel_l2": 0.08434338867664337
+      },
+      "vb_cap050": {
+        "budget": "A",
+        "selected_epoch": {
+          "0": 49,
+          "1": 44,
+          "2": 48,
+          "3": 50,
+          "4": 49
+        },
+        "stop_epoch": {
+          "0": null,
+          "1": null,
+          "2": null,
+          "3": null,
+          "4": null
+        },
+        "consumed_epochs": {
+          "0": 50,
+          "1": 50,
+          "2": 50,
+          "3": 50,
+          "4": 50
+        },
+        "mean_validation_rel_l2": 0.07908882647752762
+      },
+      "es_cap052": {
+        "budget": "B",
+        "selected_epoch": {
+          "0": 28,
+          "1": 25,
+          "2": 52,
+          "3": 9,
+          "4": 27
+        },
+        "stop_epoch": {
+          "0": 33,
+          "1": 30,
+          "2": null,
+          "3": 14,
+          "4": 32
+        },
+        "consumed_epochs": {
+          "0": 33,
+          "1": 30,
+          "2": 52,
+          "3": 14,
+          "4": 32
+        },
+        "mean_validation_rel_l2": 0.08421620428562164
+      },
+      "vb_cap052": {
+        "budget": "B",
+        "selected_epoch": {
+          "0": 49,
+          "1": 44,
+          "2": 52,
+          "3": 50,
+          "4": 49
+        },
+        "stop_epoch": {
+          "0": null,
+          "1": null,
+          "2": null,
+          "3": null,
+          "4": null
+        },
+        "consumed_epochs": {
+          "0": 52,
+          "1": 52,
+          "2": 52,
+          "3": 52,
+          "4": 52
+        },
+        "mean_validation_rel_l2": 0.07896164208650588
+      },
+      "es_cap051": {
+        "budget": "B51",
+        "selected_epoch": {
+          "0": 28,
+          "1": 25,
+          "2": 48,
+          "3": 9,
+          "4": 27
+        },
+        "stop_epoch": {
+          "0": 33,
+          "1": 30,
+          "2": null,
+          "3": 14,
+          "4": 32
+        },
+        "consumed_epochs": {
+          "0": 33,
+          "1": 30,
+          "2": 51,
+          "3": 14,
+          "4": 32
+        },
+        "mean_validation_rel_l2": 0.08434338867664337
+      },
+      "vb_cap051": {
+        "budget": "B51",
+        "selected_epoch": {
+          "0": 49,
+          "1": 44,
+          "2": 48,
+          "3": 50,
+          "4": 49
+        },
+        "stop_epoch": {
+          "0": null,
+          "1": null,
+          "2": null,
+          "3": null,
+          "4": null
+        },
+        "consumed_epochs": {
+          "0": 51,
+          "1": 51,
+          "2": 51,
+          "3": 51,
+          "4": 51
+        },
+        "mean_validation_rel_l2": 0.07908882647752762
+      }
+    },
+    "10.0": {
+      "es_cap050": {
+        "budget": "A",
+        "selected_epoch": {
+          "0": 3,
+          "1": 2,
+          "2": 4,
+          "3": 2,
+          "4": 3
+        },
+        "stop_epoch": {
+          "0": 8,
+          "1": 7,
+          "2": 9,
+          "3": 7,
+          "4": 8
+        },
+        "consumed_epochs": {
+          "0": 8,
+          "1": 7,
+          "2": 9,
+          "3": 7,
+          "4": 8
+        },
+        "mean_validation_rel_l2": 0.241255322098732
+      },
+      "vb_cap050": {
+        "budget": "A",
+        "selected_epoch": {
+          "0": 3,
+          "1": 2,
+          "2": 4,
+          "3": 20,
+          "4": 3
+        },
+        "stop_epoch": {
+          "0": null,
+          "1": null,
+          "2": null,
+          "3": null,
+          "4": null
+        },
+        "consumed_epochs": {
+          "0": 50,
+          "1": 50,
+          "2": 50,
+          "3": 50,
+          "4": 50
+        },
+        "mean_validation_rel_l2": 0.2409668892621994
+      },
+      "es_cap052": {
+        "budget": "B",
+        "selected_epoch": {
+          "0": 3,
+          "1": 2,
+          "2": 4,
+          "3": 2,
+          "4": 3
+        },
+        "stop_epoch": {
+          "0": 8,
+          "1": 7,
+          "2": 9,
+          "3": 7,
+          "4": 8
+        },
+        "consumed_epochs": {
+          "0": 8,
+          "1": 7,
+          "2": 9,
+          "3": 7,
+          "4": 8
+        },
+        "mean_validation_rel_l2": 0.241255322098732
+      },
+      "vb_cap052": {
+        "budget": "B",
+        "selected_epoch": {
+          "0": 3,
+          "1": 2,
+          "2": 4,
+          "3": 20,
+          "4": 3
+        },
+        "stop_epoch": {
+          "0": null,
+          "1": null,
+          "2": null,
+          "3": null,
+          "4": null
+        },
+        "consumed_epochs": {
+          "0": 52,
+          "1": 52,
+          "2": 52,
+          "3": 52,
+          "4": 52
+        },
+        "mean_validation_rel_l2": 0.2409668892621994
+      },
+      "es_cap051": {
+        "budget": "B51",
+        "selected_epoch": {
+          "0": 3,
+          "1": 2,
+          "2": 4,
+          "3": 2,
+          "4": 3
+        },
+        "stop_epoch": {
+          "0": 8,
+          "1": 7,
+          "2": 9,
+          "3": 7,
+          "4": 8
+        },
+        "consumed_epochs": {
+          "0": 8,
+          "1": 7,
+          "2": 9,
+          "3": 7,
+          "4": 8
+        },
+        "mean_validation_rel_l2": 0.241255322098732
+      },
+      "vb_cap051": {
+        "budget": "B51",
+        "selected_epoch": {
+          "0": 3,
+          "1": 2,
+          "2": 4,
+          "3": 20,
+          "4": 3
+        },
+        "stop_epoch": {
+          "0": null,
+          "1": null,
+          "2": null,
+          "3": null,
+          "4": null
+        },
+        "consumed_epochs": {
+          "0": 51,
+          "1": 51,
+          "2": 51,
+          "3": 51,
+          "4": 51
+        },
+        "mean_validation_rel_l2": 0.2409668892621994
+      }
+    }
+  },
+  "mean_validation_rel_l2_by_budget": {
+    "0.0": {
+      "A": 0.044254981726408,
+      "B": 0.0440310500562191,
+      "B51": 0.04412077441811561
+    },
+    "0.001": {
+      "A": 0.044303163141012195,
+      "B": 0.04407861009240151,
+      "B51": 0.044168132543563846
+    },
+    "0.01": {
+      "A": 0.04473424032330513,
+      "B": 0.04450315088033676,
+      "B51": 0.04459212645888329
+    },
+    "0.1": {
+      "A": 0.048853020370006564,
+      "B": 0.048587427288293836,
+      "B51": 0.048680393397808074
+    },
+    "1.0": {
+      "A": 0.0799071803689003,
+      "B": 0.0796351745724678,
+      "B51": 0.08135031163692474
+    },
+    "10.0": {
+      "A": 0.3249033212661743,
+      "B": 0.32231462001800537,
+      "B51": 0.3227797269821167
+    }
+  },
+  "test_set_read": false
+}

@@ -14,7 +14,7 @@ as ``full_cuda``, have the ``final`` variant only.
 - ``--stage test`` writes ``results/audit/<name>_variants_test.json``: test relative L2 (mean and
   per sample), error on constant-``Kcoeff`` cells and near jumps, and the residual under the
   operator the reference solves (as ``scripts/evaluate_solver_residual.py``). It refuses to run
-  before the selection file of ``scripts/regularisation_study.py select`` exists.
+  without the committed freeze and verified restored study files.
 
 Inference only; the study's own files are not changed.
 """
@@ -32,6 +32,7 @@ from _bootstrap import ROOT
 from evaluate_solver_residual import MARGIN, residual_stats, split_error
 from pino_darcy import data as D
 from pino_darcy import engine
+from pino_darcy import freeze
 from pino_darcy import reference as R
 from pino_darcy import selection as S
 from pino_darcy.config import load_config
@@ -39,9 +40,6 @@ from pino_darcy.gpulock import gpu_lock
 from pino_darcy.metrics import relative_l2
 from pino_darcy.model import build_fno
 from pino_darcy.provenance import collect_metadata, write_json
-
-SELECTION = ROOT / S.SELECTION_FILE
-
 
 def variants(run_dir: Path) -> dict:
     """``{label: record}`` for the final checkpoint and every snapshot of a run."""
@@ -64,13 +62,17 @@ def load_variant(cfg, run_dir: Path, label: str, device: torch.device) -> torch.
     return model
 
 
-def evaluate(cfg, stage: str, root: Path = ROOT, selection: Path = SELECTION, out: Path | None = None) -> dict:
+def evaluate(cfg, stage: str, root: Path = ROOT, selection: Path | None = None, out: Path | None = None) -> dict:
     if stage == "test":
-        S.require_final_selection(selection)  # status final, validation only; for every study, not only the controls
-    out_dir, device, sets = engine.prepare_study(cfg, root, write_metadata=False, with_train=(stage == "validation"))
+        if selection is not None and Path(selection).absolute() != Path(root).resolve() / S.SELECTION_FILE:
+            raise SystemExit("Only the canonical frozen selection is accepted before any test evaluation")
+        selection_digest = freeze.check_restore(cfg, root)
+    out_dir, device, sets = engine.prepare_study(
+        cfg, root, write_metadata=False, with_train=(stage == "validation"), with_test=(stage == "test"),
+    )
     result = {"environment": collect_metadata(device), "study": cfg.name, "stage": stage, "runs": {}}
     if stage == "test":
-        result["selection_file_sha256"] = __import__("hashlib").sha256(Path(selection).read_bytes()).hexdigest()
+        result["selection_file_sha256"] = selection_digest
         with h5py.File(root / cfg.data.dir / "test.hdf5") as f:
             coeff = np.asarray(f["coeff"][:, 0], dtype=np.float64)
         mask = R.interface_nodes(coeff)
@@ -104,7 +106,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--config", required=True)
     parser.add_argument("--stage", required=True, choices=("validation", "test"))
-    parser.add_argument("--selection", type=Path, default=SELECTION, help="must exist for --stage test")
+    parser.add_argument("--selection", type=Path, help="optional path to the canonical committed selection")
     parser.add_argument("--out", type=Path, default=None, help="default results/audit/<name>_variants_<stage>.json")
     parser.add_argument("overrides", nargs="*")
     args = parser.parse_args()

@@ -82,7 +82,7 @@ def train_study(cfg: DictConfig, root: Path, resume: bool = False) -> Path:
     that has none. Without ``resume`` every run is trained from scratch.
     """
     write_metadata = check_resumable(cfg, Path(root) / cfg.output_dir) if resume else True
-    out_dir, device, sets = engine.prepare_study(cfg, root, write_metadata=write_metadata)
+    out_dir, device, sets = engine.prepare_study(cfg, root, write_metadata=write_metadata, with_test=False)
     for residual, weight, seed in engine.study_runs(cfg):
         run_dir = out_dir / engine.run_name(residual, weight, seed)
         if resume and (run_dir / "train_metrics.json").exists():

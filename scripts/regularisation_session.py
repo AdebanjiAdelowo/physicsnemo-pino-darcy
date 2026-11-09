@@ -23,6 +23,7 @@ import zipfile
 from pathlib import Path
 
 from _bootstrap import ROOT
+from pino_darcy import freeze
 from pino_darcy import selection as S
 from pino_darcy.config import load_config
 
@@ -101,13 +102,23 @@ def find(input_root: Path, name: str) -> Path:
     return hits[0]
 
 
-def extract_new(archive: Path, target: Path) -> int:
+def extract_new(archive: Path, target: Path, *, verify_existing: bool = False) -> int:
     """Extract the members that do not exist yet; existing files are kept and checked by the caller."""
     with zipfile.ZipFile(archive) as z:
         for m in z.namelist():
             if Path(m).is_absolute() or ".." in Path(m).parts:
                 raise SystemExit(f"{archive}: unsafe member {m}")
-        new = [m for m in z.namelist() if not m.endswith("/") and not (target / m).exists()]
+        members = [m for m in z.namelist() if not m.endswith("/")]
+        if verify_existing:
+            for m in members:
+                path = target / m
+                if path.resolve() != path.absolute():
+                    raise SystemExit(f"{path}: non-canonical restore target")
+                if path.exists():
+                    with z.open(m) as stream:
+                        if not path.is_file() or sha256(path) != hashlib.file_digest(stream, "sha256").hexdigest():
+                            raise SystemExit(f"{path}: existing file differs from the verified archive")
+        new = [m for m in members if not (target / m).exists()]
         z.extractall(target, new)
     return len(new)
 
@@ -273,16 +284,12 @@ def restore_runs(input_root: Path, manifest: Path, root: Path = ROOT) -> dict:
         if sha256(path) != digest:
             raise SystemExit(f"{path}: SHA-256 differs from {manifest}")
         target = root if name.endswith("-bundle.zip") else root / "runs"
-        report[name] = extract_new(path, target)
+        report[name] = extract_new(path, target.resolve(), verify_existing=True)
     return report
 
 
 def check_selection(root: Path = ROOT) -> dict:
-    selection = S.require_final_selection(root / S.SELECTION_FILE)
-    tracked = subprocess.run(["git", "ls-files", "--error-unmatch", S.SELECTION_FILE], cwd=root, capture_output=True).returncode == 0
-    dirty = subprocess.run(["git", "status", "--porcelain", S.SELECTION_FILE], cwd=root, capture_output=True, text=True).stdout.strip()
-    if not tracked or dirty:
-        raise SystemExit(f"{S.SELECTION_FILE} must be committed, unchanged, before the test session")
+    selection, _ = freeze.check_selection(root)
     return selection
 
 
@@ -324,6 +331,7 @@ def main() -> None:
     p.add_argument("--input-root", type=Path, required=True)
     p.add_argument("--manifest", type=Path, required=True)
     sub.add_parser("check-selection")
+    sub.add_parser("check-restore")
     sub.add_parser("check-gate")
     args = parser.parse_args()
 
@@ -356,6 +364,11 @@ def main() -> None:
         print(json.dumps(restore_runs(args.input_root, args.manifest), indent=1))
     elif args.command == "check-gate":
         print(f"TEST GATE ACTIVE for {len(check_gate())} studies: any test evaluation is refused until the selection is final")
+    elif args.command == "check-restore":
+        selection = check_selection()
+        for name in [*selection["studies"].values(), "full_cuda", "full_cuda_more"]:
+            freeze.check_restore(load_config(name), ROOT)
+            print(f"RESTORE VERIFIED: {name}")
     else:
         selection = check_selection()
         print(f"selection final, committed: weight decay {selection['selected_weight_decay']} ({selection['selected_study']})")

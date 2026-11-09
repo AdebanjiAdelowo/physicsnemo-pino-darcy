@@ -40,7 +40,7 @@ def write_selection(root: Path, **changes) -> Path:
 
 @pytest.fixture
 def gated(tiny_cfg, sets, tmp_path, monkeypatch):
-    monkeypatch.setattr(engine, "load_datasets", lambda cfg, root, with_train=True: sets)
+    monkeypatch.setattr(engine, "load_datasets", lambda cfg, root, with_train=True, with_test=True: sets)
     cfg = OmegaConf.merge(tiny_cfg, {"evaluation": {"test_after_selection": True}, "study": {"physics_weights": [0]}})
     study.train_study(cfg, tmp_path)  # training never reads the test split
     return cfg, tmp_path
@@ -51,12 +51,9 @@ def test_no_test_evaluation_before_a_final_selection(gated):
     for attempt in (lambda: study.evaluate_study(cfg, root), lambda: study.verify_study(cfg, root)):
         with pytest.raises(SystemExit, match="does not exist"):
             attempt()
-    for bad in ({"status": "extend"}, {"test_set_read": True}):
-        write_selection(root, **bad)
-        with pytest.raises(SystemExit, match="not a final"):
-            study.evaluate_study(cfg, root)
     write_selection(root)
-    assert study.evaluate_study(cfg, root)["runs"]  # allowed now
+    with pytest.raises(SystemExit, match="regularisation_freeze_v1.json"):
+        study.evaluate_study(cfg, root)
 
 
 def test_audit_scripts_are_gated_too(monkeypatch, tmp_path):
@@ -108,9 +105,13 @@ def test_restore_verifies_hashes_and_never_overwrites(tmp_path):
     manifest = tmp_path / "m.sha256"
     manifest.write_text(f"archive {digest} physicsnemo-pino-darcy-x-bundle.zip\n")
     (root / "runs" / "x").mkdir(parents=True)
-    (root / "runs" / "x" / "a.pt").write_bytes(b"kept")
+    existing = root / "runs" / "x" / "a.pt"
+    existing.write_bytes(b"kept")
+    with pytest.raises(SystemExit, match="existing file differs"):
+        RS.restore_runs(inp, manifest, root=root)
+    assert existing.read_bytes() == b"kept"
+    existing.write_bytes(b"new")
     assert RS.restore_runs(inp, manifest, root=root) == {"physicsnemo-pino-darcy-x-bundle.zip": 0}
-    assert (root / "runs" / "x" / "a.pt").read_bytes() == b"kept"
     manifest.write_text(f"archive {'0' * 64} physicsnemo-pino-darcy-x-bundle.zip\n")
     with pytest.raises(SystemExit, match="SHA-256 differs"):
         RS.restore_runs(inp, manifest, root=root)
@@ -250,7 +251,7 @@ def test_launcher_trains_only_the_controls_resumably_and_never_tests_before_the_
     assert "full_mps" not in text and "results.py publish" not in text
     order = [
         "regularisation_session.py env-check",
-        "scripts/verify_data.py",
+        "scripts/verify_data.py --exclude-test",
         "python -m pytest -q",
         "regularisation_session.py restore-inputs",
         "regularisation_session.py pilot",
@@ -258,6 +259,7 @@ def test_launcher_trains_only_the_controls_resumably_and_never_tests_before_the_
         "--stage validation",
         "regularisation_study.py select",
         "regularisation_session.py check-selection",
+        "regularisation_session.py check-restore",
         "--stage test",
         "scripts/evaluate.py --config {study}",
         "regularisation_study.py analyse",
