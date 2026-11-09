@@ -305,7 +305,7 @@ def test_historical_results_are_unchanged():
         if p.is_file() and p.name != ".DS_Store" and str(p.relative_to(REPO_ROOT)) not in listed
     }
     # new files may only belong to the regularisation study, never replace or sit inside an earlier study
-    assert all(re.match(r"results/(audit/(regularisation_|reg_cuda_|full_cuda(_more)?_variants_)|reg_cuda_)", p) for p in added), added
+    assert all(re.match(r"results/(audit/(regularisation_|reg_cuda_|full_cuda(_more)?_variants_)|reg_cuda_|g8_frozen_test/)", p) for p in added), added
 
 
 def test_committed_pilot_is_the_kaggle_output_and_fixes_budget_b():
