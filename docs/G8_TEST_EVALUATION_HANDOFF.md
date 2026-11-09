@@ -40,3 +40,11 @@ The original frozen selection contains `test_set_read: false`, although earlier 
 ## Release boundary
 
 No retraining, reselection, or repeated test evaluation is authorized by this handoff. Before a final results commit, acquire the **original** eight `*_variants_test.json` files and `regularisation_study.json` from the frozen Kaggle output, verify each against `SHA256SUMS`, and inspect the exact staged Git diff. Preserve immutable freeze records. Commit only verified outputs and documentation to `research/regularization-controls`; run CI and review the resulting commit before any merge. This handoff alone is not the complete results archive.
+
+## Post-handoff archival completion (9 November 2026)
+
+The paragraphs above are the original handoff and describe what was outstanding **at the time of handoff**. Subsequently, the original eight `*_variants_test.json` records and `regularisation_study.json` were archived under `results/g8_frozen_test/` at commit `fcf67e3ec48df99b2af3f8197f1579982160dccb`. All nine archived JSON SHA-256 digests matched the supplied `SHA256SUMS` during staging, as recorded in `docs/G8_ARCHIVE_VERIFICATION.md`. The original manifest also lists checkpoint bundles and other evidence not included in this nine-file verification; their independent local verification is **not** implied by the JSON check.
+
+Commit `b3cb401bcfc50eb158b9297bebd0559c68365d41` added `tests/test_g8_archive_integrity.py` to enforce the nine JSON hashes and the expected archive file inventory in CI. The push and pull-request workflows for that commit both passed. These checks establish integrity against the archived manifest, not independent retraining, independent GPU-kernel execution verification, or an untouched test holdout. The original freeze record, result JSONs, and statistical conclusions were not changed.
+
+This addendum supersedes only the handoff's **pending archive** instructions; it does not alter the historical provenance or limitations stated above. The pull request remains subject to review of the broader branch before merge.
