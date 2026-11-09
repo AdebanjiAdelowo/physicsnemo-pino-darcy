@@ -283,3 +283,50 @@ def test_launcher_scripts_and_configs_exist():
     grid = next(ast.literal_eval(n.value) for n in tree.body if isinstance(n, ast.Assign) and getattr(n.targets[0], "id", "") == "GRID")
     for name in grid + ["reg_cuda_wd1e2", "full_cuda", "full_cuda_more"]:
         assert (REPO_ROOT / "configs" / f"{name}.yaml").exists(), name
+
+
+# --- amendment and train_select session ---------------------------------------------------------------
+
+
+def test_historical_results_are_unchanged():
+    """Every result and figure file tracked at 47c85a9 (MPS and CUDA studies) is byte-identical."""
+    manifest = REPO_ROOT / "tests" / "data" / "historical_results.sha256"
+    rows = [line.split(maxsplit=1) for line in manifest.read_text().splitlines() if line and not line.startswith("#")]
+    assert len(rows) == 382
+    for digest, path in rows:
+        assert hashlib.sha256((REPO_ROOT / path).read_bytes()).hexdigest() == digest, path
+    listed = {path for _, path in rows}
+    added = {
+        str(p.relative_to(REPO_ROOT))
+        for top in ("results", "figures")
+        for p in (REPO_ROOT / top).rglob("*")
+        if p.is_file() and p.name != ".DS_Store" and str(p.relative_to(REPO_ROOT)) not in listed
+    }
+    # new files may only belong to the regularisation study, never replace or sit inside an earlier study
+    assert all(re.match(r"results/(audit/(regularisation_|reg_cuda_|full_cuda(_more)?_variants_)|reg_cuda_)", p) for p in added), added
+
+
+def test_committed_pilot_is_the_kaggle_output_and_fixes_budget_b():
+    pilot = json.loads((REPO_ROOT / RS.PILOT).read_text())
+    assert pilot["budget_B_epochs"] == 52 == int(load_config("reg_cuda").max_epochs)
+    assert pilot["environment"]["git_commit"] == "cd7ca41f6c39e572711fe87dd7a7d8f92f254a12" and pilot["environment"]["git_dirty"] is False
+    assert pilot["environment"]["gpu_name"] == "Tesla T4" and pilot["comparability"]["comparable"] is True
+    assert RS.budget_epochs(pilot["t_pino"], pilot["t_data"]) == 52 and pilot["ratio"] == pytest.approx(pilot["t_pino"] / pilot["t_data"])
+    for run in pilot["runs"].values():  # the estimator: mean of epochs 2 and 3
+        assert run["seconds_per_epoch"] == pytest.approx(sum(run["epoch_seconds"][1:3]) / 2)
+
+
+def test_check_gate_requires_an_active_gate_and_no_selection(tmp_path):
+    assert RS.check_gate(tmp_path) == list(RS.GATED_STUDIES)
+    write_selection(tmp_path)
+    with pytest.raises(SystemExit, match="exists already"):
+        RS.check_gate(tmp_path)
+
+
+def test_launcher_checks_budget_and_gate_and_stops_at_the_boundary():
+    text = _code()
+    assert re.search(r"^EXPECTED_BUDGET_B = 52\b", text, re.M) and re.search(r"^AUTO_EXTEND = False\b", text, re.M)
+    train = text[text.index('if MODE == "train_select":') :]
+    assert train.index("check-pilot") < train.index("check-gate") < train.index("train_and_archive(study)")
+    assert 'assert pilot["budget_B_epochs"] == EXPECTED_BUDGET_B' in text
+    assert 'if selection["status"] == "extend" and AUTO_EXTEND:' in text and "SELECTION NOT FINAL" in text

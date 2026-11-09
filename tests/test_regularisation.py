@@ -29,8 +29,8 @@ def reg_cfg(tiny_cfg, **changes):
         {
             "max_epochs": 4,
             "optimizer": {"name": "adamw", "weight_decay": 0.01},
-            "snapshots": {"epochs": [2]},
-            "early_stopping": {"caps": [2, 4], "rules": {"es": {"patience": 1, "min_delta": 0.0}, "vb": {"patience": None, "min_delta":0.0}}},
+            "snapshots": {"epochs": [2, 3]},  # mirrors 50 (budget A) and 51 (sensitivity) of a 52-epoch budget B
+            "early_stopping": {"caps": [2, 3, 4], "rules": {"es": {"patience": 1, "min_delta": 0.0}, "vb": {"patience": None, "min_delta":0.0}}},
             "study": {"physics_weights": [0], "seeds": [0]},
         },
         changes,
@@ -157,7 +157,10 @@ def test_snapshots_and_records_follow_the_rule(reg_run):
     with open(run_dir / "history.csv") as f:
         val = [float(line.split(",")[6]) for line in f.read().splitlines()[1:]]
     assert len(val) == cfg.max_epochs and m["optimizer"] == {"name": "adamw", "weight_decay": 0.01, "betas": [0.9, 0.999], "start_lr": 1e-3, "gamma": cfg.gamma}
-    assert set(m["snapshots"]) == {"epoch002", "es_cap002", "es_cap004", "vb_cap002", "vb_cap004"}
+    assert set(m["snapshots"]) == {"epoch002", "epoch003", "es_cap002", "es_cap003", "es_cap004", "vb_cap002", "vb_cap003", "vb_cap004"}
+    for label in ("epoch002", "epoch003"):  # the state after that epoch, with its optimiser-step count
+        record = m["snapshots"][label]
+        assert record["kind"] == "fixed" and record["optimiser_steps"] == record["epoch"] * 4 and record["epoch"] == int(label[-3:])
     for label, record in m["snapshots"].items():
         assert (run_dir / "snapshots" / f"{label}.pt").exists()
         if record["kind"] == "early_stopping":
@@ -214,7 +217,7 @@ def test_grid_configurations_train_as_full_cuda_apart_from_the_controls():
         # the same evaluation settings, plus the gate that keeps the test split closed until the selection is final
         assert c["evaluation"] == {**reference["evaluation"], "test_after_selection": True}, name
         assert c["optimizer"]["name"] == "adamw" and c["study"]["physics_weights"] == [0] and c["study"]["seeds"] == [0, 1, 2, 3, 4]
-        assert c["snapshots"]["epochs"] == [50] and c["max_epochs"] >= 50 and sorted(c["early_stopping"]["caps"]) == sorted({50, c["max_epochs"]})
+        assert c["snapshots"]["epochs"] == [50, 51] and c["max_epochs"] == 52 and c["early_stopping"]["caps"] == [50, 51, 52]
         assert c["early_stopping"]["rules"] == {"es": {"patience": 5, "min_delta": 0.0}, "vb": {"patience": None, "min_delta": 0.0}}
         names.add(c["name"])
         dirs.add(c["output_dir"])
@@ -229,7 +232,7 @@ def test_grid_configurations_train_as_full_cuda_apart_from_the_controls():
 
 
 def _fake_records(audit, val_by_wd, test_offset_by_wd, pino_test=0.030, seeds=RS.SEEDS):
-    labels = ("final", "epoch050", "es_cap050", "es_cap051", "vb_cap050", "vb_cap051")
+    labels = ("final", "epoch050", "epoch051") + tuple(f"{r}_cap{c:03d}" for r in ("es", "vb") for c in (50, 51, 52))
     for wd, study_name in {**RS.GRID, **RS.EXTENSION}.items():
         if wd not in val_by_wd:
             continue
@@ -325,3 +328,80 @@ def test_analysis_computes_the_primary_and_the_holm_family(tmp_path):
 def test_test_evaluation_refuses_to_run_before_the_selection(tmp_path):
     with pytest.raises(SystemExit, match="before any test evaluation"):
         V.evaluate(load_config("reg_smoke"), "test", root=tmp_path, selection=tmp_path / "missing.json")
+
+
+# --- amendment: budget B = 52 epochs with an epoch-51 sensitivity analysis ------------------------------
+
+
+def test_final_checkpoint_is_the_full_run_and_differs_from_the_epoch_snapshots(reg_run, tiny_cfg, sets, tmp_path):
+    from physicsnemo.utils.checkpoint import load_checkpoint
+
+    cfg, run_dir, m = reg_run
+    model = build_fno(cfg)
+    assert load_checkpoint(str(run_dir / "checkpoints"), models=model, device="cpu") == cfg.max_epochs == 4
+    assert m["optimiser_steps"] == 4 * 4
+    again = engine.train_run(reg_cfg(tiny_cfg), None, 0.0, 0, tmp_path / "again", torch.device("cpu"), sets)
+    other = build_fno(cfg)
+    load_checkpoint(str(tmp_path / "again" / "checkpoints"), models=other, device="cpu")
+    snap = _state(run_dir / "snapshots" / "epoch003.pt")
+    for key, value in model.state_dict().items():
+        assert torch.equal(value, other.state_dict()[key])  # the same run reproduces its final checkpoint
+    assert any(not torch.equal(value, snap[key]) for key, value in model.state_dict().items())  # epoch 4 is not epoch 3
+    assert again["optimiser_steps"] == m["optimiser_steps"]
+
+
+def test_budget_labels_do_not_collide():
+    lab = RS.labels("reg_cuda_wd0")
+    assert (lab["A_epochs"], lab["B_epochs"], lab["sensitivity"]) == (50, 52, ["B51"])
+    names = [lab[f"{kind}{b}"] for b in ("A", "B", "B51") for kind in ("", "ES_", "VB_")]
+    assert names == ["epoch050", "es_cap050", "vb_cap050", "final", "es_cap052", "vb_cap052", "epoch051", "es_cap051", "vb_cap051"]
+    assert len(set(names)) == len(names)
+
+
+def test_selection_reports_the_rules_for_every_budget_from_validation_only(tmp_path):
+    _fake_records(tmp_path, GRID_VAL, GRID_TEST)
+    for name in RS.GRID.values():
+        (tmp_path / f"{name}_variants_test.json").unlink()
+    sel = RS.select(audit=tmp_path)
+    assert sel["budgets"]["sensitivity"] == ["B51"] and sel["test_set_read"] is False
+    table = sel["checkpoint_selections"]["0.01"]
+    assert set(table) == {f"{r}_cap{c:03d}" for r in ("es", "vb") for c in (50, 51, 52)}
+    assert table["vb_cap051"]["budget"] == "B51" and set(table["vb_cap051"]["selected_epoch"]) == {"0", "1", "2", "3", "4"}
+    assert set(sel["mean_validation_rel_l2_by_budget"]["0.01"]) == {"A", "B", "B51"}
+
+    def keys(x):
+        if isinstance(x, dict):
+            for k, v in x.items():
+                yield k
+                yield from keys(v)
+        elif isinstance(x, list):
+            for v in x:
+                yield from keys(v)
+
+    assert [k for k in keys(sel) if k.startswith("test")] == ["test_set_read"]  # no test quantity anywhere in the selection
+
+
+def test_sensitivity_budget_is_reported_apart_from_the_official_family(tmp_path):
+    _fake_records(tmp_path, GRID_VAL, GRID_TEST)
+    result = RS.analyse(RS.select(audit=tmp_path), audit=tmp_path, pino_studies=("pino",))
+    assert set(result["arms"]) == {"A", "B", "B51"}
+    assert all(not k.startswith("B51") for k in result["secondary_holm"])
+    sens = result["sensitivity_unadjusted"]["B51"]
+    assert set(sens) == {f"B51: {x} - {y}" for b, x, y in RS.SECONDARY if b == "B"}
+    assert all("holm_p_value" not in e for e in sens.values())
+
+
+def test_validation_stage_never_touches_the_test_split(tiny_cfg, sets, tmp_path, monkeypatch):
+    """The validation files that the selection reads are computed with a test split that fails on any access."""
+
+    class Closed(dict):
+        def __getitem__(self, key):
+            raise AssertionError(f"test split accessed: {key}")
+
+    monkeypatch.setattr(engine, "load_datasets", lambda cfg, root, with_train=True: {**sets, "test": Closed()})
+    cfg = OmegaConf.merge(reg_cfg(tiny_cfg), {"evaluation": {"test_after_selection": True}})
+    for residual, weight, seed in engine.study_runs(cfg):
+        engine.train_run(cfg, residual, weight, seed, tmp_path / cfg.output_dir / engine.run_name(residual, weight, seed), torch.device("cpu"), sets)
+    result = V.evaluate(cfg, "validation", root=tmp_path, out=tmp_path / "val.json")
+    entries = [e for run in result["runs"].values() for e in run.values()]
+    assert len(entries) == 9 and all("validation_rel_l2" in e and not any(k.startswith("test") for k in e) for e in entries)

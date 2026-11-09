@@ -11,22 +11,23 @@ defaults:
 name: reg_cuda
 device: cuda
 
-# Budget B (matched compute) in epochs of 102 optimiser steps. PROVISIONAL: fixed by the timing
-# pilot with the rule of the plan before any study run; budget A (equal steps) is epoch 50.
-max_epochs: 51
+# Budget B (matched compute) in epochs of 102 optimiser steps, fixed by the timing pilot with the
+# pre-registered rule (results/audit/regularisation_pilot.json: ratio 1.0277, ceil(50 * 1.0277) = 52).
+# Budget A (equal steps) is epoch 50.
+max_epochs: 52
 
 optimizer:
   name: adamw               # decoupled weight decay; with weight_decay 0 identical to the upstream Adam
   weight_decay: 0.0
 
 snapshots:
-  epochs: [50]              # budget A: 5100 optimiser steps
+  epochs: [50, 51]          # 50: budget A (5100 optimiser steps); 51: sensitivity of budget B (amendment, see the plan)
 
 evaluation:
   test_after_selection: true  # no test evaluation before results/audit/regularisation_selection.json is final
 
 early_stopping:
-  caps: [50, "${max_epochs}"]   # applied with both budgets
+  caps: [50, 51, "${max_epochs}"]   # budget A, the epoch-51 sensitivity, budget B
   rules:
     es:                         # early stopping: stop after 5 epochs without a new validation minimum
       patience: 5

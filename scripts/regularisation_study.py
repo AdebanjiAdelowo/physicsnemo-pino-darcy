@@ -47,19 +47,38 @@ SECONDARY = (
 
 
 def labels(study: str) -> dict:
-    """Variant labels of the two budgets, from the configuration of a grid study."""
+    """Variant labels of the budgets, from the configuration of a grid study.
+
+    A is the first snapshot epoch (equal steps), B the final epoch (matched compute, official); every
+    other snapshot epoch between them is a sensitivity budget ``B<epoch>`` (amendment: B51), analysed
+    with the same rules and reported separately from the Holm family.
+    """
     cfg = load_config(study)
-    a, b = int(cfg.snapshots.epochs[0]), int(cfg.max_epochs)
-    return {
-        "A_epochs": a,
-        "B_epochs": b,
-        "A": f"epoch{a:03d}",
-        "B": "final",
-        "ES_A": f"es_cap{a:03d}",
-        "ES_B": f"es_cap{b:03d}",
-        "VB_A": f"vb_cap{a:03d}",
-        "VB_B": f"vb_cap{b:03d}",
-    }
+    snapshots = sorted(int(e) for e in cfg.snapshots.epochs)
+    a, b = snapshots[0], int(cfg.max_epochs)
+    out = {"A_epochs": a, "B_epochs": b, "sensitivity": [f"B{e}" for e in snapshots[1:] if a < e < b]}
+    for budget, epoch, fixed in [("A", a, f"epoch{a:03d}"), ("B", b, "final")] + [(f"B{e}", e, f"epoch{e:03d}") for e in snapshots[1:] if a < e < b]:
+        out[budget] = fixed
+        out[f"ES_{budget}"] = f"es_cap{epoch:03d}"
+        out[f"VB_{budget}"] = f"vb_cap{epoch:03d}"
+    return out
+
+
+def checkpoint_selections(record: dict, lab: dict, seeds=SEEDS) -> dict:
+    """Validation-only record of what every rule selected in every run (epoch, stop, compute consumed)."""
+    out = {}
+    for budget in ["A", "B", *lab["sensitivity"]]:
+        for rule in ("ES", "VB"):
+            label = lab[f"{rule}_{budget}"]
+            runs = {s: record["runs"][f"dataonly_seed{s}"][label] for s in seeds}
+            out[label] = {
+                "budget": budget,
+                "selected_epoch": {str(s): r["epoch"] for s, r in runs.items()},
+                "stop_epoch": {str(s): r.get("stop_epoch") for s, r in runs.items()},
+                "consumed_epochs": {str(s): r.get("consumed_epochs") for s, r in runs.items()},
+                "mean_validation_rel_l2": float(np.mean([r["validation_rel_l2"] for r in runs.values()])),
+            }
+    return out
 
 
 def read(path: Path) -> dict:
@@ -80,7 +99,8 @@ def select(grid: dict = GRID, extension: dict = EXTENSION, audit: Path = AUDIT, 
     missing = [s for s in tested.values() if not (audit / f"{s}_variants_validation.json").exists()]
     if missing:
         raise SystemExit(f"validation files missing for {missing}")
-    val = {wd: mean_validation(read(audit / f"{s}_variants_validation.json"), lab["A"], seeds) for wd, s in tested.items()}
+    records = {wd: read(audit / f"{s}_variants_validation.json") for wd, s in tested.items()}
+    val = {wd: mean_validation(records[wd], lab["A"], seeds) for wd in tested}
     nonzero = {wd: v for wd, v in val.items() if wd > 0}
     chosen = min(nonzero, key=nonzero.get)
     untested = [wd for wd in extension if wd not in tested and wd > max(tested)]
@@ -98,6 +118,10 @@ def select(grid: dict = GRID, extension: dict = EXTENSION, audit: Path = AUDIT, 
         "selected_study": tested[chosen],
         "status": status,
         "extension_to_train": [extension[wd] for wd in untested] if status == "extend" else [],
+        "checkpoint_selections": {str(wd): checkpoint_selections(records[wd], lab, seeds) for wd in sorted(tested)},
+        "mean_validation_rel_l2_by_budget": {
+            str(wd): {b: mean_validation(records[wd], lab[b], seeds) for b in ["A", "B", *lab["sensitivity"]]} for wd in sorted(tested)
+        },
         "test_set_read": False,
     }
 
@@ -120,7 +144,7 @@ def arm_records(selection: dict, audit: Path = AUDIT, pino_studies=PINO_STUDIES,
     if sorted(pino) != list(seeds):
         raise SystemExit(f"physics-informed comparison runs missing for seeds {sorted(set(seeds) - set(pino))}")
     out = {}
-    for budget in ("A", "B"):
+    for budget in ["A", "B", *lab["sensitivity"]]:
         fixed, es, vb = lab[budget], lab[f"ES_{budget}"], lab[f"VB_{budget}"]
         out[budget] = {
             "base": {s: merged(base, f"dataonly_seed{s}", fixed) for s in seeds},
@@ -199,6 +223,10 @@ def analyse(selection: dict, audit: Path = AUDIT, **kwargs) -> dict:
     secondary = {f"{b}: {x} - {y}": paired(arms[b][x], arms[b][y], seeds) for b, x, y in SECONDARY}
     for (name, entry), p in zip(secondary.items(), holm([e["t_p_value"] for e in secondary.values()])):
         entry["holm_p_value"] = p
+    sensitivity = {
+        budget: {f"{budget}: {x} - {y}": paired(arms[budget][x], arms[budget][y], seeds) for b, x, y in SECONDARY if b == "B"}
+        for budget in selection["budgets"]["sensitivity"]
+    }
     regional = {
         f"{b}: PINO - {y}, {metric}": paired(arms[b]["PINO"], arms[b][y], seeds, key=get)
         for b in ("A", "B")
@@ -213,6 +241,7 @@ def analyse(selection: dict, audit: Path = AUDIT, **kwargs) -> dict:
         "selection": selection,
         "primary": {"comparison": f"budget A: {PRIMARY[0]} - {PRIMARY[1]}, test relative L2", **primary},
         "secondary_holm": secondary,
+        "sensitivity_unadjusted": sensitivity,  # B51: same comparisons as budget B, descriptive; B (52 epochs) is the official result
         "descriptive_regions_and_residual": regional,
         "arms": {b: {arm: describe(rec, seeds) for arm, rec in arms[b].items()} for b in arms},
         "grid": grid_table(selection, audit, seeds),

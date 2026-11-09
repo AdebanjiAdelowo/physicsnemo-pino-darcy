@@ -47,6 +47,8 @@ MODE = None                                   # None (checks only), "pilot", "tr
 SESSION_BUDGET_HOURS = 9.0                    # GPU time you are willing to spend in this session; check Kaggle's current limits
 INPUT_ROOT = "/kaggle/input"                  # where Kaggle mounts the attached notebook outputs
 GITHUB_TOKEN_SECRET = None                    # name of a Kaggle secret holding a GitHub token; only for a private repository
+EXPECTED_BUDGET_B = 52                        # train_select and test: budget B of the committed pilot (epochs); asserted
+AUTO_EXTEND = False                           # train_select: train the weight-decay extension in this session if the boundary rule asks for it
 
 GRID = ["reg_cuda_wd0", "reg_cuda_wd1e-3", "reg_cuda_wd1e-2", "reg_cuda_wd1e-1", "reg_cuda_wd1e0", "reg_cuda_wd1e1"]
 EXTENSION = "reg_cuda_wd1e2"                  # trained only if the boundary rule of the plan asks for it
@@ -169,7 +171,7 @@ if MODE == "pilot":
 md(r"""
 ## Training and validation-only selection (`MODE = "train_select"`)
 
-Needs the committed pilot (`check-pilot`: budget B in `configs/reg_cuda.yaml` equals the pilot's, and the runs were comparable). Every grid study is trained with `--resume --no-evaluate` (finished runs are skipped, a changed configuration is refused, nothing is evaluated on the test split) and archived as soon as it is finished. A session that runs out of time continues in the next one: attach this session's output; its archives are restored after their hashes are checked against its manifest. Then every model of every run, and the physics-informed runs, are evaluated on the training and validation splits, and `select` fixes the weight decay. If the boundary rule asks for the extension, it is trained, evaluated and selected once more.
+Needs the committed pilot (`check-pilot`: budget B in `configs/reg_cuda.yaml` equals the pilot's and `EXPECTED_BUDGET_B`, and the runs were comparable) and an active test gate (`check-gate`). Every run saves snapshots after epochs 50 (budget A) and 51 (sensitivity of budget B) and the models both rules select with caps 50, 51 and 52. Every grid study is trained with `--resume --no-evaluate` (finished runs are skipped, a changed configuration is refused, nothing is evaluated on the test split) and archived as soon as it is finished. A session that runs out of time continues in the next one: attach this session's output; its archives are restored after their hashes are checked against its manifest. Then every model of every run, and the physics-informed runs, are evaluated on the training and validation splits, and `select` fixes the weight decay. If the boundary rule asks for the extension, the session stops with the completed runs archived and reports it (`AUTO_EXTEND = False`); with `AUTO_EXTEND = True` the extension is trained, evaluated and selected once more in the same session.
 """)
 
 code(r'''
@@ -180,12 +182,14 @@ def train_and_archive(study):
 if MODE == "train_select":
     sh("python scripts/regularisation_session.py check-pilot", cwd=REPO)
     assert not os.path.exists(f"{REPO}/results/audit/regularisation_selection.json"), "a selection already exists at this commit"
+    sh("python scripts/regularisation_session.py check-gate", cwd=REPO)   # no test evaluation possible before the selection
     earlier = glob.glob(f"{INPUT_ROOT}/**/regularisation_archives.sha256", recursive=True)
     if earlier:   # resume an interrupted session
         assert len(earlier) == 1, earlier
         sh(f"python scripts/regularisation_session.py restore-runs --input-root {INPUT_ROOT} --manifest {earlier[0]}", cwd=REPO)
         sh(f"cp {earlier[0]} {WORK}/regularisation_archives.sha256")
     pilot = json.load(open(f"{REPO}/results/audit/regularisation_pilot.json"))
+    assert pilot["budget_B_epochs"] == EXPECTED_BUDGET_B, (pilot["budget_B_epochs"], EXPECTED_BUDGET_B)
     status = json.loads(subprocess.run(["python", "scripts/study_status.py", *GRID], cwd=REPO, capture_output=True, text=True, check=True).stdout)
     to_train = sum(len(st["to_train"]) for st in status.values())
     projection_h = to_train * pilot["t_data"] * pilot["budget_B_epochs"] / 3600
@@ -206,16 +210,20 @@ if MODE == "train_select":
     validate(GRID + PINO_STUDIES)
     sh("python scripts/regularisation_study.py select", cwd=REPO)
     selection = json.load(open(f"{REPO}/results/audit/regularisation_selection.json"))
-    if selection["status"] == "extend":
+    if selection["status"] == "extend" and AUTO_EXTEND:
         train_and_archive(EXTENSION)
         validate([EXTENSION])
         sh("python scripts/regularisation_study.py select", cwd=REPO)
         selection = json.load(open(f"{REPO}/results/audit/regularisation_selection.json"))
-    assert selection["status"] == "final" and selection["test_set_read"] is False
+    assert selection["test_set_read"] is False
     for path in glob.glob(f"{REPO}/results/audit/*_variants_validation.json") + [f"{REPO}/results/audit/regularisation_selection.json"]:
         sh(f"cp {path} {WORK}/")
-    print(json.dumps({k: selection[k] for k in ("mean_validation_rel_l2_budget_A", "selected_weight_decay", "status")}, indent=1))
-    print("SELECTION FROZEN. Commit regularisation_selection.json, the *_variants_validation.json files and regularisation_archives.sha256 to results/audit/, then run MODE = 'test' with the new commit as REF and this output attached.")
+    print(json.dumps({k: selection[k] for k in ("mean_validation_rel_l2_budget_A", "selected_weight_decay", "status", "extension_to_train")}, indent=1))
+    if selection["status"] == "extend":
+        print(f"SELECTION NOT FINAL: the boundary rule asks for {selection['extension_to_train']}. Nothing else was trained; the completed runs are archived. Report and wait for a decision.")
+    else:
+        assert selection["status"] == "final"
+        print("SELECTION FROZEN (validation only). Commit regularisation_selection.json, the *_variants_validation.json files and regularisation_archives.sha256 to results/audit/, then run MODE = 'test' with the new commit as REF and this output attached.")
 ''')
 
 md(r"""
@@ -228,6 +236,7 @@ code(r'''
 if MODE == "test":
     sh("python scripts/regularisation_session.py check-selection", cwd=REPO)
     sh("python scripts/regularisation_session.py check-pilot", cwd=REPO)
+    assert json.load(open(f"{REPO}/results/audit/regularisation_pilot.json"))["budget_B_epochs"] == EXPECTED_BUDGET_B
     sh(f"python scripts/regularisation_session.py restore-runs --input-root {INPUT_ROOT} --manifest results/audit/regularisation_archives.sha256", cwd=REPO)
     assert tree_is_clean(), "restoring modified tracked files"
     selection = json.load(open(f"{REPO}/results/audit/regularisation_selection.json"))

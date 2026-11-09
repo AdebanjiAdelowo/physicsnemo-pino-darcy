@@ -7,6 +7,7 @@
     python scripts/regularisation_session.py archive reg_cuda_wd0 --out /kaggle/working
     python scripts/regularisation_session.py restore-runs --input-root /kaggle/input --manifest results/audit/regularisation_archives.sha256
     python scripts/regularisation_session.py check-selection               # tracked, final, validation-only selection
+    python scripts/regularisation_session.py check-gate                    # before training: every test evaluation is refused
 
 Every restore verifies SHA-256 hashes before and after extraction and never overwrites a file.
 """
@@ -285,6 +286,25 @@ def check_selection(root: Path = ROOT) -> dict:
     return selection
 
 
+GATED_STUDIES = ("reg_cuda_wd0", "reg_cuda_wd1e-3", "reg_cuda_wd1e-2", "reg_cuda_wd1e-1", "reg_cuda_wd1e0", "reg_cuda_wd1e1", "reg_cuda_wd1e2")
+
+
+def check_gate(root: Path = ROOT) -> list[str]:
+    """Before any selection exists: every regularisation study has the gate on and a test evaluation is refused."""
+    if (root / S.SELECTION_FILE).exists():
+        raise SystemExit(f"{S.SELECTION_FILE} exists already; check-gate is for the session before the selection")
+    for study in GATED_STUDIES:
+        cfg = load_config(study)
+        if not cfg.evaluation.get("test_after_selection"):
+            raise SystemExit(f"{study}: the test gate is off")
+        try:
+            S.guard_test_evaluation(cfg, root)
+        except SystemExit:
+            continue
+        raise SystemExit(f"{study}: a test evaluation would not be refused")
+    return list(GATED_STUDIES)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -304,6 +324,7 @@ def main() -> None:
     p.add_argument("--input-root", type=Path, required=True)
     p.add_argument("--manifest", type=Path, required=True)
     sub.add_parser("check-selection")
+    sub.add_parser("check-gate")
     args = parser.parse_args()
 
     if args.command == "env-check":
@@ -333,6 +354,8 @@ def main() -> None:
         print("\n".join(archive(args.study, args.out)))
     elif args.command == "restore-runs":
         print(json.dumps(restore_runs(args.input_root, args.manifest), indent=1))
+    elif args.command == "check-gate":
+        print(f"TEST GATE ACTIVE for {len(check_gate())} studies: any test evaluation is refused until the selection is final")
     else:
         selection = check_selection()
         print(f"selection final, committed: weight decay {selection['selected_weight_decay']} ({selection['selected_study']})")

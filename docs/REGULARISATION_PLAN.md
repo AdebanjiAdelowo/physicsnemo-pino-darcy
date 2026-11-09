@@ -1,6 +1,6 @@
 # Analysis plan: conventional regularisation against the corrected physics residual (G8)
 
-Written and committed before any run of `configs/reg_cuda*.yaml`. The commit that adds this file is the record of what was decided in advance; departures will be reported as departures. One value is still open and is fixed by a rule stated here before any study run: the matched-compute budget B (section "Budgets"), measured in a timing pilot on the study device.
+Written and committed before any run of `configs/reg_cuda*.yaml`. The commit that adds this file is the record of what was decided in advance; departures will be reported as departures. One value was left open and fixed by a rule stated here before any study run: the matched-compute budget B (section "Budgets"), measured in a timing pilot on the study device. The pilot has run (B = 52 epochs), and one amendment was made after it and before any study run (section "Amendment 1").
 
 ## Status of this study
 
@@ -51,9 +51,21 @@ The ES and VB arms do not need runs of their own: early stopping depends only on
 
   `B = ceil(50 · t_pino / t_data)` epochs,
 
-written into `configs/reg_cuda.yaml` (`max_epochs`) and committed before any study run. The learning-rate schedule is not stretched: the extra epochs continue the upstream per-step decay, so the first 50 epochs of every run are those of budget A and one run per (λ, seed) gives both budgets. ES arms at B: at most B epochs; actual consumption reported. The provisional value 51 in the configuration follows from the F18 timings (`ceil(50 · 193.5 / 190.0) = 51`) and is replaced by the pilot's value.
+written into `configs/reg_cuda.yaml` (`max_epochs`) and committed before any study run. The learning-rate schedule is not stretched: the extra epochs continue the upstream per-step decay, so the first 50 epochs of every run are those of budget A and one run per (λ, seed) gives both budgets. ES arms at B: at most B epochs; actual consumption reported. The provisional value 51 in the first version of the configuration followed from the F18 timings (`ceil(50 · 193.5 / 190.0) = 51`); the pilot gave 52, which is the value used (Amendment 1).
 
 Equal epochs are not claimed to be equal compute; the times actually consumed are reported for every arm.
+
+## Amendment 1: budget B from the pilot, and an epoch-51 sensitivity analysis (2026-11-09)
+
+Made after the timing pilot and before any study run and any test evaluation of this study; approved before training. Nothing else in this plan changes: the primary comparison (budget A), the weight-decay grid and its boundary rule, the selection rules, the intervals and the reading rule are as above.
+
+**Pilot result** (Kaggle session `pino-darcy-reg-pilot-cd7ca41`, Tesla T4, commit `cd7ca41`, `results/audit/regularisation_pilot.json`, committed unchanged): epochs 2 and 3 took 3.715 and 3.679 s (`reg_cuda_wd1e-2`) and 3.801 and 3.797 s (`consistent` 0.1), so `t_data` = 3.697 s, `t_pino` = 3.799 s, ratio 1.0277 and **B = ceil(51.39) = 52 epochs**, by the pre-registered rule. The first three epochs of AdamW without decay and of `consistent` 0.1 were identical to those of `full_cuda` (relative difference 0), so the runs are comparable with the historical ones. The environment matched `full_cuda` exactly.
+
+**Why an amendment.** The ratio lies 0.0077 above 1.02, where B changes from 52 to 51, and the data-only epoch times vary by about ±1.6 % between epochs. The same two-epoch estimator applied to the five full-length runs of F18 gives B = 53, 51, 52, 52 and 51, and the mean over their epochs 2 to 50 gives a ratio of 1.019 (B = 51). The matched-compute budget is therefore at the edge between 51 and 52 epochs, and the rule decides between them by chance. The rule is kept, and its value 52 is the official budget B. Changing the estimator after seeing its result is not done.
+
+**What is added.** Every run also keeps the model after epoch 51 (`epoch051`, 5202 optimiser steps) and the models both rules select with a cap of 51 epochs (`es_cap051`, `vb_cap051`), from the same 52-epoch runs: no extra training. The analysis reports a sensitivity budget **B51** with the same arms and comparisons as budget B, unadjusted and outside the Holm family, next to the official budget B (52 epochs). The choice between 51 and 52 is never made on test errors: 52 is official, B51 is reported whatever it shows. The selection file lists, from validation errors only, the epoch each rule selected with each cap in every run.
+
+**Boundary extension.** If the boundary rule asks for the weight decay 100, the `train_select` session stops with the completed runs archived (`AUTO_EXTEND = False` in the launcher) and the extension is trained only after a decision.
 
 ## Selection (validation only)
 
@@ -117,7 +129,7 @@ Not controlled: the physical GPU and driver of a Kaggle session (recorded), and 
 | `train_select` | set-up, 30 runs of B ≈ 51 epochs (30 × about 195 s ≈ 1.6 h), validation evaluation of 6 models per run and of the 10 physics-informed runs (about 0.2 h); with the grid extension 5 more runs (about 0.3 h) | about 2 to 2.3 h |
 | `test` | set-up, restore, test evaluation of every model and the summaries, analysis | about 0.4 h |
 
-Estimates from the F18 timings; the pilot replaces them. Storage, outside Git: per run the final checkpoint (28 MB) and five snapshots (`epoch050` and the two rules at the two caps, 9 MB each; identical selections are still stored separately), about 75 MB; 2.3 GB for 30 runs (2.6 GB with the extension), about the same again for archives in the session. Tracked records: about 2 MB per grid study plus the variant files (per-sample test errors), about 15 MB in all.
+Estimates from the F18 timings; the pilot replaces them. Storage, outside Git: per run the final checkpoint (28 MB) and eight snapshots (`epoch050`, `epoch051` and the two rules at the three caps, 9 MB each; identical selections are still stored separately), about 100 MB; 3.0 GB for 30 runs (3.5 GB with the extension), about the same again for archives in the session. Tracked records: about 2 MB per grid study plus the variant files (per-sample test errors), about 15 MB in all.
 
 ## Execution
 
