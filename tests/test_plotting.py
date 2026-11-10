@@ -8,7 +8,7 @@ from pino_darcy.plotting import plot_all
 
 def test_all_figures_are_written(tiny_cfg, tmp_path, monkeypatch):
     sets = synthetic_sets()
-    monkeypatch.setattr(engine, "load_datasets", lambda cfg, root, with_train=True: sets)
+    monkeypatch.setattr(engine, "load_datasets", lambda cfg, root, with_train=True, with_test=True: sets)
     out_dir = study.train_study(tiny_cfg, tmp_path)
     study.evaluate_study(tiny_cfg, tmp_path)
     paths = plot_all(out_dir, tmp_path / "figures")

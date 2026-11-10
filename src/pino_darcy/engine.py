@@ -39,6 +39,7 @@ from physicsnemo.utils.checkpoint import load_checkpoint, save_checkpoint
 
 from . import data as D
 from . import physics as P
+from . import selection as S
 from .metrics import relative_l2, summarise
 from .model import build_fno, count_parameters
 from .provenance import collect_metadata, write_json
@@ -115,6 +116,9 @@ def validate_study(cfg: DictConfig) -> None:
         raise ValueError("physics weights must be non-negative.")
     if cfg.batch_size != 1:
         raise ValueError("batch_size must be 1: the finite-difference residual of PhysicsInformer uses one sample.")
+    S.optimiser_settings(cfg)
+    S.early_stopping_settings(cfg)
+    S.snapshot_epochs(cfg)
     names = [run_name(*run) for run in study_runs(cfg)]
     if len(set(names)) != len(names):
         raise ValueError("two runs of the study share a name.")
@@ -125,7 +129,7 @@ def unlabelled_samples(cfg: DictConfig) -> int:
     return int(cfg.data.get("unlabelled_samples", 0) or 0)
 
 
-def load_datasets(cfg: DictConfig, root: Path, with_train: bool = True) -> dict:
+def load_datasets(cfg: DictConfig, root: Path, with_train: bool = True, *, with_test: bool = True) -> dict:
     """Normalised CPU tensors of the splits, after preparing the files if necessary.
 
     With ``data.unlabelled_samples = U > 0`` the training-split samples ``N .. N + U - 1`` that follow
@@ -136,7 +140,9 @@ def load_datasets(cfg: DictConfig, root: Path, with_train: bool = True) -> dict:
     """
     manifest = D.prepare(cfg.data, root)
     data_dir = Path(root) / cfg.data.dir
-    sets = {split: D.load_split(data_dir / f"{split}.hdf5") for split in ("validation", "test")}
+    sets = {"validation": D.load_split(data_dir / "validation.hdf5")}
+    if with_test:
+        sets["test"] = D.load_split(data_dir / "test.hdf5")
     if with_train:
         n_train = cfg.data.train_samples
         sets["train"] = D.load_split(data_dir / "train.hdf5", n_train)
@@ -194,7 +200,13 @@ def train_run(
     pool_shuffle = torch.Generator().manual_seed(seed + 1_000_003)
     validate_every = int(cfg.evaluation.get("validate_every", 1))
 
-    optimizer = torch.optim.Adam(model.parameters(), betas=(0.9, 0.999), lr=cfg.start_lr, weight_decay=0.0)
+    # Adam without weight decay unless the configuration has an ``optimizer`` node (regularisation controls)
+    optimizer = S.make_optimiser(cfg, model.parameters())
+    es = S.early_stopping_settings(cfg)
+    trackers = {label: S.EarlyStoppingTracker(rule, es["caps"]) for label, rule in es["rules"].items()} if es else {}
+    snapshots_at = S.snapshot_epochs(cfg)
+    snapshots: dict = {}
+    snapshot_seconds = 0.0
     scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=cfg.gamma)
 
     train_k, train_u = sets["train"]["k"], sets["train"]["u"]
@@ -269,11 +281,40 @@ def train_run(
         for name, informer in informers.items():
             row[f"validation_pde_l1_{name}"] = residual_fields(informer, pred, val_k).abs().mean().item()
         synchronise(device)
-        row["elapsed_seconds"] = time.perf_counter() - start
+        row["elapsed_seconds"] = time.perf_counter() - start - snapshot_seconds
         history.append(row)
 
+        # Snapshots for the regularisation controls. Writing them is bookkeeping of this study,
+        # not part of any method's compute, so its time is excluded from the training clock.
+        reached = [(label, *r) for label, t in trackers.items() for r in t.update(epoch, row["validation_rel_l2"], model)]
+        if reached or epoch in snapshots_at:
+            tick = time.perf_counter()
+            (run_dir / "snapshots").mkdir(exist_ok=True)
+            steps_per_epoch = len(train_k)
+            if epoch in snapshots_at:
+                label = f"epoch{epoch:03d}"
+                torch.save(model.state_dict(), run_dir / "snapshots" / f"{label}.pt")
+                snapshots[label] = {"kind": "fixed", "epoch": epoch, "optimiser_steps": epoch * steps_per_epoch, "train_seconds": row["elapsed_seconds"]}
+            for rule, cap, selected, stop, state in reached:
+                consumed = stop if stop is not None and stop <= cap else cap
+                label = f"{rule}_cap{cap:03d}"
+                torch.save(state, run_dir / "snapshots" / f"{label}.pt")
+                snapshots[label] = {
+                    "kind": "early_stopping",
+                    "rule": rule,
+                    **es["rules"][rule],
+                    "cap": cap,
+                    "epoch": selected,
+                    "stop_epoch": stop if stop is not None and stop <= cap else None,
+                    "consumed_epochs": consumed,
+                    "optimiser_steps": consumed * steps_per_epoch,
+                    "selected_at_optimiser_step": selected * steps_per_epoch,
+                    "train_seconds": history[consumed - 1]["elapsed_seconds"],
+                }
+            snapshot_seconds += time.perf_counter() - tick
+
     synchronise(device)
-    train_seconds = time.perf_counter() - start
+    train_seconds = time.perf_counter() - start - snapshot_seconds
     save_checkpoint(str(run_dir / "checkpoints"), models=model, optimizer=optimizer, scheduler=scheduler, epoch=cfg.max_epochs)
 
     with open(run_dir / "history.csv", "w", newline="") as f:
@@ -300,6 +341,12 @@ def train_run(
     }
     if residual is not None and residual not in P.RESIDUALS:
         metrics["residual_spec"] = P.TRAINING_RESIDUALS[residual]
+    if cfg.get("optimizer") or trackers or snapshots_at:  # keys added only for the regularisation controls
+        name, weight_decay = S.optimiser_settings(cfg)
+        metrics["optimizer"] = {"name": name, "weight_decay": weight_decay, "betas": [0.9, 0.999], "start_lr": float(cfg.start_lr), "gamma": float(cfg.gamma)}
+        metrics["early_stopping"] = es
+        metrics["snapshots"] = snapshots
+        metrics["snapshot_write_seconds"] = snapshot_seconds
     if pool_physics is not None:
         metrics["unlabelled_samples"] = len(pool["k"])
         metrics["final_train_loss_pde_unlabelled"] = sums["pde_unlabelled"]
@@ -368,14 +415,14 @@ def reference_residuals(sets: dict, device: torch.device) -> dict:
     }
 
 
-def prepare_study(cfg: DictConfig, root: Path, write_metadata: bool, with_train: bool = True) -> tuple[Path, torch.device, dict]:
+def prepare_study(cfg: DictConfig, root: Path, write_metadata: bool, with_train: bool = True, *, with_test: bool = True) -> tuple[Path, torch.device, dict]:
     """Validate the config, resolve the device, load the data, optionally write ``study_metadata.json``."""
     validate_study(cfg)
     device = resolve_device(cfg.device)
     out_dir = Path(root) / cfg.output_dir
     out_dir.mkdir(parents=True, exist_ok=True)
     metadata = collect_metadata(device)  # before the data is prepared: the code state at start
-    sets = load_datasets(cfg, root, with_train=with_train)
+    sets = load_datasets(cfg, root, with_train=with_train, with_test=with_test)
     if write_metadata:
         metadata["physics_device"] = str(P.physics_device(device))
         metadata["residual_definitions"] = P.RESIDUALS

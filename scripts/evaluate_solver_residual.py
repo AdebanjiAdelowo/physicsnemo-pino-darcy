@@ -27,6 +27,7 @@ from pino_darcy import data as D
 from pino_darcy import engine
 from pino_darcy import physics as P
 from pino_darcy import reference as R
+from pino_darcy import selection as S
 from pino_darcy.config import load_config
 from pino_darcy.gpulock import gpu_lock
 from pino_darcy.model import build_fno
@@ -66,6 +67,7 @@ def main() -> None:
 
 
 def evaluate(cfg) -> None:
+    S.guard_test_evaluation(cfg, ROOT)
     out_dir, device, sets = engine.prepare_study(cfg, ROOT, write_metadata=False, with_train=False)
     with h5py.File(ROOT / cfg.data.dir / "test.hdf5") as f:
         coeff = np.asarray(f["coeff"][:, 0], dtype=np.float64)

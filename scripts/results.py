@@ -24,18 +24,24 @@ from _bootstrap import ROOT
 KEEP_SUFFIXES = {".json", ".csv", ".npz"}
 
 
-def tracked_files(study_dir: Path) -> list[Path]:
-    """Summaries, metadata, histories and plotting fields: everything except checkpoints and figures."""
-    files = [p for p in sorted(study_dir.rglob("*")) if p.is_file() and p.suffix in KEEP_SUFFIXES and "checkpoints" not in p.parts]
-    if not (study_dir / "summary.json").exists():
+def tracked_files(study_dir: Path, records_only: bool = False) -> list[Path]:
+    """Summaries, metadata, histories and plotting fields: everything except checkpoints, snapshots and figures.
+
+    ``records_only`` accepts a study that has not been evaluated yet (no ``summary.json``): the
+    regularisation controls are evaluated on the test split only after their selection is frozen.
+    """
+    files = [
+        p for p in sorted(study_dir.rglob("*")) if p.is_file() and p.suffix in KEEP_SUFFIXES and not {"checkpoints", "snapshots"} & set(p.parts)
+    ]
+    if not records_only and not (study_dir / "summary.json").exists():
         raise SystemExit(f"{study_dir} has no summary.json; run scripts/evaluate.py first.")
     return files
 
 
-def package(study_dir: Path) -> Path:
+def package(study_dir: Path, records_only: bool = False) -> Path:
     archive = study_dir.with_suffix(".zip")
     with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED) as z:
-        for path in tracked_files(study_dir):
+        for path in tracked_files(study_dir, records_only):
             z.write(path, Path(study_dir.name) / path.relative_to(study_dir))
     return archive
 
@@ -44,6 +50,7 @@ def bundle(study_dir: Path) -> Path:
     meta = json.loads((study_dir / "study_metadata.json").read_text())
     epoch = meta["config"]["max_epochs"]
     files = sorted(p for p in study_dir.glob(f"*/checkpoints/*.{epoch}.*") if p.is_file())
+    files += sorted(p for p in study_dir.glob("*/snapshots/*.pt") if p.is_file())  # regularisation controls only
     if not any(p.suffix == ".mdlus" for p in files):
         raise SystemExit(f"cannot build the bundle: no final checkpoints in {study_dir}")
     archive = study_dir.parent / f"{study_dir.name}_eval_bundle.zip"
@@ -78,14 +85,15 @@ def main() -> None:
     sub = parser.add_subparsers(dest="command", required=True)
     p = sub.add_parser("package", help="zip the small result files of a study directory")
     p.add_argument("study", type=Path)
-    p = sub.add_parser("bundle", help="zip the final checkpoints of a study directory")
+    p.add_argument("--records-only", action="store_true", help="also before evaluation (no summary.json yet)")
+    p = sub.add_parser("bundle", help="zip the final checkpoints (and snapshots, if any) of a study directory")
     p.add_argument("study", type=Path)
     p = sub.add_parser("publish", help="copy a study directory or archive into results/")
     p.add_argument("source", type=Path)
     p.add_argument("--force", action="store_true")
     args = parser.parse_args()
     if args.command == "package":
-        print(package(args.study.resolve()))
+        print(package(args.study.resolve(), args.records_only))
     elif args.command == "bundle":
         print(bundle(args.study.resolve()))
     else:

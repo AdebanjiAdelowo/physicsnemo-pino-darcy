@@ -1,0 +1,86 @@
+{
+  "environment": {
+    "timestamp_utc": "2026-11-09T02:35:25+00:00",
+    "git_commit": "1286cbcaafbe21eda2dac8c0549c4a0e69243a3e",
+    "git_dirty": true,
+    "upstream": {
+      "repository": "https://github.com/NVIDIA/physicsnemo",
+      "commit": "b45a5c810c741e6b41f8515be24c51121f8fc21f",
+      "example": "examples/cfd/darcy_physics_informed"
+    },
+    "device": "cuda",
+    "gpu_name": "Tesla T4",
+    "cuda_version": "13.2",
+    "python_version": "3.12.3",
+    "torch_version": "2.15.0+cu132",
+    "torch_threads": 2,
+    "physicsnemo": {
+      "version": "2.3.0a0",
+      "commit": "b45a5c810c741e6b41f8515be24c51121f8fc21f",
+      "url": "https://github.com/NVIDIA/physicsnemo.git"
+    },
+    "warp_version": "1.19.0",
+    "sympy_version": "1.14.0",
+    "numpy_version": "2.5.4",
+    "platform": "Linux-6.18.55+-x86_64-with-glibc2.39",
+    "processor": "x86_64"
+  },
+  "study": "full_cuda_more",
+  "stage": "validation",
+  "runs": {
+    "dataonly_seed3": {
+      "final": {
+        "kind": "final",
+        "optimiser_steps": 5100,
+        "train_seconds": 190.57188376999966,
+        "train_rel_l2": 0.007070987019687891,
+        "validation_rel_l2": 0.04611967131495476
+      }
+    },
+    "shipped_w0.1_seed3": {
+      "final": {
+        "kind": "final",
+        "optimiser_steps": 5100,
+        "train_seconds": 193.1211099269999,
+        "train_rel_l2": 0.025561587885022163,
+        "validation_rel_l2": 0.04452914744615555
+      }
+    },
+    "consistent_w0.1_seed3": {
+      "final": {
+        "kind": "final",
+        "optimiser_steps": 5100,
+        "train_seconds": 192.886647541,
+        "train_rel_l2": 0.016938157379627228,
+        "validation_rel_l2": 0.03634294494986534
+      }
+    },
+    "dataonly_seed4": {
+      "final": {
+        "kind": "final",
+        "optimiser_steps": 5100,
+        "train_seconds": 189.5165433889997,
+        "train_rel_l2": 0.007318709511309862,
+        "validation_rel_l2": 0.044911716133356094
+      }
+    },
+    "shipped_w0.1_seed4": {
+      "final": {
+        "kind": "final",
+        "optimiser_steps": 5100,
+        "train_seconds": 193.52031767400013,
+        "train_rel_l2": 0.02614445611834526,
+        "validation_rel_l2": 0.041716981679201126
+      }
+    },
+    "consistent_w0.1_seed4": {
+      "final": {
+        "kind": "final",
+        "optimiser_steps": 5100,
+        "train_seconds": 193.3708146580002,
+        "train_rel_l2": 0.017147144302725792,
+        "validation_rel_l2": 0.03398989140987396
+      }
+    }
+  }
+}

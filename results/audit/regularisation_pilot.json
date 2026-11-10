@@ -1,0 +1,332 @@
+{
+ "rule": "B = ceil(50 * t_pino / t_data); t = mean time of epochs 2 to 3 of seed 0 (elapsed_seconds, validation included); t_data from reg_cuda_wd1e-2, t_pino from consistent 0.1 as in full_cuda",
+ "epochs": 3,
+ "runs": {
+  "data_wd0": {
+   "config": "reg_cuda_wd0",
+   "overrides": [
+    "name=reg_pilot_wd0",
+    "max_epochs=3",
+    "study.seeds=[0]",
+    "snapshots.epochs=[2]",
+    "early_stopping.caps=[2,3]"
+   ],
+   "epoch_seconds": [
+    8.186911725999948,
+    3.75496183000007,
+    3.6397656020000113
+   ],
+   "seconds_per_epoch": 3.6973637160000408,
+   "train_metrics": {
+    "run": "dataonly_seed0",
+    "residual": null,
+    "physics_weight": 0.0,
+    "effective_pde_coefficient": 0.0,
+    "seed": 0,
+    "parameters": 2365169,
+    "optimiser_steps": 306,
+    "final_train_loss_data": 0.05013296183417825,
+    "final_train_loss_pde": null,
+    "final_train_loss_total": 0.05013296183417825,
+    "train_seconds": 15.588340764000009,
+    "optimisation_seconds": 7.529541364999943,
+    "optimisation_ms_per_step": 24.606344330065173,
+    "peak_train_memory_mb": 1024.7998046875,
+    "optimizer": {
+     "name": "adamw",
+     "weight_decay": 0.0,
+     "betas": [
+      0.9,
+      0.999
+     ],
+     "start_lr": 0.001,
+     "gamma": 0.99948708
+    },
+    "early_stopping": {
+     "caps": [
+      2,
+      3
+     ],
+     "rules": {
+      "es": {
+       "patience": 5,
+       "min_delta": 0.0
+      },
+      "vb": {
+       "patience": null,
+       "min_delta": 0.0
+      }
+     }
+    },
+    "snapshots": {
+     "epoch002": {
+      "kind": "fixed",
+      "epoch": 2,
+      "optimiser_steps": 204,
+      "train_seconds": 11.941873556000019
+     },
+     "es_cap002": {
+      "kind": "early_stopping",
+      "rule": "es",
+      "patience": 5,
+      "min_delta": 0.0,
+      "cap": 2,
+      "epoch": 2,
+      "stop_epoch": null,
+      "consumed_epochs": 2,
+      "optimiser_steps": 204,
+      "selected_at_optimiser_step": 204,
+      "train_seconds": 11.941873556000019
+     },
+     "vb_cap002": {
+      "kind": "early_stopping",
+      "rule": "vb",
+      "patience": null,
+      "min_delta": 0.0,
+      "cap": 2,
+      "epoch": 2,
+      "stop_epoch": null,
+      "consumed_epochs": 2,
+      "optimiser_steps": 204,
+      "selected_at_optimiser_step": 204,
+      "train_seconds": 11.941873556000019
+     },
+     "es_cap003": {
+      "kind": "early_stopping",
+      "rule": "es",
+      "patience": 5,
+      "min_delta": 0.0,
+      "cap": 3,
+      "epoch": 3,
+      "stop_epoch": null,
+      "consumed_epochs": 3,
+      "optimiser_steps": 306,
+      "selected_at_optimiser_step": 306,
+      "train_seconds": 15.58163915800003
+     },
+     "vb_cap003": {
+      "kind": "early_stopping",
+      "rule": "vb",
+      "patience": null,
+      "min_delta": 0.0,
+      "cap": 3,
+      "epoch": 3,
+      "stop_epoch": null,
+      "consumed_epochs": 3,
+      "optimiser_steps": 306,
+      "selected_at_optimiser_step": 306,
+      "train_seconds": 15.58163915800003
+     }
+    },
+    "snapshot_write_seconds": 0.039207746999977644
+   },
+   "relative_difference_from_full_cuda": {
+    "train_loss_data": 0.0,
+    "validation_rel_l2": 0.0
+   }
+  },
+  "data_wd1e-2": {
+   "config": "reg_cuda_wd1e-2",
+   "overrides": [
+    "name=reg_pilot_wd1e-2",
+    "max_epochs=3",
+    "study.seeds=[0]",
+    "snapshots.epochs=[2]",
+    "early_stopping.caps=[2,3]"
+   ],
+   "epoch_seconds": [
+    4.2707209650000095,
+    3.7152804390000256,
+    3.6785973520001107
+   ],
+   "seconds_per_epoch": 3.696938895500068,
+   "train_metrics": {
+    "run": "dataonly_seed0",
+    "residual": null,
+    "physics_weight": 0.0,
+    "effective_pde_coefficient": 0.0,
+    "seed": 0,
+    "parameters": 2365169,
+    "optimiser_steps": 306,
+    "final_train_loss_data": 0.05031096234041102,
+    "final_train_loss_pde": null,
+    "final_train_loss_total": 0.05031096234041102,
+    "train_seconds": 11.671575711000173,
+    "optimisation_seconds": 7.3522568910000246,
+    "optimisation_ms_per_step": 24.02698330392165,
+    "peak_train_memory_mb": 1024.7998046875,
+    "optimizer": {
+     "name": "adamw",
+     "weight_decay": 0.01,
+     "betas": [
+      0.9,
+      0.999
+     ],
+     "start_lr": 0.001,
+     "gamma": 0.99948708
+    },
+    "early_stopping": {
+     "caps": [
+      2,
+      3
+     ],
+     "rules": {
+      "es": {
+       "patience": 5,
+       "min_delta": 0.0
+      },
+      "vb": {
+       "patience": null,
+       "min_delta": 0.0
+      }
+     }
+    },
+    "snapshots": {
+     "epoch002": {
+      "kind": "fixed",
+      "epoch": 2,
+      "optimiser_steps": 204,
+      "train_seconds": 7.986001404000035
+     },
+     "es_cap002": {
+      "kind": "early_stopping",
+      "rule": "es",
+      "patience": 5,
+      "min_delta": 0.0,
+      "cap": 2,
+      "epoch": 2,
+      "stop_epoch": null,
+      "consumed_epochs": 2,
+      "optimiser_steps": 204,
+      "selected_at_optimiser_step": 204,
+      "train_seconds": 7.986001404000035
+     },
+     "vb_cap002": {
+      "kind": "early_stopping",
+      "rule": "vb",
+      "patience": null,
+      "min_delta": 0.0,
+      "cap": 2,
+      "epoch": 2,
+      "stop_epoch": null,
+      "consumed_epochs": 2,
+      "optimiser_steps": 204,
+      "selected_at_optimiser_step": 204,
+      "train_seconds": 7.986001404000035
+     },
+     "es_cap003": {
+      "kind": "early_stopping",
+      "rule": "es",
+      "patience": 5,
+      "min_delta": 0.0,
+      "cap": 3,
+      "epoch": 3,
+      "stop_epoch": null,
+      "consumed_epochs": 3,
+      "optimiser_steps": 306,
+      "selected_at_optimiser_step": 306,
+      "train_seconds": 11.664598756000146
+     },
+     "vb_cap003": {
+      "kind": "early_stopping",
+      "rule": "vb",
+      "patience": null,
+      "min_delta": 0.0,
+      "cap": 3,
+      "epoch": 3,
+      "stop_epoch": null,
+      "consumed_epochs": 3,
+      "optimiser_steps": 306,
+      "selected_at_optimiser_step": 306,
+      "train_seconds": 11.664598756000146
+     }
+    },
+    "snapshot_write_seconds": 0.040369429999827844
+   },
+   "relative_difference_from_full_cuda": {
+    "train_loss_data": 0.003550568323123019,
+    "validation_rel_l2": 0.0014439010039348362
+   }
+  },
+  "pino": {
+   "config": "full_cuda",
+   "overrides": [
+    "name=reg_pilot_pino",
+    "study.residuals=[consistent]",
+    "study.physics_weights=[0.1]",
+    "max_epochs=3",
+    "study.seeds=[0]"
+   ],
+   "epoch_seconds": [
+    7.8255625330000385,
+    3.8014871629999334,
+    3.797370962000059
+   ],
+   "seconds_per_epoch": 3.7994290624999962,
+   "train_metrics": {
+    "run": "consistent_w0.1_seed0",
+    "residual": "consistent",
+    "physics_weight": 0.1,
+    "effective_pde_coefficient": 0.0004166666666666667,
+    "seed": 0,
+    "parameters": 2365169,
+    "optimiser_steps": 306,
+    "final_train_loss_data": 0.05108184907950607,
+    "final_train_loss_pde": 30.190877278645832,
+    "final_train_loss_total": 0.06366137897267062,
+    "train_seconds": 15.42443773499997,
+    "optimisation_seconds": 11.125479409000036,
+    "optimisation_ms_per_step": 36.357775846405346,
+    "peak_train_memory_mb": 1024.80078125
+   },
+   "relative_difference_from_full_cuda": {
+    "train_loss_data": 0.0,
+    "validation_rel_l2": 0.0
+   }
+  }
+ },
+ "t_data": 3.696938895500068,
+ "t_pino": 3.7994290624999962,
+ "ratio": 1.0277229810654105,
+ "budget_B_epochs": 52,
+ "comparability": {
+  "largest_relative_difference": 0.0,
+  "threshold": 0.001,
+  "comparable": true
+ },
+ "environment": {
+  "timestamp_utc": "2026-11-09T00:24:25+00:00",
+  "git_commit": "cd7ca41f6c39e572711fe87dd7a7d8f92f254a12",
+  "git_dirty": false,
+  "upstream": {
+   "repository": "https://github.com/NVIDIA/physicsnemo",
+   "commit": "b45a5c810c741e6b41f8515be24c51121f8fc21f",
+   "example": "examples/cfd/darcy_physics_informed"
+  },
+  "device": "cuda",
+  "gpu_name": "Tesla T4",
+  "cuda_version": "13.2",
+  "python_version": "3.12.3",
+  "torch_version": "2.15.0+cu132",
+  "torch_threads": 2,
+  "physicsnemo": {
+   "version": "2.3.0a0",
+   "commit": "b45a5c810c741e6b41f8515be24c51121f8fc21f",
+   "url": "https://github.com/NVIDIA/physicsnemo.git"
+  },
+  "warp_version": "1.19.0",
+  "sympy_version": "1.14.0",
+  "numpy_version": "2.5.4",
+  "platform": "Linux-6.18.55+-x86_64-with-glibc2.39",
+  "processor": "x86_64"
+ },
+ "versions": {
+  "python_version": "3.12",
+  "torch_version": "2.15.0+cu132",
+  "cuda_version": "13.2",
+  "numpy_version": "2.5.4",
+  "warp_version": "1.19.0",
+  "sympy_version": "1.14.0",
+  "physicsnemo_commit": "b45a5c810c741e6b41f8515be24c51121f8fc21f"
+ }
+}

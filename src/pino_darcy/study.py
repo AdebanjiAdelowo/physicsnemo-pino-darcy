@@ -9,6 +9,7 @@ import numpy as np
 from omegaconf import DictConfig, OmegaConf
 
 from . import engine
+from . import selection as S
 from .provenance import collect_metadata, write_json
 
 SUMMARY_FIELDS = [
@@ -81,7 +82,7 @@ def train_study(cfg: DictConfig, root: Path, resume: bool = False) -> Path:
     that has none. Without ``resume`` every run is trained from scratch.
     """
     write_metadata = check_resumable(cfg, Path(root) / cfg.output_dir) if resume else True
-    out_dir, device, sets = engine.prepare_study(cfg, root, write_metadata=write_metadata)
+    out_dir, device, sets = engine.prepare_study(cfg, root, write_metadata=write_metadata, with_test=False)
     for residual, weight, seed in engine.study_runs(cfg):
         run_dir = out_dir / engine.run_name(residual, weight, seed)
         if resume and (run_dir / "train_metrics.json").exists():
@@ -113,6 +114,7 @@ def summary_row(train: dict, evaluation: dict) -> dict:
 
 def evaluate_study(cfg: DictConfig, root: Path) -> dict:
     """Evaluate every run from its checkpoint and write the summary files and plotting fields."""
+    S.guard_test_evaluation(cfg, root)
     out_dir, device, sets = engine.prepare_study(cfg, root, write_metadata=False, with_train=False)
     n_plot = cfg.evaluation.plot_samples
     plot_seed = cfg.study.seeds[0]
@@ -157,6 +159,7 @@ def verify_study(cfg: DictConfig, root: Path) -> list[dict]:
     Nothing is written. Used after results were produced on another machine: the stored
     timings and memory figures belong to that machine and must not be replaced.
     """
+    S.guard_test_evaluation(cfg, root)
     out_dir, device, sets = engine.prepare_study(cfg, root, write_metadata=False, with_train=False)
     rows = []
     for run in engine.study_runs(cfg):

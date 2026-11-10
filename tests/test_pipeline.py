@@ -14,7 +14,7 @@ from pino_darcy.model import build_fno
 
 @pytest.fixture
 def trained(tiny_cfg, sets, tmp_path, monkeypatch):
-    monkeypatch.setattr(engine, "load_datasets", lambda cfg, root, with_train=True: sets)
+    monkeypatch.setattr(engine, "load_datasets", lambda cfg, root, with_train=True, with_test=True: sets)
     out_dir = study.train_study(tiny_cfg, tmp_path)
     return tiny_cfg, out_dir, study.evaluate_study(tiny_cfg, tmp_path)
 
@@ -103,7 +103,7 @@ def test_resume_skips_finished_runs(trained, tmp_path, capsys):
 
 def test_resume_of_a_new_study_writes_its_metadata(tiny_cfg, sets, tmp_path, monkeypatch):
     """A first launch with --resume (as the CUDA notebook always uses) must still record its provenance."""
-    monkeypatch.setattr(engine, "load_datasets", lambda cfg, root, with_train=True: sets)
+    monkeypatch.setattr(engine, "load_datasets", lambda cfg, root, with_train=True, with_test=True: sets)
     out_dir = study.train_study(tiny_cfg, tmp_path, resume=True)
     meta = json.loads((out_dir / "study_metadata.json").read_text())
     assert meta["config"]["name"] == tiny_cfg.name and "git_commit" in meta
