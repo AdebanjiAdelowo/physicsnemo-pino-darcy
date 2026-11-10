@@ -1,0 +1,10 @@
+# CUDA replication, stage 2: both residuals at weights 0.001, 0.01 and 1, seeds 0 to 2 (as
+# full_mps_sweep on MPS). With full_cuda this gives the 27 runs of full.yaml.
+defaults:
+  - full_cuda
+  - _self_
+
+name: full_cuda_sweep
+
+study:
+  physics_weights: [0.001, 0.01, 1]

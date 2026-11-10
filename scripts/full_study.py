@@ -90,21 +90,23 @@ def available(study: str) -> bool:
     return (RESULTS / study / "summary.json").exists() and (AUDIT / f"{study}_solver_residual.json").exists()
 
 
-def history(study: str, run: str) -> dict:
-    with open(RESULTS / study / run / "history.csv") as f:
+def history(study: str, run: str, results=RESULTS) -> dict:
+    with open(results / study / run / "history.csv") as f:
         rows = list(csv.DictReader(f))
     return {k: np.array([float(r[k]) if r[k] != "" else np.nan for r in rows]) for k in rows[0]}
 
 
-def run_record(study: str, run: str) -> dict:
-    ev = load(RESULTS / study / run / "eval_metrics.json")
-    tr = load(RESULTS / study / run / "train_metrics.json")
-    audit = load(AUDIT / f"{study}_solver_residual.json")["runs"][run]
+def run_record(study: str, run: str, results=RESULTS) -> dict:
+    """One run's metrics; ``results`` is the results root (``results/``, its ``audit/`` beside the studies)."""
+    audit_dir = results / "audit"
+    ev = load(results / study / run / "eval_metrics.json")
+    tr = load(results / study / run / "train_metrics.json")
+    audit = load(audit_dir / f"{study}_solver_residual.json")["runs"][run]
     stored, recomputed = ev["test_rel_l2"]["mean"], audit["rel_l2_mean"]
     assert abs(stored - recomputed) <= 1e-5 * stored, f"{study}/{run}: stored and recomputed test errors differ"
-    gen_path = AUDIT / f"{study}_generalisation.json"
+    gen_path = audit_dir / f"{study}_generalisation.json"
     gen = load(gen_path)["runs"].get(run) if gen_path.exists() else None
-    h = history(study, run)
+    h = history(study, run, results)
     steps_per_epoch = tr["optimiser_steps"] / h["epoch"][-1]
     return {
         "metrics": {

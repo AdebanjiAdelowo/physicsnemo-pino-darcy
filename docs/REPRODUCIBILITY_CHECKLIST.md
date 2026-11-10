@@ -30,7 +30,7 @@ State on 2026-10-24, audit of the repository at the commit that adds this file. 
 - [x] Checkpoints of the reduced study re-evaluated: test relative L2 reproduced (`results/audit/local_solver_residual.json`, `stored_rel_l2_mean` against `rel_l2_mean`).
 - [x] Re-training a run and comparing histories (bitwise or to tolerance) on MPS. (2026-11-06: one-epoch repeats of data only and `consistent` 0.1 give identical parameters on this machine, `results/audit/determinism.json`; full-length runs and other residuals not repeated.)
 - [x] More than one training seed at weight 0.1: seeds 0, 1, 2 (`docs/EXPERIMENT_GAPS.md`, G1; `docs/SCIENTIFIC_AUDIT.md`, F14). Other weights: one seed at 15 epochs; three seeds at every weight at 50 epochs (2026-11-07, `full_mps_sweep`).
-- [x] The 50-epoch study (G2). (2026-11-07: on MPS with `configs/full_mps.yaml` and `full_mps_sweep.yaml`, audit F15; the CUDA configuration `configs/full.yaml` has not been run.)
+- [x] The 50-epoch study (G2). (2026-11-07: on MPS with `configs/full_mps.yaml` and `full_mps_sweep.yaml`, audit F15; the CUDA configuration `configs/full.yaml` has not been run; its five-seed primary comparison was replicated on CUDA on 2026-11-08 with `configs/full_cuda*.yaml`, audit F18.)
 
 ## Provenance of the audit files
 

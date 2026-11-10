@@ -118,3 +118,53 @@ def test_label_budget_studies_keep_the_optimiser_budget(n):
     assert labelled.data.get("unlabelled_samples", 0) == 0
     assert pooled.data.unlabelled_samples == 102 - n  # the rest of the training split, nothing else
     assert list(labelled.study.physics_weights) == [0, 0.1] and list(pooled.study.physics_weights) == [0.1]
+
+
+CUDA_STAGES = {"full_cuda": "full_mps", "full_cuda_sweep": "full_mps_sweep", "full_cuda_more": "full_mps"}
+MPS_STUDIES = (
+    "full_mps",
+    "full_mps_more",
+    "full_mps_sweep",
+    "full_mps_operator",
+    "full_mps_solver_w1",
+    "labels25",
+    "labels50",
+    "labels25_unlabelled",
+    "labels50_unlabelled",
+)
+
+
+@pytest.mark.parametrize("name", sorted(CUDA_STAGES))
+def test_cuda_stages_train_exactly_as_full_and_full_mps(name):
+    from omegaconf import OmegaConf
+
+    cfg = load_config(name)
+    resolved = OmegaConf.to_container(cfg, resolve=True)
+    for ref in ("full", "full_mps"):
+        base = OmegaConf.to_container(load_config(ref), resolve=True)
+        for key in ("start_lr", "gamma", "max_epochs", "batch_size", "model", "data", "physics_weight", "evaluation"):
+            assert resolved[key] == base[key], (ref, key)
+    assert cfg.device == "cuda" and cfg.name == name and cfg.output_dir == f"runs/{name}"
+    engine.validate_study(cfg)
+
+
+def test_cuda_stages_cannot_write_to_any_mps_study():
+    for name in CUDA_STAGES:
+        cfg = load_config(name)
+        assert cfg.name not in MPS_STUDIES and not cfg.name.startswith("full_mps") and not cfg.name.startswith("labels")
+        assert cfg.output_dir.split("/")[-1] == cfg.name
+
+
+def test_cuda_stages_mirror_the_mps_stages_and_cover_the_plans():
+    runs = {name: engine.study_runs(load_config(name)) for name in CUDA_STAGES}
+    assert runs["full_cuda"] == engine.study_runs(load_config("full_mps"))
+    assert runs["full_cuda_sweep"] == engine.study_runs(load_config("full_mps_sweep"))
+    assert runs["full_cuda_more"] == engine.study_runs(load_config("full_mps", ["study.seeds=[3,4]"]))
+    minimal = runs["full_cuda"] + runs["full_cuda_more"]
+    assert len(minimal) == len(set(minimal)) == 15
+    for setting in {(r, w) for r, w, _ in minimal}:
+        assert sorted(s for r, w, s in minimal if (r, w) == setting) == [0, 1, 2, 3, 4]
+    g2 = runs["full_cuda"] + runs["full_cuda_sweep"]
+    assert len(g2) == len(set(g2)) == 27 and set(g2) == set(engine.study_runs(load_config("full")))
+    everything = g2 + runs["full_cuda_more"]
+    assert len(everything) == len(set(everything)) == 33
