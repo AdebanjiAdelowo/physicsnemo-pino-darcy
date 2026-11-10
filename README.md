@@ -27,6 +27,15 @@ and, at the upstream budget:
 - A pre-registered replication on an NVIDIA GPU (Tesla T4, CUDA; 15 runs, seeds 0 to 4, 5100 optimiser steps each) reproduces the main result: the data-consistent residual at weight 0.1 lowers the test error by 21.5 % (95 % interval over seeds 19.6 % to 23.5 %), in every seed, which meets the pre-registered criterion (upper end of the interval below -5 %). The residual as shipped again has no material effect (-1.1 %, interval -3.8 % to +1.6 %). CUDA and MPS give per-seed test errors within 0.11 % of each other, without being bitwise equal. The weight sweep was not repeated on CUDA.
 - The 15-epoch conclusions above do not carry over to the upstream budget. At 15 epochs the data-consistent residual had no detectable effect and raised the error near permeability jumps; at 50 epochs it lowers the error everywhere, including near jumps.
 
+
+### G8: conventional regularisation controls (follow-up study)
+
+The G8 study tests whether the corrected physics-residual model (`consistent`, weight 0.1) outperforms a data-only FNO trained with conventional regularisation. The comparison includes weight decay, validation-based checkpoint selection, and matched-compute sensitivity checks, following the [pre-specified G8 analysis plan](docs/REGULARISATION_PLAN.md). This is a **follow-up analysis on previously examined data**, not an independent confirmatory holdout experiment.
+
+In the primary five-seed, 50-epoch comparison, the PINO model's mean test relative $L^2$ error is **0.0300261**, versus **0.0381912** for the selected weight-decay-plus-validation-best (WD+VB) control (weight decay 0.001). The paired mean difference is **-0.0081651**, a **21.38%** lower mean error for PINO relative to the control. All five seed pairs favor PINO. The reported 95% paired Student-t interval for the absolute difference is **[-0.0088331, -0.0074972]**; the exact two-sided sign-test p-value is **0.0625**, reflecting the limited number of independent seeds. These are results for this particular dataset, model and training protocol, not evidence that physics regularisation always beats conventional regularisation.
+
+**Provenance and inference limits:** earlier preflight code accessed descriptive information from the test split before the G8 selection freeze. The historical selection export's `test_set_read: false` field is therefore inaccurate as a literal access claim; the correction is documented in [scientific audit F19](docs/SCIENTIFIC_AUDIT.md). The same test set was also used in earlier studies. Some archived records have dirty-tree flags or inconsistent aggregate device metadata. The [G8 archive verification](docs/G8_ARCHIVE_VERIFICATION.md) verifies nine frozen JSON files against their recorded hashes and reconciles the reported results; it does **not** rerun GPU training or establish an untouched holdout. See the [detailed G8 review](docs/G8_PR_REVIEW_2026-11-09.md) for the statistical and archival audit.
+
 ## Problem
 
 Steady Darcy flow on the unit square with zero pressure on the boundary:
@@ -378,7 +387,7 @@ pip install -r requirements.txt
 python scripts/prepare_data.py        # downloads Darcy_241.zip (0.8 GB), writes the three splits
 python scripts/verify_data.py         # results/data_check.json, figures/data_check.png
 python scripts/verify_reference.py    # results/audit/reference_check.json
-python -m pytest -q                   # 88 tests, no training run needed
+python -m pytest -q                   # offline tests; exact count may change
 python scripts/train.py --config smoke device=cpu
 python scripts/train.py --config local            # reduced study, trains and evaluates
 python scripts/plot_results.py --study runs/local --out runs/local/figures
@@ -430,14 +439,14 @@ python scripts/cuda_replication.py                                   # results/a
 
 ## Tests
 
-`python -m pytest -q` runs 119 tests in about 15 seconds: the upstream part of `official.yaml` against its checksum, the equality of the training settings of `full` and `official`, split construction and normalisation on a synthetic file, the residual against an analytic solution, the two forcing constants, rejection of batches larger than one, the equality of the loss with the upstream expression, separate data and PDE columns in the history, checkpoint round trips, figure generation, static checks of the launcher, the re-implemented data-generation solver and its residual on synthetic fields, the accelerator lock across processes, the paired statistics, the agreement of the tracked seed study with its per-run records, the torch residuals on the solver grid against the NumPy solver, training with every residual formulation, and the construction of the unlabelled pool from the training split only, resuming a study (metadata written once, finished runs kept, a changed configuration refused), the CUDA configurations against their MPS counterparts, the replication criterion and analysis (with the MPS studies standing in for CUDA), and the tracked CUDA results against their run records and an independent recomputation of the primary interval.
+`python -m pytest -q` runs the offline test suite (the exact count and runtime depend on the current revision and environment), including: the upstream part of `official.yaml` against its checksum, the equality of the training settings of `full` and `official`, split construction and normalisation on a synthetic file, the residual against an analytic solution, the two forcing constants, rejection of batches larger than one, the equality of the loss with the upstream expression, separate data and PDE columns in the history, checkpoint round trips, figure generation, static checks of the launcher, the re-implemented data-generation solver and its residual on synthetic fields, the accelerator lock across processes, the paired statistics, the agreement of the tracked seed study with its per-run records, the torch residuals on the solver grid against the NumPy solver, training with every residual formulation, and the construction of the unlabelled pool from the training split only, resuming a study (metadata written once, finished runs kept, a changed configuration refused), the CUDA configurations against their MPS counterparts, the replication criterion and analysis (with the MPS studies standing in for CUDA), and the tracked CUDA results against their run records and an independent recomputation of the primary interval.
 
 ## Limitations
 
 - The upstream-budget studies were trained on Apple MPS, not on the CUDA hardware the upstream example targets; MPS runs repeat bitwise for the same seed on this machine (checked for one epoch), and MPS and CPU differ in the parameters after one epoch. Only the primary comparison (data only, `shipped` 0.1, `consistent` 0.1, five seeds) was replicated on CUDA, on one GPU model (Tesla T4) and with slightly newer PyTorch and NumPy than on MPS; the weight sweep, the residual formulations and the label studies were not.
 - Three seeds per setting (five for the primary G2 comparison) give wide intervals; secondary comparisons that are significant only before the Holm adjustment are reported as such.
 - The 15-epoch studies compare models that are not converged, and their conclusions differ from those at the upstream budget.
-- All settings use the upstream learning rate and schedule; a physics weight may prefer different hyperparameters (no tuning parity), and no other regulariser (early stopping, weight decay) was compared with the residual.
+- All settings use the upstream learning rate and schedule; a physics weight may prefer different hyperparameters (no tuning parity), and G8 subsequently compared weight decay and validation-based checkpoint selection with the residual, without establishing generality across datasets or architectures.
 - Only the FNO variant with finite differences is studied. The DeepONet variant with automatic differentiation is not.
 - The finite-difference residual of the reference solutions is large near permeability changes under every discretisation tested, so the mean residual is not a measure of distance to the reference, and a model can score below the reference by smoothing.
 - The residual is evaluated in single precision. Second differences on this grid carry rounding noise of order 0.01 in normalised units, which is the level of the reference residual in cells with constant permeability.
@@ -448,7 +457,7 @@ python scripts/cuda_replication.py                                   # results/a
 ## Possible extensions
 
 - The CUDA weight sweep (`full_cuda_sweep`, 18 runs; the launcher first needs a plan with that study alone, see [`docs/EXPERIMENT_GAPS.md`](docs/EXPERIMENT_GAPS.md)), and the residual-formulation and label studies on CUDA.
-- Controls with other regularisers and a learning-rate search per setting, to separate the effect of the residual from regularisation in general.
+- Additional regularisers, learning-rate tuning per setting, and new datasets to test whether the G8 comparison generalises beyond the weight-decay and validation-checkpoint controls already evaluated.
 - A residual in conservative (flux) form, or one restricted to cells with constant permeability, to separate the forcing mismatch from the interface behaviour.
 - The DeepONet variant of the example with automatic differentiation.
 - Other datasets, resolutions and architectures.
