@@ -1,0 +1,10 @@
+# The exact residual at weight 1, where the consistent residual degraded the error at 15 epochs (F6).
+defaults:
+  - full_mps
+  - _self_
+
+name: full_mps_solver_w1
+
+study:
+  residuals: [solver]
+  physics_weights: [1]

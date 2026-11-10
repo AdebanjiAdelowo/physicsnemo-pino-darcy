@@ -1,0 +1,63 @@
+{
+  "environment": {
+    "timestamp_utc": "2026-11-06T19:40:03+00:00",
+    "git_commit": "beaac7f672c041f76239d7b1cf44285f80a867f6",
+    "git_dirty": false,
+    "upstream": {
+      "repository": "https://github.com/NVIDIA/physicsnemo",
+      "commit": "b45a5c810c741e6b41f8515be24c51121f8fc21f",
+      "example": "examples/cfd/darcy_physics_informed"
+    },
+    "device": "cpu",
+    "gpu_name": null,
+    "cuda_version": null,
+    "python_version": "3.12.2",
+    "torch_version": "2.14.1",
+    "torch_threads": 5,
+    "physicsnemo": {
+      "version": "2.3.0a0",
+      "commit": "b45a5c810c741e6b41f8515be24c51121f8fc21f",
+      "url": "https://github.com/nvidia/physicsnemo"
+    },
+    "warp_version": "1.18.0",
+    "sympy_version": "1.14.0",
+    "numpy_version": "2.5.3",
+    "platform": "macOS-26.6.2-arm64-arm-64bit",
+    "processor": "arm"
+  },
+  "against_commit": "eaca64c56da2cbb6fbeefa9faf6e3fa4d4fad8e5",
+  "settings": "smoke architecture, 4 training samples, 2 epochs, seed 0, CPU, one thread",
+  "earlier": {
+    "dataonly_seed0": {
+      "parameters_sha256": "a1a9d3eb8e02fd88e64f0bd0831cf0c90c483989a51ad2f6bc6e691938aa40b8",
+      "final_train_loss_total": 2.938572883605957
+    },
+    "shipped_w0.1_seed0": {
+      "parameters_sha256": "f9f45e71703ac59a45c50552c43548e95beb0834981935bd8d782e9a14d50862",
+      "final_train_loss_total": 2.93866229057312
+    },
+    "consistent_w0.1_seed0": {
+      "parameters_sha256": "905762e5745961f9713fd14191f1258a737ccea30b51490e2e53b4c9ed0158e0",
+      "final_train_loss_total": 2.961613416671753
+    }
+  },
+  "current": {
+    "dataonly_seed0": {
+      "parameters_sha256": "a1a9d3eb8e02fd88e64f0bd0831cf0c90c483989a51ad2f6bc6e691938aa40b8",
+      "final_train_loss_total": 2.938572883605957
+    },
+    "shipped_w0.1_seed0": {
+      "parameters_sha256": "f9f45e71703ac59a45c50552c43548e95beb0834981935bd8d782e9a14d50862",
+      "final_train_loss_total": 2.93866229057312
+    },
+    "consistent_w0.1_seed0": {
+      "parameters_sha256": "905762e5745961f9713fd14191f1258a737ccea30b51490e2e53b4c9ed0158e0",
+      "final_train_loss_total": 2.961613416671753
+    }
+  },
+  "identical": {
+    "dataonly_seed0": true,
+    "shipped_w0.1_seed0": true,
+    "consistent_w0.1_seed0": true
+  }
+}

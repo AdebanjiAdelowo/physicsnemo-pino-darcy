@@ -133,3 +133,16 @@ def load_split(path: Path, n_samples: int | None = None) -> dict:
     if n_samples is not None and len(k) < n_samples:
         raise ValueError(f"{path} holds {len(k)} samples; {n_samples} were requested.")
     return {"k": torch.from_numpy(k) / K_SCALE, "u": torch.from_numpy(u) / U_SCALE}
+
+
+def load_full_grid(path: Path, start: int = 0, stop: int | None = None) -> dict:
+    """Uncropped ``K x K`` coefficient fields of samples ``start:stop`` of one split, divided by ``K_SCALE``.
+
+    ``coeff_full`` is the two-valued coefficient the reference pressure was generated from,
+    ``kcoeff_full`` the smoothed model input before the crop. Used by residuals that need the
+    coefficient on the whole grid (``physics.TRAINING_RESIDUALS``).
+    """
+    with h5py.File(path, "r") as f:
+        coeff = np.asarray(f["coeff"][start:stop])
+        kcoeff = np.asarray(f["Kcoeff"][start:stop])
+    return {"coeff_full": torch.from_numpy(coeff) / K_SCALE, "kcoeff_full": torch.from_numpy(kcoeff) / K_SCALE}

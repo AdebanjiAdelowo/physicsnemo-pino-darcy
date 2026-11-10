@@ -1,0 +1,21 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    # CPU only, offline tests: synthetic fields, no dataset, no GPU (tests/conftest.py)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: uv pip install --index-strategy unsafe-best-match --extra-index-url https://download.pytorch.org/whl/cpu -r requirements.txt ruff
+      - name: Lint
+        run: uv run --no-project ruff check src scripts tests
+      - name: Test
+        run: uv run --no-project python -m pytest -q

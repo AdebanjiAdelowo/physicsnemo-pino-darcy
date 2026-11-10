@@ -1,0 +1,52 @@
+{
+  "environment": {
+    "timestamp_utc": "2026-11-07T19:11:55+00:00",
+    "git_commit": "beaac7f672c041f76239d7b1cf44285f80a867f6",
+    "git_dirty": true,
+    "upstream": {
+      "repository": "https://github.com/NVIDIA/physicsnemo",
+      "commit": "b45a5c810c741e6b41f8515be24c51121f8fc21f",
+      "example": "examples/cfd/darcy_physics_informed"
+    },
+    "device": "mps",
+    "gpu_name": null,
+    "cuda_version": null,
+    "python_version": "3.12.2",
+    "torch_version": "2.14.1",
+    "torch_threads": 5,
+    "physicsnemo": {
+      "version": "2.3.0a0",
+      "commit": "b45a5c810c741e6b41f8515be24c51121f8fc21f",
+      "url": "https://github.com/nvidia/physicsnemo"
+    },
+    "warp_version": "1.18.0",
+    "sympy_version": "1.14.0",
+    "numpy_version": "2.5.3",
+    "platform": "macOS-26.6.2-arm64-arm-64bit",
+    "processor": "arm"
+  },
+  "study": "runs/labels25_unlabelled",
+  "runs": {
+    "solver_w0.1_seed0": {
+      "train": 0.009023952297866344,
+      "validation": 0.054765209555625916,
+      "test": 0.04935257136821747,
+      "test_minus_train": 0.040328619070351124,
+      "test_over_train": 5.469063857960172
+    },
+    "solver_w0.1_seed1": {
+      "train": 0.010675022378563881,
+      "validation": 0.061165351420640945,
+      "test": 0.05815967917442322,
+      "test_minus_train": 0.04748465679585934,
+      "test_over_train": 5.448202084448228
+    },
+    "solver_w0.1_seed2": {
+      "train": 0.013331540860235691,
+      "validation": 0.05408776178956032,
+      "test": 0.050751812756061554,
+      "test_minus_train": 0.03742027189582586,
+      "test_over_train": 3.806897738838292
+    }
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "environment": {
+    "timestamp_utc": "2026-11-07T20:52:58+00:00",
+    "git_commit": "eaca64c56da2cbb6fbeefa9faf6e3fa4d4fad8e5",
+    "git_dirty": true,
+    "upstream": {
+      "repository": "https://github.com/NVIDIA/physicsnemo",
+      "commit": "b45a5c810c741e6b41f8515be24c51121f8fc21f",
+      "example": "examples/cfd/darcy_physics_informed"
+    },
+    "device": "mps",
+    "gpu_name": null,
+    "cuda_version": null,
+    "python_version": "3.12.2",
+    "torch_version": "2.14.1",
+    "torch_threads": 5,
+    "physicsnemo": {
+      "version": "2.3.0a0",
+      "commit": "b45a5c810c741e6b41f8515be24c51121f8fc21f",
+      "url": "https://github.com/nvidia/physicsnemo"
+    },
+    "warp_version": "1.18.0",
+    "sympy_version": "1.14.0",
+    "numpy_version": "2.5.3",
+    "platform": "macOS-26.6.2-arm64-arm-64bit",
+    "processor": "arm"
+  },
+  "study": "runs/full_mps_more",
+  "runs": {
+    "dataonly_seed3": {
+      "train": 0.007071014493703842,
+      "validation": 0.04611952230334282,
+      "test": 0.039388589560985565,
+      "test_minus_train": 0.03231757506728172,
+      "test_over_train": 5.57042975884972
+    },
+    "shipped_w0.1_seed3": {
+      "train": 0.02550642192363739,
+      "validation": 0.04447938874363899,
+      "test": 0.03933349996805191,
+      "test_minus_train": 0.01382707804441452,
+      "test_over_train": 1.542101831680305
+    },
+    "consistent_w0.1_seed3": {
+      "train": 0.016920559108257294,
+      "validation": 0.036331746727228165,
+      "test": 0.03099200502038002,
+      "test_minus_train": 0.014071445912122726,
+      "test_over_train": 1.8316182593077441
+    },
+    "dataonly_seed4": {
+      "train": 0.007318733260035515,
+      "validation": 0.04491168260574341,
+      "test": 0.03879059851169586,
+      "test_minus_train": 0.03147186525166035,
+      "test_over_train": 5.300179297900471
+    },
+    "shipped_w0.1_seed4": {
+      "train": 0.02613569237291813,
+      "validation": 0.041725050657987595,
+      "test": 0.038323480635881424,
+      "test_minus_train": 0.012187788262963295,
+      "test_over_train": 1.4663273537605728
+    },
+    "consistent_w0.1_seed4": {
+      "train": 0.017153533175587654,
+      "validation": 0.03400849923491478,
+      "test": 0.03050711378455162,
+      "test_minus_train": 0.013353580608963966,
+      "test_over_train": 1.7784740596746764
+    }
+  }
+}

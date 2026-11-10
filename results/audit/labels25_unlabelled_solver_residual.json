@@ -1,0 +1,79 @@
+{
+  "environment": {
+    "timestamp_utc": "2026-11-07T19:11:25+00:00",
+    "git_commit": "beaac7f672c041f76239d7b1cf44285f80a867f6",
+    "git_dirty": true,
+    "upstream": {
+      "repository": "https://github.com/NVIDIA/physicsnemo",
+      "commit": "b45a5c810c741e6b41f8515be24c51121f8fc21f",
+      "example": "examples/cfd/darcy_physics_informed"
+    },
+    "device": "mps",
+    "gpu_name": null,
+    "cuda_version": null,
+    "python_version": "3.12.2",
+    "torch_version": "2.14.1",
+    "torch_threads": 5,
+    "physicsnemo": {
+      "version": "2.3.0a0",
+      "commit": "b45a5c810c741e6b41f8515be24c51121f8fc21f",
+      "url": "https://github.com/nvidia/physicsnemo"
+    },
+    "warp_version": "1.18.0",
+    "sympy_version": "1.14.0",
+    "numpy_version": "2.5.3",
+    "platform": "macOS-26.6.2-arm64-arm-64bit",
+    "processor": "arm"
+  },
+  "study": "runs/labels25_unlabelled",
+  "margin_nodes": 6,
+  "units": "residual in physical units (forcing f = 1); errors are relative L2 fractions",
+  "reference": {
+    "solver_residual": {
+      "abs_mean": 0.00041085064810277873,
+      "abs_mean_interface_nodes": 0.0004723484638363088,
+      "abs_mean_other_nodes": 0.0004088357303521257
+    }
+  },
+  "runs": {
+    "solver_w0.1_seed0": {
+      "solver_residual": {
+        "abs_mean": 0.375251407066392,
+        "abs_mean_interface_nodes": 6.015328461309879,
+        "abs_mean_other_nodes": 0.1904596183483979
+      },
+      "rel_l2_by_region": {
+        "constant_k_cells": 0.044661602099543785,
+        "other_cells": 0.0638004891920724
+      },
+      "rel_l2_mean": 0.04935257136821747,
+      "stored_rel_l2_mean": 0.04935256905082497
+    },
+    "solver_w0.1_seed1": {
+      "solver_residual": {
+        "abs_mean": 0.4257098222936673,
+        "abs_mean_interface_nodes": 6.218503842392062,
+        "abs_mean_other_nodes": 0.235914406671909
+      },
+      "rel_l2_by_region": {
+        "constant_k_cells": 0.053276888632910975,
+        "other_cells": 0.07319092597597633
+      },
+      "rel_l2_mean": 0.05815967917442322,
+      "stored_rel_l2_mean": 0.05815968251408776
+    },
+    "solver_w0.1_seed2": {
+      "solver_residual": {
+        "abs_mean": 0.40416841485775223,
+        "abs_mean_interface_nodes": 6.225170846222162,
+        "abs_mean_other_nodes": 0.21344877732827786
+      },
+      "rel_l2_by_region": {
+        "constant_k_cells": 0.04515651265832246,
+        "other_cells": 0.06911590014601174
+      },
+      "rel_l2_mean": 0.050751812756061554,
+      "stored_rel_l2_mean": 0.05075181465508649
+    }
+  }
+}

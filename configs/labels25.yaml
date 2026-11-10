@@ -1,0 +1,19 @@
+# G6: 25 labelled samples (the first 25 of the training split), same optimiser budget as full_mps:
+# 204 epochs x 25 samples = 5100 steps with the per-step learning-rate schedule unchanged, validation
+# every 4 epochs (100 steps). Data-only against the exact residual at weight 0.1.
+defaults:
+  - full_mps
+  - _self_
+
+name: labels25
+max_epochs: 204
+
+data:
+  train_samples: 25
+
+study:
+  residuals: [solver]
+  physics_weights: [0, 0.1]
+
+evaluation:
+  validate_every: 4

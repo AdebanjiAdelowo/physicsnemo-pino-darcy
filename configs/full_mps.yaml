@@ -1,0 +1,15 @@
+# Primary comparison at the upstream training budget on Apple MPS (FNO) and CPU (residual).
+# Every training setting is that of official.yaml and full.yaml; only the device and the
+# study axes differ. This is not a CUDA result: kaggle/run_cuda.ipynb with configs/full.yaml
+# remains the replication on another device.
+defaults:
+  - full
+  - _self_
+
+name: full_mps
+device: mps
+
+study:
+  residuals: [shipped, consistent]
+  physics_weights: [0, 0.1]
+  seeds: [0, 1, 2]

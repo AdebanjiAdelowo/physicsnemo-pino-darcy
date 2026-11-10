@@ -1,0 +1,14 @@
+# G3 and G4 of docs/EXPERIMENT_GAPS.md at the upstream budget: the residual with the two-valued
+# coefficient (consistent_coeff), the operator of the data generator with Kcoeff (solver_kcoeff)
+# and with coeff (solver, exact for the reference). Training settings are those of full_mps.yaml;
+# within a seed the runs share initial weights and sample order with the data-only and the
+# consistent 0.1 runs of full_mps, which are the controls (docs/OPERATOR_AND_LABELS_PLAN.md).
+defaults:
+  - full_mps
+  - _self_
+
+name: full_mps_operator
+
+study:
+  residuals: [consistent_coeff, solver_kcoeff, solver]
+  physics_weights: [0.1]

@@ -1,0 +1,14 @@
+# G5: as labels25.yaml, plus the remaining 77 training-split permeabilities without their pressure
+# as inputs of the PDE term (one unlabelled field per optimiser step, in an order of its own). The
+# labelled samples, their order and the initial weights are those of labels25 for the same seed.
+defaults:
+  - labels25
+  - _self_
+
+name: labels25_unlabelled
+
+data:
+  unlabelled_samples: 77
+
+study:
+  physics_weights: [0.1]

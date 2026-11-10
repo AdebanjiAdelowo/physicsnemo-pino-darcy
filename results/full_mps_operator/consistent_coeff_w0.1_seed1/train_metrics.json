@@ -1,0 +1,21 @@
+{
+  "run": "consistent_coeff_w0.1_seed1",
+  "residual": "consistent_coeff",
+  "physics_weight": 0.1,
+  "effective_pde_coefficient": 0.0004166666666666667,
+  "seed": 1,
+  "parameters": 2365169,
+  "optimiser_steps": 5100,
+  "final_train_loss_data": 0.0012821877996126811,
+  "final_train_loss_pde": 18.235193589154413,
+  "final_train_loss_total": 0.00888018339288001,
+  "train_seconds": 572.3815645829891,
+  "optimisation_seconds": 390.18108591780765,
+  "optimisation_ms_per_step": 76.5060952780015,
+  "peak_train_memory_mb": null,
+  "residual_spec": {
+    "operator": "cell_fd",
+    "definition": "consistent",
+    "coefficient": "coeff"
+  }
+}

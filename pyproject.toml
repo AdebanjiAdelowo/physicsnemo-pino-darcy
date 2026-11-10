@@ -10,3 +10,11 @@ authors = [{ name = "Adebanji Adelowo" }]
 testpaths = ["tests"]
 pythonpath = ["src"]
 filterwarnings = ["ignore::DeprecationWarning", "ignore::UserWarning"]
+
+[tool.ruff]
+extend-exclude = ["*.ipynb"]
+# the code base uses long lines throughout; 160 is the limit it already meets
+line-length = 160
+
+[tool.ruff.lint]
+select = ["E", "F", "W"]

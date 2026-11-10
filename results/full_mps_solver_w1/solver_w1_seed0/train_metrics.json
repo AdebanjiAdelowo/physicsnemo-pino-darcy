@@ -1,0 +1,20 @@
+{
+  "run": "solver_w1_seed0",
+  "residual": "solver",
+  "physics_weight": 1.0,
+  "effective_pde_coefficient": 0.004166666666666667,
+  "seed": 0,
+  "parameters": 2365169,
+  "optimiser_steps": 5100,
+  "final_train_loss_data": 0.003573574564036201,
+  "final_train_loss_pde": 11.880744485294118,
+  "final_train_loss_total": 0.05307666928160424,
+  "train_seconds": 488.95337441697484,
+  "optimisation_seconds": 332.1422017160221,
+  "optimisation_ms_per_step": 65.12592190510237,
+  "peak_train_memory_mb": null,
+  "residual_spec": {
+    "operator": "solver",
+    "coefficient": "coeff"
+  }
+}

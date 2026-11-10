@@ -1,0 +1,94 @@
+{
+  "environment": {
+    "timestamp_utc": "2026-11-07T14:10:38+00:00",
+    "git_commit": "beaac7f672c041f76239d7b1cf44285f80a867f6",
+    "git_dirty": true,
+    "upstream": {
+      "repository": "https://github.com/NVIDIA/physicsnemo",
+      "commit": "b45a5c810c741e6b41f8515be24c51121f8fc21f",
+      "example": "examples/cfd/darcy_physics_informed"
+    },
+    "device": "mps",
+    "gpu_name": null,
+    "cuda_version": null,
+    "python_version": "3.12.2",
+    "torch_version": "2.14.1",
+    "torch_threads": 5,
+    "physicsnemo": {
+      "version": "2.3.0a0",
+      "commit": "b45a5c810c741e6b41f8515be24c51121f8fc21f",
+      "url": "https://github.com/nvidia/physicsnemo"
+    },
+    "warp_version": "1.18.0",
+    "sympy_version": "1.14.0",
+    "numpy_version": "2.5.3",
+    "platform": "macOS-26.6.2-arm64-arm-64bit",
+    "processor": "arm"
+  },
+  "study": "runs/full_mps_operator",
+  "runs": {
+    "consistent_coeff_w0.1_seed0": {
+      "train": 0.017494304105639458,
+      "validation": 0.033337682485580444,
+      "test": 0.029257144778966904,
+      "test_minus_train": 0.011762840673327446,
+      "test_over_train": 1.6723811705968676
+    },
+    "solver_kcoeff_w0.1_seed0": {
+      "train": 0.015528403222560883,
+      "validation": 0.03217151388525963,
+      "test": 0.028234852477908134,
+      "test_minus_train": 0.012706449255347252,
+      "test_over_train": 1.818271465084467
+    },
+    "solver_w0.1_seed0": {
+      "train": 0.016009235754609108,
+      "validation": 0.03269249200820923,
+      "test": 0.02854001894593239,
+      "test_minus_train": 0.01253078319132328,
+      "test_over_train": 1.7827221351097682
+    },
+    "consistent_coeff_w0.1_seed1": {
+      "train": 0.019864097237586975,
+      "validation": 0.036508865654468536,
+      "test": 0.03193007409572601,
+      "test_minus_train": 0.012065976858139038,
+      "test_over_train": 1.607426389119145
+    },
+    "solver_kcoeff_w0.1_seed1": {
+      "train": 0.017275666818022728,
+      "validation": 0.035490427166223526,
+      "test": 0.030743343755602837,
+      "test_minus_train": 0.013467676937580109,
+      "test_over_train": 1.7795749408370183
+    },
+    "solver_w0.1_seed1": {
+      "train": 0.019042549654841423,
+      "validation": 0.0365712009370327,
+      "test": 0.03171638399362564,
+      "test_minus_train": 0.012673834338784218,
+      "test_over_train": 1.665553435254506
+    },
+    "consistent_coeff_w0.1_seed2": {
+      "train": 0.021935362368822098,
+      "validation": 0.035984624177217484,
+      "test": 0.03163173794746399,
+      "test_minus_train": 0.009696375578641891,
+      "test_over_train": 1.4420430998862306
+    },
+    "solver_kcoeff_w0.1_seed2": {
+      "train": 0.019315475597977638,
+      "validation": 0.033904217183589935,
+      "test": 0.02966020256280899,
+      "test_minus_train": 0.010344726964831352,
+      "test_over_train": 1.5355667745460257
+    },
+    "solver_w0.1_seed2": {
+      "train": 0.02108360454440117,
+      "validation": 0.035382531583309174,
+      "test": 0.030949773266911507,
+      "test_minus_train": 0.009866168722510338,
+      "test_over_train": 1.4679545521607849
+    }
+  }
+}

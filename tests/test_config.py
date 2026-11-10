@@ -42,6 +42,21 @@ def test_full_trains_exactly_as_official():
     assert full.device == "cuda"
 
 
+@pytest.mark.parametrize("name", ["full_mps", "full_mps_sweep"])
+def test_full_mps_trains_exactly_as_official(name):
+    official, cfg = load_config("official"), load_config(name)
+    for key in ("start_lr", "gamma", "max_epochs", "batch_size", "model", "data"):
+        assert cfg[key] == official[key], key
+    assert cfg.device == "mps"
+    engine.validate_study(cfg)
+
+
+def test_full_mps_stages_are_the_runs_of_full():
+    stages = engine.study_runs(load_config("full_mps")) + engine.study_runs(load_config("full_mps_sweep"))
+    assert len(stages) == len(set(stages)) == 27
+    assert set(stages) == set(engine.study_runs(load_config("full")))
+
+
 def test_local_schedule_reaches_the_upstream_final_learning_rate():
     official, local = load_config("official"), load_config("local")
     steps = lambda cfg: cfg.max_epochs * 102  # noqa: E731
@@ -70,3 +85,36 @@ def test_unavailable_device_is_an_error():
     if not torch.cuda.is_available():
         with pytest.raises(RuntimeError):
             engine.resolve_device("cuda")
+
+
+TRAINING_KEYS = ("start_lr", "gamma", "model", "batch_size", "device")
+
+
+def test_operator_studies_share_the_training_settings_of_full_mps():
+    """G3/G4 runs are paired with the data-only and consistent runs of full_mps: nothing else may differ."""
+    from omegaconf import OmegaConf
+
+    base = OmegaConf.to_container(load_config("full_mps"), resolve=True)
+    for name in ("full_mps_operator", "full_mps_solver_w1"):
+        cfg = OmegaConf.to_container(load_config(name), resolve=True)
+        assert {k: cfg[k] for k in (*TRAINING_KEYS, "max_epochs", "data")} == {k: base[k] for k in (*TRAINING_KEYS, "max_epochs", "data")}
+        assert cfg["study"]["seeds"] == [0, 1, 2]
+        engine.validate_study(load_config(name))
+    assert load_config("full_mps_operator").study.residuals == ["consistent_coeff", "solver_kcoeff", "solver"]
+
+
+@pytest.mark.parametrize("n", [25, 50])
+def test_label_budget_studies_keep_the_optimiser_budget(n):
+    from omegaconf import OmegaConf
+
+    base = OmegaConf.to_container(load_config("full_mps"), resolve=True)
+    labelled, pooled = load_config(f"labels{n}"), load_config(f"labels{n}_unlabelled")
+    for cfg in (labelled, pooled):
+        c = OmegaConf.to_container(cfg, resolve=True)
+        assert {k: c[k] for k in TRAINING_KEYS} == {k: base[k] for k in TRAINING_KEYS}
+        assert cfg.max_epochs * cfg.data.train_samples == 5100 == base["max_epochs"] * 102
+        assert cfg.data.train_samples == n
+        engine.validate_study(cfg)
+    assert labelled.data.get("unlabelled_samples", 0) == 0
+    assert pooled.data.unlabelled_samples == 102 - n  # the rest of the training split, nothing else
+    assert list(labelled.study.physics_weights) == [0, 0.1] and list(pooled.study.physics_weights) == [0.1]
